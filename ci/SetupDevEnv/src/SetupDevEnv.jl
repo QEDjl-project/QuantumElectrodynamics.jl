@@ -6,16 +6,16 @@ using Pkg
 """
     extract_env_vars_from_git_message!()
 
-Parse the commit message, if set via variable `CI_COMMIT_MESSAGE` and set custom urls.
+Parse the commit message, if set via variable (usual `CI_COMMIT_MESSAGE`) and set custom URLs.
 """
-function extract_env_vars_from_git_message!()
-    if haskey(ENV, "CI_COMMIT_MESSAGE")
-        println("Found env variable CI_COMMIT_MESSAGE")
-        for line in split(ENV["CI_COMMIT_MESSAGE"], "\n")
+function extract_env_vars_from_git_message!(var_name = "CI_COMMIT_MESSAGE")
+    if haskey(ENV, var_name)
+        @info "Found env variable $var_name"
+        for line in split(ENV[var_name], "\n")
             line = strip(line)
             if startswith(line, "CI_UNIT_PKG_URL_")
                 (var_name, url) = split(line, ":"; limit=2)
-                println("add " * var_name * "=" * strip(url))
+                @info "add " * var_name * "=" * strip(url)
                 ENV[var_name] = strip(url)
             end
         end
@@ -40,8 +40,8 @@ end
 """
     add_develop_dep(dependencies::Set{AbstractString})
 
-Add all dependencies listed in `dependencies` as develop version. By default, it takes the current development branch.
-If the environment variable "CI_UNIT_PKG_URL_<dependency_name>" is set, take the url defined in the value to set 
+Add all dependencies listed in `dependencies` as development version. By default, it takes the current development branch.
+If the environment variable "CI_UNIT_PKG_URL_<dependency_name>" is set, take the URL defined in the value to set 
 develop version, instead the the default develop branch (see `Pkg.develop(url=)`). 
 """
 function add_develop_dep(dependencies::Set{AbstractString})
@@ -55,11 +55,11 @@ function add_develop_dep(dependencies::Set{AbstractString})
     end
 
     if !isempty(modified_urls)
-        println("Found following env variables")
+        local info_str = "Found following env variables"
         for (pkg_name, url) in modified_urls
-            println("  " * pkg_name * "=" * url)
+            info_str *= "\n  " * pkg_name * "=" * url
         end
-        println()
+        @info info_str
     end
 
     # add all dependencies as develop version to the current julia environment
@@ -67,19 +67,18 @@ function add_develop_dep(dependencies::Set{AbstractString})
         if haskey(modified_urls, dep)
             split_url = split(modified_urls[dep], "#")
             if length(split_url) > 2
-                @error "Ill formed url: $(url)"
-                exit(1)
+                error("Ill formed url: $(url)")
             end
 
             if length(split_url) == 1
-                println("Pkg.develop(url=\"" * split_url[1] * "\")")
+                @info "Pkg.develop(url=\"" * split_url[1] * "\")"
                 Pkg.add(url=split_url[1])
             else
-                println("Pkg.develop(url=\"" * split_url[1] * ";\" rev=\"" * split_url[2] * "\")")
+                @info "Pkg.develop(url=\"" * split_url[1] * ";\" rev=\"" * split_url[2] * "\")"
                 Pkg.add(url=split_url[1], rev=split_url[2])
             end
         else
-            println("Pkg.develop(\"" * dep * "\")")
+            @info "Pkg.develop(\"" * dep * "\")"
             Pkg.develop(dep)
         end
     end
@@ -87,8 +86,7 @@ end
 
 if abspath(PROGRAM_FILE) == @__FILE__
     if length(ARGS) < 1
-        println("Set path to Project.toml as first argument.")
-        exit(1)
+        error("Set path to Project.toml as first argument.")
     end
 
     project_toml_path = ARGS[1]

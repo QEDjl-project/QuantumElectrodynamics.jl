@@ -6,6 +6,10 @@ unit_tests_julia1.9:
   image: julia:1.9
   stage: unit-test
   script:
+    - cd ${CI_PROJECT_DIR}/ci/SetupDevEnv/
+    - julia --project=. -e 'import Pkg; Pkg.instantiate()'
+    - julia --project=. -e 'import Pkg; Pkg.test(; coverage = true)'
+    - cd ${CI_PROJECT_DIR}
     - julia --project=. -e 'import Pkg; Pkg.Registry.add(Pkg.RegistrySpec(url="https://github.com/QEDjl-project/registry.git"));'
     - julia --project=. -e 'import Pkg; Pkg.Registry.add(Pkg.RegistrySpec(url="https://github.com/JuliaRegistries/General"));'
     - julia --project=. ${CI_PROJECT_DIR}/ci/SetupDevEnv/src/SetupDevEnv.jl ${CI_PROJECT_DIR}/Project.toml

@@ -3,6 +3,10 @@ uuid = "b422d612-8f72-4cc8-9700-415372519aaa"
 authors = ["Simeon Ehrig <s.ehrig@hzdr.de> and contributors"]
 version = "1.0.0"
 
+[deps]
+Pkg = "44cfe95a-1eb2-52ea-b672-e2afdf69b78f"
+TOML = "fa267f1f-6049-4f14-aa54-33bafae1ed76"
+
 [compat]
 julia = "1"
 
