@@ -1,1 +1,4 @@
 /docs/build/
+
+# IDE specific folders
+.vscode
