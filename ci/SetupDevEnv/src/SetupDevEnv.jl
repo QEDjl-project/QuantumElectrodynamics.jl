@@ -90,7 +90,13 @@ if abspath(PROGRAM_FILE) == @__FILE__
     end
 
     project_toml_path = ARGS[1]
-    extract_env_vars_from_git_message!()
+
+    # custom commit message variable can be set as second argument
+    if length(ARGS) < 2
+        extract_env_vars_from_git_message!()
+    else
+        extract_env_vars_from_git_message!(ARGS[2])
+    end
     # get only dependencies, which starts with QED
     deps = get_dependencies(project_toml_path, r"(QED)")
     add_develop_dep(deps)
