@@ -4,7 +4,7 @@ CurrentModule = QED
 
 # QED
 
-Documentation for [QED](https://www.github.com/szabo137/QED.jl).
+Documentation for [QED](https://github.com/QEDjl-project/QED.jl).
 
 ```@index
 ```

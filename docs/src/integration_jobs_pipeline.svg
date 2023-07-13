@@ -1,0 +1,259 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="352.58188mm"
+   height="100.40265mm"
+   viewBox="0 0 352.58188 100.40265"
+   version="1.1"
+   id="svg5"
+   inkscape:version="1.1.2 (0a00cf5339, 2022-02-04)"
+   sodipodi:docname="integration_jobs_pipeline.svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview7"
+     pagecolor="#ffffff"
+     bordercolor="#cccccc"
+     borderopacity="1"
+     inkscape:pageshadow="0"
+     inkscape:pageopacity="1"
+     inkscape:pagecheckerboard="0"
+     inkscape:document-units="mm"
+     showgrid="false"
+     fit-margin-top="2"
+     fit-margin-left="2"
+     fit-margin-right="2"
+     fit-margin-bottom="2"
+     inkscape:zoom="0.81691218"
+     inkscape:cx="830.56664"
+     inkscape:cy="250.94497"
+     inkscape:window-width="2560"
+     inkscape:window-height="1384"
+     inkscape:window-x="0"
+     inkscape:window-y="0"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="layer1" />
+  <defs
+     id="defs2" />
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(0.72779578,12.925033)">
+    <g
+       id="g71219"
+       transform="translate(0,2.9325017)">
+      <rect
+         style="fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:1.117;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+         id="rect846"
+         width="73.831009"
+         height="62.157093"
+         x="1.8307042"
+         y="3.2652442" />
+      <text
+         xml:space="preserve"
+         style="font-size:5.64444px;line-height:125%;font-family:Sans;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:0.264583px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+         x="5.1086626"
+         y="10.831652"
+         id="text3204"><tspan
+           sodipodi:role="line"
+           style="fill:#000000;fill-opacity:1;stroke-width:0.264583px"
+           x="5.1086626"
+           y="10.831652"
+           id="tspan31985">Stage: Integration Tests</tspan><tspan
+           sodipodi:role="line"
+           style="fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.264583px"
+           x="5.1086626"
+           y="17.887201"
+           id="tspan16446">- execute tests of </tspan><tspan
+           sodipodi:role="line"
+           style="fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.264583px"
+           x="5.1086626"
+           y="24.942753"
+           id="tspan29952">  modified package</tspan></text>
+    </g>
+    <g
+       id="g71229"
+       transform="translate(0.725634,2.9325017)">
+      <rect
+         style="fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:1.117;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+         id="rect846-6"
+         width="73.831009"
+         height="62.157093"
+         x="92.230782"
+         y="3.2652442" />
+      <text
+         xml:space="preserve"
+         style="font-size:5.64444px;line-height:125%;font-family:Sans;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:0.264583px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+         x="95.508743"
+         y="10.732433"
+         id="text3204-7"><tspan
+           sodipodi:role="line"
+           style="fill:#000000;fill-opacity:1;stroke-width:0.264583px"
+           x="95.508743"
+           y="10.732433"
+           id="tspan31985-5">Stage: Generate </tspan><tspan
+           sodipodi:role="line"
+           style="fill:#000000;fill-opacity:1;stroke-width:0.264583px"
+           x="95.508743"
+           y="17.787983"
+           id="tspan34619">Integration Tests</tspan><tspan
+           sodipodi:role="line"
+           style="fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.264583px"
+           x="95.508743"
+           y="24.843534"
+           id="tspan29952-5">- git clone jobGenertor </tspan><tspan
+           sodipodi:role="line"
+           style="fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.264583px"
+           x="95.508743"
+           y="31.899084"
+           id="tspan36719"> from QED.jl</tspan><tspan
+           sodipodi:role="line"
+           style="fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.264583px"
+           x="95.508743"
+           y="38.954636"
+           id="tspan36725">- execute the script and </tspan><tspan
+           sodipodi:role="line"
+           style="fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.264583px"
+           x="95.508743"
+           y="46.010185"
+           id="tspan36727">  generate job yaml's</tspan></text>
+    </g>
+    <g
+       id="g71237"
+       transform="translate(1.4512519,2.9325017)">
+      <rect
+         style="fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:1.117;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+         id="rect846-6-6"
+         width="73.831009"
+         height="62.157093"
+         x="182.63086"
+         y="3.2652442" />
+      <text
+         xml:space="preserve"
+         style="font-size:5.64444px;line-height:125%;font-family:Sans;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:0.264583px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+         x="185.8019"
+         y="10.732433"
+         id="text3204-7-2"><tspan
+           sodipodi:role="line"
+           style="fill:#000000;fill-opacity:1;stroke-width:0.264583px"
+           x="185.8019"
+           y="10.732433"
+           id="tspan31985-5-9">Stage: Run </tspan><tspan
+           sodipodi:role="line"
+           style="fill:#000000;fill-opacity:1;stroke-width:0.264583px"
+           x="185.8019"
+           y="17.787983"
+           id="tspan34619-1">Integration Tests</tspan><tspan
+           sodipodi:role="line"
+           style="fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.264583px"
+           x="185.8019"
+           y="24.843534"
+           id="tspan36727-9">- execute generated </tspan><tspan
+           sodipodi:role="line"
+           style="fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.264583px"
+           x="185.8019"
+           y="31.899084"
+           id="tspan43793">  integration jobs</tspan></text>
+    </g>
+    <g
+       id="g71212"
+       transform="translate(-16.704684,-0.83328903)">
+      <g
+         id="g71181">
+        <rect
+           style="fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:1.117;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+           id="rect846-6-6-3"
+           width="74.306747"
+           height="20.353886"
+           x="291.69351"
+           y="-9.5332441" />
+        <text
+           xml:space="preserve"
+           style="font-size:5.64444px;line-height:125%;font-family:Sans;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:0.264583px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+           x="301.5466"
+           y="-1.3268942"
+           id="text3204-7-2-6"><tspan
+             sodipodi:role="line"
+             style="fill:#000000;fill-opacity:1;stroke-width:0.264583px"
+             x="301.5466"
+             y="-1.3268942"
+             id="tspan34619-1-6">Integration Tests of </tspan><tspan
+             sodipodi:role="line"
+             style="fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:0.264583px"
+             x="301.5466"
+             y="5.7286558"
+             id="tspan43793-6">Sub Package 1</tspan></text>
+      </g>
+      <g
+         id="g71187"
+         transform="translate(-0.03777174)">
+        <rect
+           style="fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:1.117;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+           id="rect846-6-6-3-1"
+           width="74.306747"
+           height="20.353886"
+           x="291.69351"
+           y="20.141705" />
+        <text
+           xml:space="preserve"
+           style="font-size:5.64444px;line-height:125%;font-family:Sans;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:0.264583px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+           x="301.5466"
+           y="28.348055"
+           id="text3204-7-2-6-8"><tspan
+             sodipodi:role="line"
+             style="fill:#000000;fill-opacity:1;stroke-width:0.264583px"
+             x="301.5466"
+             y="28.348055"
+             id="tspan34619-1-6-7">Integration Tests of </tspan><tspan
+             sodipodi:role="line"
+             style="fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:0.264583px"
+             x="301.5466"
+             y="35.403606"
+             id="tspan43793-6-9">Sub Package 2</tspan></text>
+      </g>
+      <g
+         id="g71193"
+         transform="translate(-0.03777174)">
+        <rect
+           style="fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:1.117;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+           id="rect846-6-6-3-2"
+           width="74.306747"
+           height="20.353886"
+           x="291.69351"
+           y="65.398521" />
+        <text
+           xml:space="preserve"
+           style="font-size:5.64444px;line-height:125%;font-family:Sans;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:0.264583px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+           x="301.5466"
+           y="73.604874"
+           id="text3204-7-2-6-0"><tspan
+             sodipodi:role="line"
+             style="fill:#000000;fill-opacity:1;stroke-width:0.264583px"
+             x="301.5466"
+             y="73.604874"
+             id="tspan34619-1-6-2">Integration Tests of </tspan><tspan
+             sodipodi:role="line"
+             style="fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:0.264583px"
+             x="301.5466"
+             y="80.660423"
+             id="tspan43793-6-3">Sub Package N</tspan></text>
+      </g>
+      <text
+         xml:space="preserve"
+         style="font-size:11.2889px;line-height:125%;font-family:Sans;letter-spacing:0px;word-spacing:0px;fill:none;stroke:#000000;stroke-width:0.264583px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+         x="47.569946"
+         y="-328.10907"
+         id="text58969"
+         transform="rotate(90)"><tspan
+           sodipodi:role="line"
+           id="tspan58967"
+           style="font-size:11.2889px;fill:#000000;fill-opacity:1;stroke-width:0.264583px"
+           x="47.569946"
+           y="-328.10907">...</tspan></text>
+    </g>
+  </g>
+</svg>
