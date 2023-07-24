@@ -2,7 +2,7 @@
 
 In the `QED.jl` eco-system, we use [Continuous integration](https://en.wikipedia.org/wiki/Continuous_integration) (CIs) for running automatic tests. Each time, when a pull request is opened on GitHub.com or changes are committed to an existing pull request, the CI pipeline is triggered and starts a test script. The result of the tests will be reported in the pull request. In `QED.jl`, we distinguish between two kinds of tests
 
-- **Unit tests**: tests which check the functionality of the modified (sub) package. Those tests can either run standalone or use the functionality of other (third-party) packages.
+- **Unit tests**: tests which check the functionality of the modified (sub-) package. Those tests can either run standalone or use the functionality of other (third-party) packages.
 - **Integration tests**: tests which check the interoperatebility of the modified package with all sub-packages. For example, if package `A` depends on package `B` and you change package `B`, the integration test will check, if package `A` still works with the new version of package `B`.
 
 The CI will first execute the unit tests. Then, if all unit tests are passed, the integration tests will be started.
@@ -10,17 +10,17 @@ The CI will first execute the unit tests. Then, if all unit tests are passed, th
 Our CI uses the [GitLab CI](https://docs.gitlab.com/ee/ci/) because it allows us to use CI resources provided by [HIFIS](https://www.hifis.net/). There, we can use strong CPU runners and special runners for testing on Nvidia and AMD GPUs.
 
 
-# Unit Test for CI Users
+# Unit Tests for CI Users
 
 The unit tests are automatically triggered, if you open a pull request, which target the `main` or `dev` branch. Before the tests start, the CI sets up the test environment.  Thus, the `Project.toml` of the project is taken and the latest development version of each QED.jl dependency is added. Other dependencies will regularly be resolved by the Julia Package manager. Afterwards the unit tests will be executed.
 
-You can also modify, which version of a `QED.jl` dependency should be used. For example if you need to test your code with a function, which is not merged in the development branch yet. Thus, you need to add specific line to your commit message with the following format:
+You can also modify which version of a `QED.jl` dependency should be used. For example if you need to test your code with a function, which is not merged in the development branch yet. Thus, you need to add a specific line to your commit message with the following format:
 
 ```
 CI_UNIT_PKG_URL_<dep_name>: https://github.com/<user>/<dep_name>#<commit_hash>
 ```
 
-You find the `<dep_name>` name in the `Project.toml` of the dependent project. For example, let's assume the name of the dependent package is `depLibrary`. The url of the fork is https://github.com/user/depLibrary.jl and the required feature has the commit sha `45a753b`.
+You can find the `<dep_name>` name in the `Project.toml` of the dependent project. For example, let's assume the name of the dependent package is `depLibrary`. The url of the fork is https://github.com/user/depLibrary.jl and the required feature has the commit sha `45a753b`.
 
 ```
 This commit extends function foo with a new
@@ -40,30 +40,30 @@ It is also possible to set a custom URL for more than one package. Simply add an
 
     You don't need to add a new commit to set custom URLs. You can modify the commit message with `git commit --amend` and force push to the branch. This also starts the CI pipeline again.
 
-There is a last job, which checks if lines starting with `CI_UNIT_PKG_URL_` exist in the commit message of the latest commit. If so, the unit test will fail. This is required, because otherwise the merged code would depend on non merged changes in sub packages and would be non-compatible.
+There is a last job, which checks if lines starting with `CI_UNIT_PKG_URL_` exist in the commit message of the latest commit. If so, the unit test will fail. This is required, because otherwise the merged code would depend on non merged changes in sub-packages and would be non-compatible.
 
 !!! note
 
-If you use `CI_UNIT_PKG_URL_`, the CI pipeline will fail which does not mean that the actual tests are failing.
+    If you use `CI_UNIT_PKG_URL_`, the CI pipeline will fail which does not mean that the actual tests are failing.
 
-# Integration Test for CI Users
+# Integration Tests for CI Users
 
-The integration tests are automatically triggered, if you open a pull request, which target the `main` or `dev` branch, and the unit tests passed. The integration tests itself are in an extra stage of the CI.
+The integration tests are automatically triggered if you open a pull request that targets the `main` or `dev` branch, and the unit tests have passed. The integration tests itself are in an extra stage of the CI.
 
 ![CI pipeline with unit and integration tests](CI_pipeline.png)
 
-If the tests pass successfully, you don't need to do something. If the fails, i.e. the change breaks the interoperation with another package in the `QED.jl` eco-system, the pull request will suspend, and one has two options to proceed:
+If the tests pass successfully, you don't need to do anything. If they fail, i.e. the change breaks the interoperability with another package in the `QED.jl` ecosystem, the pull request will suspend, and one has two options to proceed:
 
-1. One can solve the problem locally, by changing the code of the modified (sub) package. The workflow is the same, like fixing unit tests.
-2. One need to modify the depending package, which failed in the integration test. In the following, we describe how to provide the necessary changes to the downstream package and make the CI pass the integration tests, which will resume the pull request.
+1. One can solve the problem locally, by changing the code of the modified (sub-) package. The workflow is the same as for fixing unit tests.
+2. One needs to modify the depending package, which failed in the integration test. In the following, we describe how to provide the necessary changes to the downstream package and make the CI pass the integration tests, which will resume the pull request.
 
-For better understanding, the package currently modified by the pull request is called `orig`, and the package, which depends on it is referred to as `dep`.  First, one should fork the package `dep` and checkout a new feature branch on this fork. The fix of the integration issue for `dep` is now developed on the feature branch. Once finished, the changes to `dep` are push to GitHub, and pull request on `dep` is opend to check in the changes. By default, the unit test for `dep` should fail, because the CI in `dep` needs to use the modified version of `orig`. The solution for this problem is explained in the section [Unit Test for CI Users](#Unit-Test-for-CI-Users). Using this, one should develop the fix on the feature branch until the CI of `dep` passes all unit tests. In this case, original pull request in the upstream package `orig` can be resumed. Therefore, one needs to tell the CI of `orig` that the integration tests should use fixed version package `dep`, which is still on the feature branch in a pull request on `dep`. In order to proceed, the CI on `orig` needs the information, where the fix for `dep` is lying. This is given to the CI of `orig` in a commit message on the origin branch of the pull request on `orig`, one just needs to add a new line with the following format to the commit message:
+For better understanding, the package currently modified by the pull request is called `orig`, and the package that depends on it is referred to as `dep`. This means in practice, the `Project.toml` of the project `dep` contains the dependency to `orig`. First, one should fork the package `dep` and checkout a new feature branch on this fork. The fix of the integration issue for `dep` is now developed on the feature branch. Once finished, the changes to `dep` are push to GitHub, and a pull request on `dep` is opened to check in the changes. By default, the unit test for `dep` should fail, because the CI in `dep` needs to use the modified version of `orig`. The solution for this problem is explained in the section [Unit Test for CI Users](#Unit-Test-for-CI-Users). Using this, one should develop the fix on the feature branch until the CI of `dep` passes all unit tests. In this case, the original pull request in the upstream package `orig` can be resumed. Therefore, one needs to tell the CI of `orig` that the integration tests should use the fixed version package `dep`, which is still on the feature branch in a pull request on `dep`. In order to proceed, the CI on `orig` needs information on where the fix for `dep` is located. This is given to the CI of `orig` in a commit message on the origin branch of the pull request on `orig`, one just needs to add a new line with the following format to the commit message:
 
 ```
 CI_INTG_PKG_URL_<dep_name>: https://github.com/<user>/<dep_name>#<commit_hash>
 ```
 
-You find the names of the environment variables in the section [Environment Variables](#Environment-Variables). For an example let's assume the name of the `dep` package is `dep1.jl`, `user1` forked the package and the commit hash of the fix for package `dep1.jl` is `45a723b`. Then, an example message could look like this:
+You can find the names of the environment variables in the section [Environment Variables](#Environment-Variables). For an example let's assume the name of the `dep` package is `dep1.jl`, `user1` forked the package and the commit hash of the fix for package `dep1.jl` is `45a723b`. Then, an example message could look like this:
 
 ```
 This commit extends function foo with a new
@@ -77,7 +77,7 @@ If you pass a 0, it has a special meaning.
 CI_INTG_PKG_URL_DEP1JL: https://github.com/user1/dep1.jl#45a723b
 ```
 
-It is also possible to set a custom URL for more than one package, which depends on `orig`. Simple add an additional line with the shape of `CI_INTG_PKG_URL_<dep_name>: https://github.com/<user>/<dep_name>#<commit_hash>` to the commit message.
+It is also possible to set a custom URL for more than one package, which depends on `orig`. Simply add an additional line of the shape `CI_INTG_PKG_URL_<dep_name>: https://github.com/<user>/<dep_name>#<commit_hash>` to the commit message.
 
 !!! note
 
@@ -98,11 +98,11 @@ QEDprocesses.jl | `CI_UNIT_PKG_URL_QEDprocesses` | `CI_INTG_PKG_URL_QEDprocesses
 
 In this section, we explain how the unit tests are prepared and executed. It is not mandatory to read the section if you only want to use the CI.
 
-Before the unit tests are executed, the `SetupDevEnv.jl` is executed, which prepares the project environment for the unit test. It reads the `Project.toml` of the current project and adds the version of the `dev` branch of all QED dependency (`Pkg.develop()`) if no line starting with `CI_UNIT_PKG_URL_` was defined in the commit message. If `CI_UNIT_PKG_URL_` was defined, it use a custom URL.
+Before the unit tests are executed, the `SetupDevEnv.jl` is executed, which prepares the project environment for the unit test. It reads the `Project.toml` of the current project and adds the version of the `dev` branch of all QED dependency (`Pkg.develop()`) if no line starting with `CI_UNIT_PKG_URL_` was defined in the commit message. If `CI_UNIT_PKG_URL_` was defined, it will use the custom URL.
 
-The commit message is defined in the environment variable `CI_COMMIT_MESSAGE` by GitLab CI. If the variable is not defined, the script ignores the commit message. If you want to disable reading the commit message you can set the name of the commit message variable to a undefined variable via first argument of the `SetupDevEnv.jl` script. We use this, when we execute the CI on the `main` or `dev` branch. On this branches, it should be not possible to use custom URLs for unit or integration tests. Therefore we disable it, which also allows to use `CI_UNIT_PKG_URL_` variables as regular part of the merge commit message.
+The commit message is defined in the environment variable `CI_COMMIT_MESSAGE` by GitLab CI. If the variable is not defined, the script ignores the commit message. If you want to disable reading the commit message, you can set the name of the commit message variable to an undefined variable via the first argument of the `integTestGen.jl` script. We use this when executing the CI on the `main` or `dev` branch. On these branches, it should not be possible to use custom URLs for unit or integration tests. Therefore we disable it, which also allows the use of `CI_INTG_PKG_URL_` variables as regular part of the merge commit message.
 
-## running locally
+## Running Locally
 
 If you want to run the script locally, you can set custom URLs via environment variables. For example:
 
@@ -116,27 +116,57 @@ In this section, we explain how the integration tests are created and executed. 
 
 ![detailed CI pipeline of the integration tests](integration_jobs_pipeline.svg)
 
-All of the following stages are executed in the CI pipeline of the sub-package, where the code is modified. This means also, that GitLab CI automatically checks out the repository with the changes of the pull request and provides it in the CI job. We name the package `orig` for easier understanding of the documentation.
+All of the following stages are executed in the CI pipeline of the package, where the code is modified. We name the package `orig` for easier understanding of the documentation. A package who uses `orig` is called `user`. In practice, this means the `Project.toml` of the project `user` contains the dependency to `orig`. A list of `user` is called `users`.
 
-- **Stage: Integration Tests**: Execute the unit tests of `orig` via `Pkg.test()`.
-- **Stage: Generate integration Tests**: Download the `integTestGen.jl` script from the `QED.jl` package via `git clone`. The script is executed with the name of the subpackage `orig`. The script traverses the dependency tree of the `QED.jl` and it is searching for sub-packages which has a dependency of package `orig`. For each package with the dependency of package `orig`, the generator generates a job yaml. By default, it uses the upstream repository and development branch of the package tested in the integration test. The repository and commit can be changed via the environment parameter in the git commit message. The `integTestGen.jl` uses the `Package.toml` of the `QED.jl` package because all sub-packages are direct and indirect dependencies of it.
-- **Stage: Run Integration Tests**: This stage uses the generated job yaml to create and run new test jobs. It uses the [GitLab CI child pipeline](https://about.gitlab.com/blog/2020/04/24/parent-child-pipelines/#dynamically-generating-pipelines) mechanism.
-- **Stage: Integration Tests of Sub package N**: Each job clones the repository of the subpackage. After the clone, it uses the Julia function `Pkg.develop(path="$CI_package_DIR")` to replace the dependency to the package `orig` with the modified version of the Pull Request and execute the tests of the subpackage via `Pkg.test()`.
+## Stage: Unit Tests
+
+This stage executes the unit tests of `orig` via `Pkg.test()`. The integration tests are only executed, when the unit tests are passed. If the unit tests would not pass, it would test other (sub-) packages with the broken package `orig` and therefore we cannot expect, that the integration tests pass.
+
+## Stage: Generate integration Tests
+
+The integration tests checks, if all (sub-) packages which use the package `orig` as dependency still work with the code modification of the current pull request.
+
+Before we talk about the details, here is a small overview on what the `integTestGen.jl` script is doing. First the CI needs to determine, which (sub-) packages has `orig` as dependency. Therefore the CI downloads the `integTestGen.jl` script from the `QED.jl` project via `git clone`. The `integTestGen.jl` script finds out, which (sub-) package use `orig` and generates for each (sub-) package a new CI test job. So the output of the `integTestGen.jl` is a GitLab CI yaml file, which can be executed via [GitLab CI child pipeline](https://about.gitlab.com/blog/2020/04/24/parent-child-pipelines/#dynamically-generating-pipelines).
+
+The `integTestGen.jl` script traverses the dependency tree of `QED.jl` package. Because each QED sub-package is a dependency of the `QED.jl` package, the `QED.jl` dependency tree contains implicitly all dependency trees of the sub-packages. So the script is traversing the tree and creating a list of sub-packages who depends on `orig`. This list is called `users`.
+
+For each `user` from the list of `users` we need to define a separate CI job. First, the job checkouts the `dev` branch of the git repository of `user`. Then it sets the modified version of `orig` as dependency (`Pkg.develop(path="$CI_package_DIR")`). Finally, it executes the unit tests of `user`. The unit tests of `user` are tested with the code changes of the current pull request.
+
+If the `dev` branch of `user` does not work, it is also possible to define a custom git commit to a working commit via the git commit message of the pull request of `orig`. For more details see [Integration Tests for CI Users](#Integration-Tests-for-CI-Users).
 
 !!! note
 
-    If a sub package triggers an integration test, the main package `QED.jl` is passive. It does not get any notification or trigger any script. The repository is simply cloned.
+    If a sub-package triggers an integration test, the main package `QED.jl` is passive. It does not get any notification or trigger any script. The repository is simply cloned.
 
-The commit message is defined in the environment variable `CI_COMMIT_MESSAGE` by GitLab CI. If the variable is not defined, the script ignores the commit message. If you want to disable reading the commit message you can set the name of the commit message variable to a undefined variable via first argument of the `integTestGen.jl` script. We use this, when we execute the CI on the `main` or `dev` branch. On this branches, it should be not possible to use custom URLs for unit or integration tests. Therefore we disable it, which also allows to use `CI_INTG_PKG_URL_` variables as regular part of the merge commit message.
+!!! note
 
-## running locally
+    The commit message is defined in the environment variable `CI_COMMIT_MESSAGE` by GitLab CI. 
+    If the variable is not defined, the script ignores the commit message. If you want to disable
+    reading the commit message, you can set the name of the commit message variable to an 
+    undefined variable via the first argument of the `integTestGen.jl` script. We use this when 
+    executing the CI on the `main` or `dev` branch. On these branches, it should not be possible 
+    to use custom URLs for unit or integration tests. Therefore we disable it, which also allows 
+    the use of `CI_INTG_PKG_URL_` variables as regular part of the merge commit message.
 
-The `integTestGen.jl` script has a special behavior. It creates is own `Project.toml` in a temporary folder and switches it's project environment to it. Therefor you need to start the script with the project path `--project=ci/integTestGen`. You need also to set two environment variables:
 
-- **CI_DEPENDENCY_NAME:** Name of the package, where to run the integration tests. For example `QEDbase`.
-- **CI_PROJECT_DIR:** Path to the project root directory, where to run the integration tests. This path is used in the generated integration test, to use the modified code of the pull request.
+## Stage: Run Integration Tests 
 
-Following example assumes, that the `QED.jl` project is located at `$HOME/projects/QED.jl` and the project to test is `QEDbase.jl` and located at `$HOME/projects/QEDbase.jl`.
+This stage uses the generated job yaml to create and run new test jobs. It uses the [GitLab CI child pipeline](https://about.gitlab.com/blog/2020/04/24/parent-child-pipelines/#dynamically-generating-pipelines) mechanism.
+
+## Stage: Integration Tests of Sub-Packages N 
+
+Each job clones the repository of the sub-package. After the clone, it uses the Julia function `Pkg.develop(path="$CI_package_DIR")` to replace the dependency to the package `orig` with the modified version of the pull request and execute the tests of the sub-package via `Pkg.test()`.
+
+The integration tests of each sub-package are executed in parallel. So, if the integration tests of a package fails, the integration tests of the other packages are still executed and can pass.
+
+## Running Locally
+
+The `integTestGen.jl` script has a special behavior. It creates its own `Project.toml` in a temporary folder and switches its project environment to it. Therefore, you need to start the script with the project path `--project=ci/integTestGen`. You also need to set two environment variables:
+
+- **CI_DEPENDENCY_NAME:** Name of the `orig`. For example `QEDbase`.
+- **CI_PROJECT_DIR:** Path to the project root directory of `orig`. This path is used in the generated integration test, to set the dependency the modified code of `orig`.
+
+The following example assumes that the `QED.jl` project is located at `$HOME/projects/QED.jl` and the project to test is `QEDbase.jl` and is located at `$HOME/projects/QEDbase.jl`.
 
 ```bash
 CI_DEPENDENCY_NAME=QEDbase CI_PROJECT_DIR="$HOME/projects/QEDbase.jl" julia --project=$HOME/projects/QED.jl/ci/integTestGen $HOME/projects/QED.jl/ci/integTestGen/src/integTestGen.jl

@@ -16,13 +16,13 @@ printTree::Bool = haskey(ENV, "PRINTTREE")
     end
 
     # dependency exist and prefix is correct
-    @test integTestGen.depending_projects("MyDep1.jl", "My", project_tree) == ["MyMainProject.jl"]
+    @test integTestGen.depending_projects("MyDep1.jl", ["MyMainProject.jl"], project_tree) == ["MyMainProject.jl"]
     # dependency does not exist and prefix is correct
-    @test isempty(integTestGen.depending_projects("MyDep2.jl", "My", project_tree))
+    @test isempty(integTestGen.depending_projects("MyDep2.jl", ["MyMainProject.jl"], project_tree))
     # dependency exist and prefix is incorrect
-    @test isempty(integTestGen.depending_projects("MyDep1.jl", "Extern", project_tree))
+    @test isempty(integTestGen.depending_projects("MyDep1.jl", ["ExternProject.jl"], project_tree))
     # dependency does not exist and prefix is incorrect
-    @test isempty(integTestGen.depending_projects("MyDep2.jl", "Extern", project_tree))
+    @test isempty(integTestGen.depending_projects("MyDep2.jl", ["ExternProject.jl"], project_tree))
 end
 
 
@@ -47,15 +47,17 @@ end
         print(Tree(project_tree; name="complex dependencies"))
     end
 
+    package_filter=["MyMainProject.jl", "MyDep1.jl", "MyDep2.jl", "MyDep3.jl", "MyDep4.jl", "MyDep5.jl", "MyDep6.jl", "MyDep7.jl"]
+
     # sort all vectors to guaranty the same order -> guaranty is not important for the actual result, onyl for comparison
-    @test sort(integTestGen.depending_projects("MyDep1.jl", "My", project_tree)) == sort(["MyMainProject.jl"])
-    @test sort(integTestGen.depending_projects("MyDep2.jl", "My", project_tree)) == sort(["MyMainProject.jl"])
+    @test sort(integTestGen.depending_projects("MyDep1.jl", package_filter, project_tree)) == sort(["MyMainProject.jl"])
+    @test sort(integTestGen.depending_projects("MyDep2.jl", package_filter, project_tree)) == sort(["MyMainProject.jl"])
     # MyDep5.jl should only appears one time -> MyDep4.jl and MyDep7.jl has the same MyDep5.jl dependency
-    @test sort(integTestGen.depending_projects("MyDep3.jl", "My", project_tree)) == sort(["MyDep2.jl", "MyDep5.jl", "MyDep7.jl"])
-    @test sort(integTestGen.depending_projects("MyDep5.jl", "My", project_tree)) == sort(["MyDep4.jl", "MyDep7.jl"])
+    @test sort(integTestGen.depending_projects("MyDep3.jl", package_filter, project_tree)) == sort(["MyDep2.jl", "MyDep5.jl", "MyDep7.jl"])
+    @test sort(integTestGen.depending_projects("MyDep5.jl", package_filter, project_tree)) == sort(["MyDep4.jl", "MyDep7.jl"])
     # cannot find MyDep6.jl, because it is only a dependency of a foreign package
-    @test isempty(integTestGen.depending_projects("MyDep6.jl", "My", project_tree))
-    @test isempty(integTestGen.depending_projects("MyDep3.jl", "Foo", project_tree))
+    @test isempty(integTestGen.depending_projects("MyDep6.jl", package_filter, project_tree))
+    @test isempty(integTestGen.depending_projects("MyDep3.jl", ["Foo"], project_tree))
 end
 
 @testset "circular dependency" begin
@@ -66,8 +68,10 @@ end
         print(Tree(project_tree; name="circular dependencies"))
     end
 
-    @test sort(integTestGen.depending_projects("MyDep1.jl", "My", project_tree)) == sort(["MyMainProject.jl", "MyDep2.jl"])
-    @test sort(integTestGen.depending_projects("MyDep2.jl", "My", project_tree)) == sort(["MyDep1.jl"])
-    @test isempty(integTestGen.depending_projects("MyDep2.jl", "Foo", project_tree))
-    @test isempty(integTestGen.depending_projects("Circulation", "My", project_tree))
+    package_filter=["MyMainProject.jl", "MyDep1.jl", "MyDep2.jl"]
+
+    @test sort(integTestGen.depending_projects("MyDep1.jl", package_filter, project_tree)) == sort(["MyMainProject.jl", "MyDep2.jl"])
+    @test sort(integTestGen.depending_projects("MyDep2.jl", package_filter, project_tree)) == sort(["MyDep1.jl"])
+    @test isempty(integTestGen.depending_projects("MyDep2.jl", ["Foo"], project_tree))
+    @test isempty(integTestGen.depending_projects("Circulation", package_filter, project_tree))
 end

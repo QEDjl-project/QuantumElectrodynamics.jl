@@ -8,13 +8,13 @@ import YAML
     create_working_env(project_path::AbstractString)
 
 Create a temporary folder, and set up a new Project.toml and activate it. Checking the dependencies of
-a project only works, if it is a dependency of the integTestGen.jl. Because the package to analyze
+a project only works, if it is a dependency of the integTestGen.jl. The package to be analyzed
 is only a temporary dependency, it must not change the Project.toml of integTestGen.jl permanently.
 Therefore, the script generates a temporary Julia environment and adds the package
 to analyze as a dependency.
 
 # Args
-    `project_path::AbstractString`: Absolute path to the project folder of the package to be analysed
+    `project_path::AbstractString`: Absolute path to the project folder of the package to be analyzed
 """
 function create_working_env(project_path::AbstractString)
     tmp_path = mktempdir()
@@ -45,7 +45,7 @@ end
 """
     extract_env_vars_from_git_message!(package_infos::AbstractDict{String, PackageInfo}, var_name = "CI_COMMIT_MESSAGE")
 
-    Parse the commit message, if set via variable (usual `CI_COMMIT_MESSAGE`) and set custom URLs.
+    Parse the commit message, if set via variable (usual `CI_COMMIT_MESSAGE`), and set custom URLs.
 """
 function extract_env_vars_from_git_message!(package_infos::AbstractDict{String, PackageInfo}, var_name = "CI_COMMIT_MESSAGE")
     if haskey(ENV, var_name)
@@ -63,8 +63,8 @@ end
 """
     modify_package_url!(package_infos::AbstractDict{String, PackageInfo})
 
-Iterate over all entries of package_info. If an environment variable exits with the same name like,
-the `env_var` entry, set the value of the environment variable to `custom_url`.
+Iterate over all entries of package_info. If an environment variable exists with the same name as,
+the `env_var` entry, set the value of the environment variable to `modified_url`.
 """
 function modify_package_url!(package_infos::AbstractDict{String, PackageInfo})
     for package_info in values(package_infos)
@@ -100,33 +100,33 @@ end
 """
     depending_projects(package_name, package_prefix, project_tree)
 
-    Return a list of packages, which has the package `package_name` as a dependency. Ignore all packages, which does not start with `package_prefix`.
+Return a list of packages, which have the package `package_name` as a dependency. Ignore all packages, which do not start with `package_prefix`.
 
 # Arguments
 - `package_name::String`: Name of the dependency
-- `package_prefix::Union{AbstractString,Regex}`: If package name does not start with the prefix, do not check if had the dependency.
-- `project_tree=PkgDependency.builddict(Pkg.project().uuid, Pkg.project())`: Project tree, where to search the dependend packages. Needs to be a nested dict.
-                                                                             Each (sub-)project needs to be AbstractDict{String, AbstractDict}
+- `package_filter`: If the package name is not included in package_filter, the dependency is not checked.
+- `project_tree=PkgDependency.builddict(Pkg.project().uuid, Pkg.project())`: Project tree, where to search the dependent packages. Needs to be a nested dict.
+                                                                             Each (sub-) package needs to be AbstractDict{String, AbstractDict}
 
 # Returns
-- `::AbstractVector{String}`: all packages, which have the search dependency
+- `::AbstractVector{String}`: all packages which have the search dependency
 
 """
-function depending_projects(package_name::String, package_prefix::Union{AbstractString,Regex}, project_tree=PkgDependency.builddict(Pkg.project().uuid, Pkg.project()))::AbstractVector{String}
+function depending_projects(package_name::String, package_filter, project_tree=PkgDependency.builddict(Pkg.project().uuid, Pkg.project()))::AbstractVector{String}
     packages::AbstractVector{String} = []
     visited_packages::AbstractVector{String} = []
-    traverse_tree!(package_name, package_prefix, project_tree, packages, visited_packages)
+    traverse_tree!(package_name, package_filter, project_tree, packages, visited_packages)
     return packages
 end
 
 """
-    traverse_tree!(package_name::String, package_prefix::Union{AbstractString,Regex}, project_tree, packages::AbstractVector{String}, visited_packages::AbstractVector{String})
+    traverse_tree!(package_name::String, package_filter, project_tree, packages::AbstractVector{String}, visited_packages::AbstractVector{String})
 
-Traverse a project tree and add package to `packages`, which has the package `package_name` as dependency. Ignore all packages, which does not start with `package_prefix`.
+Traverse a project tree and add any package to `packages`, that has the package `package_name` as a dependency. Ignore all packages that are not included in `package_filter`.
 See [`depending_projects`](@ref)
 
 """
-function traverse_tree!(package_name::String, package_prefix::Union{AbstractString,Regex}, project_tree, packages::AbstractVector{String}, visited_packages::AbstractVector{String})
+function traverse_tree!(package_name::String, package_filter, project_tree, packages::AbstractVector{String}, visited_packages::AbstractVector{String})
     for project_name_version in keys(project_tree)
         # remove project version from string -> usual shape: `packageName.jl version`
         project_name = split(project_name_version)[1]
@@ -135,7 +135,7 @@ function traverse_tree!(package_name::String, package_prefix::Union{AbstractStri
         # - the dependency is not nothing (I think this representate, that the package was already set as dependency of a another package and therefore do not repead the dependencies)
         # - has dependency
         # - was not already checked
-        if startswith(project_name, package_prefix) && project_tree[project_name_version] !== nothing && !isempty(project_tree[project_name_version]) && !(project_name in visited_packages)
+        if project_name in package_filter && project_tree[project_name_version] !== nothing && !isempty(project_tree[project_name_version]) && !(project_name in visited_packages)
             # only investigate each package one time
             # assumption: package name with it's dependency is unique
             push!(visited_packages, project_name)
@@ -147,7 +147,7 @@ function traverse_tree!(package_name::String, package_prefix::Union{AbstractStri
                 end
             end
             # independent of a match, under investigate all dependencies too, because they can also have the package as dependency
-            traverse_tree!(package_name, package_prefix, project_tree[project_name_version], packages, visited_packages)
+            traverse_tree!(package_name, package_filter, project_tree[project_name_version], packages, visited_packages)
         end
     end
 end
@@ -155,7 +155,7 @@ end
 """
     generate_job_yaml!(package_name::String, job_yaml::Dict)
 
-Generate GitLab CI job yaml for integration test of a give package.
+Generate GitLab CI job yaml for integration testing of a given package.
 
 # Args
 - `package_name::String`: Name of the package to test.
@@ -248,7 +248,7 @@ if abspath(PROGRAM_FILE) == @__FILE__
     # the script is locate in ci/integTestGen/src
     # so we need to go 3 steps upwards in hierarchy to get the QED.jl Project.toml
     create_working_env(abspath(joinpath((@__DIR__), "../../..")))
-    depending_pkg = depending_projects(modified_pkg, r"(QED)")
+    depending_pkg = depending_projects(modified_pkg, keys(package_infos))
 
     job_yaml = Dict()
 
