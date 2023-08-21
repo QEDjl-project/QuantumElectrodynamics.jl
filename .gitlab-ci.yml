@@ -6,18 +6,25 @@ unit_tests_julia1.9:
   image: julia:1.9
   stage: unit-test
   script:
-    - cd ${CI_PROJECT_DIR}/ci/SetupDevEnv/
+    # test SetupDevEnv.jl
+    - cd ${CI_PROJECT_DIR}/.ci/SetupDevEnv/
     - julia --project=. -e 'import Pkg; Pkg.instantiate()'
     - julia --project=. -e 'import Pkg; Pkg.test(; coverage = true)'
     - cd ${CI_PROJECT_DIR}
+    # test integTestGen
     - julia --project=. -e 'import Pkg; Pkg.Registry.add(Pkg.RegistrySpec(url="https://github.com/QEDjl-project/registry.git"));'
     - julia --project=. -e 'import Pkg; Pkg.Registry.add(Pkg.RegistrySpec(url="https://github.com/JuliaRegistries/General"));'
+    - cd ${CI_PROJECT_DIR}/.ci/integTestGen
+    - julia --project=. -e 'import Pkg; Pkg.instantiate()'
+    - julia --project=. -e 'import Pkg; Pkg.test(; coverage = true)'
+    - cd ${CI_PROJECT_DIR}
+    # test QED.jl
     - >
       if [[ $CI_COMMIT_BRANCH == "main" || $CI_COMMIT_REF_NAME == "main" || $CI_COMMIT_BRANCH == "dev" || $CI_COMMIT_REF_NAME == "dev" ]]; then
         # set name of the commit message from CI_COMMIT_MESSAGE to NO_MESSAGE, that the script does not read accidentally custom packages from the commit message of a merge commit
-        julia --project=. ${CI_PROJECT_DIR}/ci/SetupDevEnv/src/SetupDevEnv.jl ${CI_PROJECT_DIR}/Project.toml NO_MESSAGE
+        julia --project=. ${CI_PROJECT_DIR}/.ci/SetupDevEnv/src/SetupDevEnv.jl ${CI_PROJECT_DIR}/Project.toml NO_MESSAGE
       else
-        julia --project=. ${CI_PROJECT_DIR}/ci/SetupDevEnv/src/SetupDevEnv.jl ${CI_PROJECT_DIR}/Project.toml
+        julia --project=. ${CI_PROJECT_DIR}/.ci/SetupDevEnv/src/SetupDevEnv.jl ${CI_PROJECT_DIR}/Project.toml
       fi
     - julia --project=. -e 'import Pkg; Pkg.instantiate()'
     - julia --project=. -e 'import Pkg; Pkg.test(; coverage = true)'
@@ -34,7 +41,7 @@ verify-unit-test-deps_julia1.9:
         # does not check for custom package URLs on the main and dev branch
         echo "no custom package URL check necessary"
       else
-        julia ${CI_PROJECT_DIR}/ci/verify_env.jl
+        julia ${CI_PROJECT_DIR}/.ci/verify_env.jl
       fi
   interruptible: true
   tags:
