@@ -1,8 +1,8 @@
 module integTestGen
 
-import Pkg
-import PkgDependency
-import YAML
+using Pkg: Pkg
+using PkgDependency: PkgDependency
+using YAML: YAML
 
 """
     create_working_env(project_path::AbstractString)
@@ -24,7 +24,7 @@ function create_working_env(project_path::AbstractString)
     Pkg.add("PkgDependency")
     Pkg.add("YAML")
     # add main project as dependency
-    Pkg.develop(path=project_path)
+    return Pkg.develop(; path=project_path)
 end
 
 """
@@ -47,13 +47,17 @@ end
 
     Parse the commit message, if set via variable (usual `CI_COMMIT_MESSAGE`), and set custom URLs.
 """
-function extract_env_vars_from_git_message!(package_infos::AbstractDict{String, PackageInfo}, var_name = "CI_COMMIT_MESSAGE")
+function extract_env_vars_from_git_message!(
+    package_infos::AbstractDict{String,PackageInfo}, var_name="CI_COMMIT_MESSAGE"
+)
     if haskey(ENV, var_name)
         for line in split(ENV[var_name], "\n")
             line = strip(line)
             for pkg_info in values(package_infos)
                 if startswith(line, pkg_info.env_var * ": ")
-                    ENV[pkg_info.env_var] = SubString(line, length(pkg_info.env_var * ": ") + 1)
+                    ENV[pkg_info.env_var] = SubString(
+                        line, length(pkg_info.env_var * ": ") + 1
+                    )
                 end
             end
         end
@@ -66,7 +70,7 @@ end
 Iterate over all entries of package_info. If an environment variable exists with the same name as,
 the `env_var` entry, set the value of the environment variable to `modified_url`.
 """
-function modify_package_url!(package_infos::AbstractDict{String, PackageInfo})
+function modify_package_url!(package_infos::AbstractDict{String,PackageInfo})
     for package_info in values(package_infos)
         if haskey(ENV, package_info.env_var)
             package_info.modified_url = ENV[package_info.env_var]
@@ -82,7 +86,7 @@ Read the name of the modified (project) package from the environment variable `C
 # Returns
 - The name of the modified (project) package
 """
-function modified_package_name(package_infos::AbstractDict{String, PackageInfo})
+function modified_package_name(package_infos::AbstractDict{String,PackageInfo})
     for env_var in ["CI_DEPENDENCY_NAME", "CI_PROJECT_DIR"]
         if !haskey(ENV, env_var)
             error("Environment variable $env_var is not set.")
@@ -112,7 +116,11 @@ Return a list of packages, which have the package `package_name` as a dependency
 - `::AbstractVector{String}`: all packages which have the search dependency
 
 """
-function depending_projects(package_name::String, package_filter, project_tree=PkgDependency.builddict(Pkg.project().uuid, Pkg.project()))::AbstractVector{String}
+function depending_projects(
+    package_name::String,
+    package_filter,
+    project_tree=PkgDependency.builddict(Pkg.project().uuid, Pkg.project()),
+)::AbstractVector{String}
     packages::AbstractVector{String} = []
     visited_packages::AbstractVector{String} = []
     traverse_tree!(package_name, package_filter, project_tree, packages, visited_packages)
@@ -126,7 +134,13 @@ Traverse a project tree and add any package to `packages`, that has the package 
 See [`depending_projects`](@ref)
 
 """
-function traverse_tree!(package_name::String, package_filter, project_tree, packages::AbstractVector{String}, visited_packages::AbstractVector{String})
+function traverse_tree!(
+    package_name::String,
+    package_filter,
+    project_tree,
+    packages::AbstractVector{String},
+    visited_packages::AbstractVector{String},
+)
     for project_name_version in keys(project_tree)
         # remove project version from string -> usual shape: `packageName.jl version`
         project_name = split(project_name_version)[1]
@@ -135,7 +149,10 @@ function traverse_tree!(package_name::String, package_filter, project_tree, pack
         # - the dependency is not nothing (I think this representate, that the package was already set as dependency of a another package and therefore do not repead the dependencies)
         # - has dependency
         # - was not already checked
-        if project_name in package_filter && project_tree[project_name_version] !== nothing && !isempty(project_tree[project_name_version]) && !(project_name in visited_packages)
+        if project_name in package_filter &&
+            project_tree[project_name_version] !== nothing &&
+            !isempty(project_tree[project_name_version]) &&
+            !(project_name in visited_packages)
             # only investigate each package one time
             # assumption: package name with it's dependency is unique
             push!(visited_packages, project_name)
@@ -147,7 +164,13 @@ function traverse_tree!(package_name::String, package_filter, project_tree, pack
                 end
             end
             # independent of a match, under investigate all dependencies too, because they can also have the package as dependency
-            traverse_tree!(package_name, package_filter, project_tree[project_name_version], packages, visited_packages)
+            traverse_tree!(
+                package_name,
+                package_filter,
+                project_tree[project_name_version],
+                packages,
+                visited_packages,
+            )
         end
     end
 end
@@ -161,7 +184,9 @@ Generate GitLab CI job yaml for integration testing of a given package.
 - `package_name::String`: Name of the package to test.
 - `job_yaml::Dict`: Add generated job to this dict.
 """
-function generate_job_yaml!(package_name::String, job_yaml::Dict, package_infos::AbstractDict{String, PackageInfo})
+function generate_job_yaml!(
+    package_name::String, job_yaml::Dict, package_infos::AbstractDict{String,PackageInfo}
+)
     package_info = package_infos[package_name]
     # if modified_url is empty, use original url
     if package_info.modified_url == ""
@@ -170,12 +195,7 @@ function generate_job_yaml!(package_name::String, job_yaml::Dict, package_infos:
         url = package_info.modified_url
     end
 
-    script = [
-        "apt update",
-        "apt install -y git",
-        "cd /"
-    ]
-
+    script = ["apt update", "apt install -y git", "cd /"]
 
     split_url = split(url, "#")
     if length(split_url) > 2
@@ -189,17 +209,26 @@ function generate_job_yaml!(package_name::String, job_yaml::Dict, package_infos:
         push!(script, "git checkout $(split_url[2])")
     end
 
-    push!(script, "julia --project=. -e 'import Pkg; Pkg.Registry.add(Pkg.RegistrySpec(url=\"https://github.com/QEDjl-project/registry.git\"));'")
-    push!(script, "julia --project=. -e 'import Pkg; Pkg.Registry.add(Pkg.RegistrySpec(url=\"https://github.com/JuliaRegistries/General\"));'")
+    push!(
+        script,
+        "julia --project=. -e 'import Pkg; Pkg.Registry.add(Pkg.RegistrySpec(url=\"https://github.com/QEDjl-project/registry.git\"));'",
+    )
+    push!(
+        script,
+        "julia --project=. -e 'import Pkg; Pkg.Registry.add(Pkg.RegistrySpec(url=\"https://github.com/JuliaRegistries/General\"));'",
+    )
     ci_project_dir = ENV["CI_PROJECT_DIR"]
-    push!(script, "julia --project=. -e 'import Pkg; Pkg.develop(path=\"$ci_project_dir\");'")
+    push!(
+        script, "julia --project=. -e 'import Pkg; Pkg.develop(path=\"$ci_project_dir\");'"
+    )
     push!(script, "julia --project=. -e 'import Pkg; Pkg.test(; coverage = true)'")
 
-    job_yaml["IntegrationTest$package_name"] = Dict(
+    return job_yaml["IntegrationTest$package_name"] = Dict(
         "image" => "julia:1.9",
         "interruptible" => true,
         "tags" => ["cpuonly"],
-        "script" => script)
+        "script" => script,
+    )
 end
 
 """
@@ -211,28 +240,33 @@ Generates a GitLab CI dummy job, if required.
 - `job_yaml::Dict`: Add generated job to this dict.
 """
 function generate_dummy_job_yaml!(job_yaml::Dict)
-    job_yaml["DummyJob"] = Dict("image" => "alpine:latest",
+    return job_yaml["DummyJob"] = Dict(
+        "image" => "alpine:latest",
         "interruptible" => true,
-        "script" => ["echo \"This is a dummy job so that the CI does not fail.\""])
+        "script" => ["echo \"This is a dummy job so that the CI does not fail.\""],
+    )
 end
 
 if abspath(PROGRAM_FILE) == @__FILE__
     package_infos = Dict(
         "QED" => PackageInfo(
-            "https://github.com/QEDjl-project/QED.jl.git",
-            "CI_INTG_PKG_URL_QED"),
+            "https://github.com/QEDjl-project/QED.jl.git", "CI_INTG_PKG_URL_QED"
+        ),
         "QEDfields" => PackageInfo(
-                "https://github.com/QEDjl-project/QEDfields.jl.git",
-                "CI_INTG_PKG_URL_QEDfields"),
+            "https://github.com/QEDjl-project/QEDfields.jl.git",
+            "CI_INTG_PKG_URL_QEDfields",
+        ),
         "QEDbase" => PackageInfo(
-                "https://github.com/QEDjl-project/QEDbase.jl.git",
-                "CI_INTG_PKG_URL_QEDbase"),
+            "https://github.com/QEDjl-project/QEDbase.jl.git", "CI_INTG_PKG_URL_QEDbase"
+        ),
         "QEDevents" => PackageInfo(
-                "https://github.com/QEDjl-project/QEDevents.jl.git",
-                "CI_INTG_PKG_URL_QEDevents"),
+            "https://github.com/QEDjl-project/QEDevents.jl.git",
+            "CI_INTG_PKG_URL_QEDevents",
+        ),
         "QEDprocesses" => PackageInfo(
-                "https://github.com/QEDjl-project/QEDprocesses.jl.git",
-                "CI_INTG_PKG_URL_QEDprocesses"),
+            "https://github.com/QEDjl-project/QEDprocesses.jl.git",
+            "CI_INTG_PKG_URL_QEDprocesses",
+        ),
     )
 
     # custom commit message variable can be set as first argument

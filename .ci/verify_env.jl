@@ -32,12 +32,12 @@ function Base.showerror(io::IO, e::EnvironmentVerificationException)
         err_str *= "  $env\n"
     end
     err_str *= "\nPlease merge the custom dependency before and run the CI with custom dependency again."
-    print(io, "EnvironmentVerificationException: ", err_str)
+    return print(io, "EnvironmentVerificationException: ", err_str)
 end
 
 if abspath(PROGRAM_FILE) == @__FILE__
     extract_env_vars_from_git_message!()
-    filtered_env = filter((env_name)-> startswith(env_name, "CI_UNIT_PKG_URL_"), keys(ENV))
+    filtered_env = filter((env_name) -> startswith(env_name, "CI_UNIT_PKG_URL_"), keys(ENV))
 
     if isempty(filtered_env)
         @info "No custom dependencies for unit tests detected."
