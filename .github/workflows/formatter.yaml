@@ -1,0 +1,16 @@
+name: formatter
+on: [pull_request]
+jobs:
+  formatter:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout repo
+        uses: actions/checkout@v4
+      - name: install Julia
+        uses: julia-actions/setup-julia@v1
+        with:
+          version: 1.9
+      - name: Install Julia requirements
+        run: julia --project=${GITHUB_WORKSPACE}/.formatting -e 'import Pkg; Pkg.instantiate()'
+      - name: Check code style
+        run: julia --project=${GITHUB_WORKSPACE}/.formatting ${GITHUB_WORKSPACE}/.formatting/format_all.jl

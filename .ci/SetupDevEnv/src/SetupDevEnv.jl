@@ -8,7 +8,7 @@ using Pkg
 
 Parse the commit message, if set via variable (usual `CI_COMMIT_MESSAGE`) and set custom URLs.
 """
-function extract_env_vars_from_git_message!(var_name = "CI_COMMIT_MESSAGE")
+function extract_env_vars_from_git_message!(var_name="CI_COMMIT_MESSAGE")
     if haskey(ENV, var_name)
         @info "Found env variable $var_name"
         for line in split(ENV[var_name], "\n")
@@ -28,12 +28,16 @@ end
 Parses a Project.toml located at `project_toml_path` and returns all dependencies, matching the regex `package_prefix`.
 By default, the regex allows all dependencies.
 """
-function get_dependencies(project_toml_path::AbstractString, package_prefix::Union{AbstractString,Regex}=r".*")::Set{AbstractString}
+function get_dependencies(
+    project_toml_path::AbstractString, package_prefix::Union{AbstractString,Regex}=r".*"
+)::Set{AbstractString}
     project_toml = TOML.parsefile(project_toml_path)
-    if ! haskey(project_toml, "deps")
+    if !haskey(project_toml, "deps")
         return Set()
     end
-    filtered_deps = filter((dep_name)-> startswith(dep_name, package_prefix), keys(project_toml["deps"]))
+    filtered_deps = filter(
+        (dep_name) -> startswith(dep_name, package_prefix), keys(project_toml["deps"])
+    )
     return filtered_deps
 end
 
@@ -47,10 +51,10 @@ develop version, instead the the default develop branch (see `Pkg.develop(url=)`
 function add_develop_dep(dependencies::Set{AbstractString})
     # check if specific url was set for a dependency
     env_prefix = "CI_UNIT_PKG_URL_"
-    modified_urls = Dict{String, String}()
+    modified_urls = Dict{String,String}()
     for (env_key, env_var) in ENV
         if startswith(env_key, env_prefix)
-            modified_urls[env_key[length(env_prefix)+1:end]] = env_var
+            modified_urls[env_key[(length(env_prefix) + 1):end]] = env_var
         end
     end
 
@@ -72,10 +76,14 @@ function add_develop_dep(dependencies::Set{AbstractString})
 
             if length(split_url) == 1
                 @info "Pkg.develop(url=\"" * split_url[1] * "\")"
-                Pkg.add(url=split_url[1])
+                Pkg.add(; url=split_url[1])
             else
-                @info "Pkg.develop(url=\"" * split_url[1] * ";\" rev=\"" * split_url[2] * "\")"
-                Pkg.add(url=split_url[1], rev=split_url[2])
+                @info "Pkg.develop(url=\"" *
+                    split_url[1] *
+                    ";\" rev=\"" *
+                    split_url[2] *
+                    "\")"
+                Pkg.add(; url=split_url[1], rev=split_url[2])
             end
         else
             @info "Pkg.develop(\"" * dep * "\")"

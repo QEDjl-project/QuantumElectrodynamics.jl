@@ -14,13 +14,7 @@ makedocs(;
         edit_link="main",
         assets=String[],
     ),
-    pages=[
-        "Home" => "index.md",
-        "Automatic Testing" => "ci.md",
-    ],
+    pages=["Home" => "index.md", "Automatic Testing" => "ci.md"],
 )
 
-deploydocs(;
-    repo="www.github.com/szabo137/QED.jl",
-    devbranch="main",
-)
+deploydocs(; repo="www.github.com/szabo137/QED.jl", devbranch="main")
