@@ -4,6 +4,11 @@ using Pkg: Pkg
 using PkgDependency: PkgDependency
 using YAML: YAML
 
+# all julia version, which should be tested and cannot fail
+supported_julia_versions = ["1.6", "1.7", "1.8", "1.9"]
+# unreleased versions to test, which can fail 
+nightly_julia_versions = ["1.10-rc"]
+
 """
     create_working_env(project_path::AbstractString)
 
@@ -183,9 +188,15 @@ Generate GitLab CI job yaml for integration testing of a given package.
 # Args
 - `package_name::String`: Name of the package to test.
 - `job_yaml::Dict`: Add generated job to this dict.
+- `version::AbstractString`: Julia version. See tags at Docker Hub: https://hub.docker.com/_/julia
+- `can_fail::Bool=false`: If the flag is true, add `allow_failure=true` to the job, which allows the job to fail but the CI pipeline can still pass.
 """
 function generate_job_yaml!(
-    package_name::String, job_yaml::Dict, package_infos::AbstractDict{String,PackageInfo}
+    package_name::String,
+    job_yaml::Dict,
+    package_infos::AbstractDict{String,PackageInfo},
+    version::AbstractString;
+    can_fail::Bool=false,
 )
     package_info = package_infos[package_name]
     # if modified_url is empty, use original url
@@ -223,12 +234,18 @@ function generate_job_yaml!(
     )
     push!(script, "julia --project=. -e 'import Pkg; Pkg.test(; coverage = true)'")
 
-    return job_yaml["IntegrationTest$package_name"] = Dict(
-        "image" => "julia:1.9",
+    job = Dict(
+        "image" => "julia:" * version,
         "interruptible" => true,
         "tags" => ["cpuonly"],
         "script" => script,
     )
+
+    if can_fail
+        job["allow_failure"] = true
+    end
+
+    return job_yaml["IntegrationTest" * package_name * "Julia" * version] = job
 end
 
 """
@@ -288,7 +305,12 @@ if abspath(PROGRAM_FILE) == @__FILE__
 
     if !isempty(depending_pkg)
         for p in depending_pkg
-            generate_job_yaml!(p, job_yaml, package_infos)
+            for jl_version in supported_julia_versions
+                generate_job_yaml!(p, job_yaml, package_infos, jl_version; can_fail=false)
+            end
+            for jl_version in nightly_julia_versions
+                generate_job_yaml!(p, job_yaml, package_infos, jl_version; can_fail=true)
+            end
         end
     else
         generate_dummy_job_yaml!(job_yaml)
