@@ -8,6 +8,7 @@ permissions:
   pull-requests: write
 jobs:
   CompatHelper:
+    if: github.repository == 'QEDjl-project/QED.jl'
     runs-on: ubuntu-latest
     steps:
       - name: Check if Julia is already available in the PATH
