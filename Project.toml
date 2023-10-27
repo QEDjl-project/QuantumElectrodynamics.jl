@@ -10,4 +10,5 @@ QEDfields = "ac3a6c97-e859-4b9f-96bb-63d2a216042c"
 QEDprocesses = "46de9c38-1bb3-4547-a1ec-da24d767fdad"
 
 [compat]
+QEDprocesses = "0.1"
 julia = "1.9"
