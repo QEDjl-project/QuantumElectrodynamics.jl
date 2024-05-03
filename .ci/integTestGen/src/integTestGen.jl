@@ -148,6 +148,11 @@ function depending_projects(
     return packages
 end
 
+function clean_pkg_name(pkg_name::AbstractString)
+    # remove color tags (?) from the package names
+    return replace(pkg_name, r"\{[^}]*\}" => "")
+end
+
 """
     traverse_tree!(package_name::String, package_filter, project_tree, packages::AbstractVector{String}, visited_packages::AbstractVector{String})
 
@@ -162,7 +167,8 @@ function traverse_tree!(
     packages::AbstractVector{String},
     visited_packages::AbstractVector{String},
 )
-    for project_name_version in keys(project_tree)
+    for pkg_tree in values(project_tree)
+        project_name_version = clean_pkg_name(pkg_tree.name)
         # remove project version from string -> usual shape: `packageName.jl version`
         project_name = split(project_name_version)[1]
         # fullfil the requirements
