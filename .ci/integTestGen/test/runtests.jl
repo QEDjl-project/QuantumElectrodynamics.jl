@@ -1,16 +1,24 @@
 using integTestGen
 using Test
+using PkgDependency
 
 import Term.Trees: Tree
+import PkgDependency.PkgTree
 
 # set environment variable PRINTTREE=on to visualize the project trees of the testsets
 printTree::Bool = haskey(ENV, "PRINTTREE")
 
 @testset "direct dependency to main" begin
-    project_tree = Dict("MyMainProject.jl 1.0.0" => Dict("MyDep1.jl 1.0.0" => Dict()))
+    project_tree = [PkgTree("MyMainProject.jl 1.0.0", [PkgTree("MyDep1.jl 1.0.0", [])])]
 
     if printTree
-        print(Tree(project_tree; name="direct dependency to main"))
+        display(
+            PkgDependency.Tree(
+                PkgTree("Direct dependency to main tree", project_tree);
+                printkeys=false,
+                print_node_function=PkgDependency.writenode,
+            ),
+        )
     end
 
     # dependency exist and prefix is correct
@@ -33,23 +41,48 @@ end
 
 @testset "complex dependencies" begin
     #! format: off
-    project_tree = Dict("MyMainProject.jl 1.0.0" =>
-                        Dict("MyDep1.jl 1.0.0"      => Dict(),
-                             "MyDep2.jl 1.0.0"      => Dict("MyDep3.jl 1.0.0" => Dict(),
-                                                            "ForeignDep1.jl 1.0.0" => Dict()),
-                             "ForeignDep2.jl 1.0.0" => Dict("ForeignDep3.jl 1.0.0" => Dict(),
-                                                            "ForeignDep4.jl 1.0.0" => Dict()),
-                             "MyDep4.jl 1.0.0"      => Dict("MyDep5.jl 1.0.0" => Dict("MyDep3.jl 1.0.0" => Dict())),
-                             "ForeignDep2.jl 1.0.0" => Dict("MyDep5.jl 1.0.0" => Dict("MyDep3.jl 1.0.0" => Dict()),
-                                                            "MyDep3.jl 1.0.0" => Dict(),
-                                                            "MyDep6.jl 1.0.0" => Dict("MyDep3.jl 1.0.0" => Dict())),
-                             "MyDep7.jl 1.0.0"      => Dict("MyDep5.jl 1.0.0" => Dict("MyDep3.jl 1.0.0" => Dict()),
-                                                            "MyDep3.jl 1.0.0" => Dict()),
-                            )
-                        )
+    project_tree = [
+        PkgTree("MyMainProject.jl 1.0.0", [
+            PkgTree("MyDep1.jl 1.0.0", []),
+            PkgTree("MyDep2.jl 1.0.0", [
+                PkgTree("MyDep3.jl 1.0.0", []),
+                PkgTree("ForeignDep1.jl 1.0.0", [])
+            ]),
+            PkgTree("ForeignDep2.jl 1.0.0", [
+                PkgTree("ForeignDep3.jl 1.0.0", []),
+                PkgTree("ForeignDep4.jl 1.0.0", [])
+            ]),
+            PkgTree("MyDep4.jl 1.0.0", [
+                PkgTree("MyDep5.jl 1.0.0", [
+                    PkgTree("MyDep3.jl 1.0.0", [])
+                ])
+            ]),
+            PkgTree("ForeignDep2.jl 1.0.0", [
+                PkgTree("MyDep5.jl 1.0.0", [
+                    PkgTree("MyDep3.jl 1.0.0", [])
+                ]),
+                PkgTree("MyDep3.jl 1.0.0", []),
+                PkgTree("MyDep6.jl 1.0.0", [
+                    PkgTree("MyDep3.jl 1.0.0", [])
+                ])
+            ]),
+            PkgTree("MyDep7.jl 1.0.0", [
+                PkgTree("MyDep5.jl 1.0.0", [
+                    PkgTree("MyDep3.jl 1.0.0", [])
+                ]),
+                PkgTree("MyDep3.jl 1.0.0", [])
+            ])
+        ])
+    ]
     #! format: on
     if printTree
-        print(Tree(project_tree; name="complex dependencies"))
+        display(
+            PkgDependency.Tree(
+                PkgTree("Complex dependency tree", project_tree);
+                printkeys=false,
+                print_node_function=PkgDependency.writenode,
+            ),
+        )
     end
 
     package_filter = [
@@ -86,20 +119,31 @@ end
 
 @testset "circular dependency" begin
     # I cannot create a real circular dependency with this data structur, but if Circulation appears in an output, we passed MyDep1.jl and MyDep2.jl two times, which means it is a circle
-    project_tree = Dict(
-        "MyMainProject.jl 1.0.0" => Dict(
-            "MyDep1.jl 1.0.0" => Dict(
-                "MyDep2.jl 1.0.0" => Dict(
-                    "MyDep1.jl 1.0.0" => Dict(
-                        "MyDep2.jl 1.0.0" => Dict("Circulation" => Dict())
-                    ),
-                ),
-            ),
-        ),
-    )
+
+    #! format: off
+    project_tree = [
+        PkgTree("MyMainProject.jl 1.0.0", [
+            PkgTree("MyDep1.jl 1.0.0", [
+                PkgTree("MyDep2.jl 1.0.0", [
+                    PkgTree("MyDep1.jl 1.0.0", [
+                        PkgTree("MyDep2.jl 1.0.0", [
+                            PkgTree("Circulation", [])
+                        ])
+                    ])
+                ])
+            ])
+        ])
+    ]
+    #! format: on
 
     if printTree
-        print(Tree(project_tree; name="circular dependencies"))
+        display(
+            PkgDependency.Tree(
+                PkgTree("Circular dependency tree", project_tree);
+                printkeys=false,
+                print_node_function=PkgDependency.writenode,
+            ),
+        )
     end
 
     package_filter = ["MyMainProject.jl", "MyDep1.jl", "MyDep2.jl"]
