@@ -139,13 +139,18 @@ Return a list of packages, which have the package `package_name` as a dependency
 """
 function depending_projects(
     package_name::String,
-    package_filter,
+    package_filter::AbstractVector{<:AbstractString},
     project_tree=PkgDependency.builddict(Pkg.project().uuid, Pkg.project()),
 )::AbstractVector{String}
     packages::AbstractVector{String} = []
     visited_packages::AbstractVector{String} = []
     traverse_tree!(package_name, package_filter, project_tree, packages, visited_packages)
     return packages
+end
+
+function clean_pkg_name(pkg_name::AbstractString)
+    # remove color tags (?) from the package names
+    return replace(pkg_name, r"\{[^}]*\}" => "")
 end
 
 """
@@ -157,12 +162,14 @@ See [`depending_projects`](@ref)
 """
 function traverse_tree!(
     package_name::String,
-    package_filter,
-    project_tree,
+    package_filter::AbstractVector{<:AbstractString},
+    project_tree::AbstractVector{<:PkgDependency.PkgTree},
     packages::AbstractVector{String},
     visited_packages::AbstractVector{String},
 )
-    for project_name_version in keys(project_tree)
+    for pkg_tree in project_tree
+        project_name_version = clean_pkg_name(pkg_tree.name)
+
         # remove project version from string -> usual shape: `packageName.jl version`
         project_name = split(project_name_version)[1]
         # fullfil the requirements
@@ -170,27 +177,24 @@ function traverse_tree!(
         # - the dependency is not nothing (I think this representate, that the package was already set as dependency of a another package and therefore do not repead the dependencies)
         # - has dependency
         # - was not already checked
+
         if project_name in package_filter &&
-            project_tree[project_name_version] !== nothing &&
-            !isempty(project_tree[project_name_version]) &&
+            !isempty(pkg_tree.children) &&
             !(project_name in visited_packages)
             # only investigate each package one time
             # assumption: package name with it's dependency is unique
             push!(visited_packages, project_name)
-            for dependency_name_version in keys(project_tree[project_name_version])
+            for dependency in pkg_tree.children
+                dependency_name_version = clean_pkg_name(dependency.name)
                 # dependency matches, add to packages
                 if startswith(dependency_name_version, package_name)
                     push!(packages, project_name)
                     break
                 end
             end
-            # independent of a match, under investigate all dependencies too, because they can also have the package as dependency
+            # independent of a match, investigate all dependencies too, because they can also have the package as dependency
             traverse_tree!(
-                package_name,
-                package_filter,
-                project_tree[project_name_version],
-                packages,
-                visited_packages,
+                package_name, package_filter, pkg_tree.children, packages, visited_packages
             )
         end
     end
