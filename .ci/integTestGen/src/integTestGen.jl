@@ -307,7 +307,7 @@ if abspath(PROGRAM_FILE) == @__FILE__
     # the script is locate in ci/integTestGen/src
     # so we need to go 3 steps upwards in hierarchy to get the QED.jl Project.toml
     create_working_env(abspath(joinpath((@__DIR__), "../../..")), package_infos)
-    depending_pkg = depending_projects(modified_pkg, keys(package_infos))
+    depending_pkg = depending_projects(modified_pkg, collect(keys(package_infos)))
 
     job_yaml = Dict()
 
