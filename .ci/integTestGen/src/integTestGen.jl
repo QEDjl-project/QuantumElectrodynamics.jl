@@ -292,6 +292,9 @@ if abspath(PROGRAM_FILE) == @__FILE__
             "https://github.com/QEDjl-project/QEDprocesses.jl.git",
             "CI_INTG_PKG_URL_QEDprocesses",
         ),
+        "QEDcore" => PackageInfo(
+            "https://github.com/QEDjl-project/QEDcore.jl.git", "CI_INTG_PKG_URL_QEDcore"
+        ),
     )
 
     # custom commit message variable can be set as first argument
