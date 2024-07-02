@@ -35,7 +35,7 @@ unit_tests_releases:
   extends: .untit_test_template
   parallel:
     matrix:
-      - JULIA_VERSION: ["1.6", "1.7", "1.8", "1.9", "1.10"]
+      - JULIA_VERSION: ["1.6", "1.7", "1.8", "1.9", "1.10", "rc"]
   image: julia:$JULIA_VERSION
 
 unit_tests_nightly:
