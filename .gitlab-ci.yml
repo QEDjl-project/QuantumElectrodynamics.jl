@@ -1,0 +1,4 @@
+print_env:
+  image: ubuntu:latest
+  script:
+    - env
