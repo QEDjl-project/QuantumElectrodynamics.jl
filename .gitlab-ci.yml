@@ -1,4 +1,7 @@
-print_env:
-  image: ubuntu:latest
+get_target_branch:
+  image: julia:1.10
   script:
-    - env
+    - source .ci/get_target_branch.sh
+    - echo "value of TARGET_BRANCH -> $TARGET_BRANCH"
+  tags:
+     - cpuonly
