@@ -1,8 +1,11 @@
 module integTestGen
 
+include("get_target_branch.jl")
+
 using Pkg: Pkg
 using PkgDependency: PkgDependency
 using YAML: YAML
+using Logging
 
 """
 Contains all git-related information about a package.
@@ -207,10 +210,14 @@ Generate GitLab CI job yaml for integration testing of a given package.
 
 # Args
 - `package_name::String`: Name of the package to test.
+- `target_branch::AbstractString`: Name of the target branch of the pull request.
 - `job_yaml::Dict`: Add generated job to this dict.
 """
 function generate_job_yaml!(
-    package_name::String, job_yaml::Dict, package_infos::AbstractDict{String,PackageInfo}
+    package_name::String,
+    target_branch::AbstractString,
+    job_yaml::Dict,
+    package_infos::AbstractDict{String,PackageInfo},
 )
     package_info = package_infos[package_name]
     # if modified_url is empty, use original url
@@ -227,9 +234,17 @@ function generate_job_yaml!(
         error("Ill formed url: $(url)")
     end
 
-    push!(script, "git clone $(split_url[1]) integration_test")
+    push!(script, "git clone -b $target_branch $(split_url[1]) integration_test")
+    if (target_branch != "main")
+        push!(
+            script,
+            "git clone -b dev https://github.com/QEDjl-project/QED.jl.git /integration_test_tools",
+        )
+    end
     push!(script, "cd integration_test")
 
+    # checkout specfic branch given by the environemnt variable
+    # CI_INTG_PKG_URL_<dep_name>=https://url/to/the/repository#<commit_hash>
     if length(split_url) == 2
         push!(script, "git checkout $(split_url[2])")
     end
@@ -246,6 +261,11 @@ function generate_job_yaml!(
     push!(
         script, "julia --project=. -e 'import Pkg; Pkg.develop(path=\"$ci_project_dir\");'"
     )
+    if (target_branch != "main")
+        push!(
+            script, "julia --project=. /integration_test_tools/.ci/set_dev_dependencies.jl"
+        )
+    end
     push!(script, "julia --project=. -e 'import Pkg; Pkg.test(; coverage = true)'")
 
     return job_yaml["IntegrationTest$package_name"] = Dict(
@@ -273,6 +293,13 @@ function generate_dummy_job_yaml!(job_yaml::Dict)
 end
 
 if abspath(PROGRAM_FILE) == @__FILE__
+    if !haskey(ENV, "CI_COMMIT_REF_NAME")
+        @warn "Environemnt variable CI_COMMIT_REF_NAME not defined. Use default branch `dev`."
+        target_branch = "dev"
+    else
+        target_branch = getTargetBranch.get_target_branch()
+    end
+
     package_infos = Dict(
         "QED" => PackageInfo(
             "https://github.com/QEDjl-project/QED.jl.git", "CI_INTG_PKG_URL_QED"
@@ -316,7 +343,7 @@ if abspath(PROGRAM_FILE) == @__FILE__
 
     if !isempty(depending_pkg)
         for p in depending_pkg
-            generate_job_yaml!(p, job_yaml, package_infos)
+            generate_job_yaml!(p, target_branch, job_yaml, package_infos)
         end
     else
         generate_dummy_job_yaml!(job_yaml)
