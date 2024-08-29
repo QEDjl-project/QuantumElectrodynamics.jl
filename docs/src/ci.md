@@ -153,7 +153,7 @@ If the `dev` branch of `user` does not work, it is also possible to define a cus
 
 This stage uses the generated job yaml to create and run new test jobs. It uses the [GitLab CI child pipeline](https://about.gitlab.com/blog/2020/04/24/parent-child-pipelines/#dynamically-generating-pipelines) mechanism.
 
-## Stage: Integration Tests of Sub-Packages N 
+## Stage: Integration Tests of Sub-Packages N
 
 Each job clones the repository of the sub-package. After the clone, it uses the Julia function `Pkg.develop(path="$CI_package_DIR")` to replace the dependency to the package `orig` with the modified version of the pull request and execute the tests of the sub-package via `Pkg.test()`.
 
@@ -163,8 +163,8 @@ The integration tests of each sub-package are executed in parallel. So, if the i
 
 The `integTestGen.jl` script has a special behavior. It creates its own `Project.toml` in a temporary folder and switches its project environment to it. Therefore, you need to start the script with the project path `--project=ci/integTestGen`. You also need to set two environment variables:
 
-- **CI_DEPENDENCY_NAME:** Name of the `orig`. For example `QEDbase`.
-- **CI_PROJECT_DIR:** Path to the project root directory of `orig`. This path is used in the generated integration test, to set the dependency the modified code of `orig`.
+- **CI\_DEPENDENCY\_NAME:** Name of the `orig`. For example `QEDbase`.
+- **CI\_PROJECT\_DIR:** Path to the project root directory of `orig`. This path is used in the generated integration test, to set the dependency the modified code of `orig`.
 
 The following example assumes that the `QED.jl` project is located at `$HOME/projects/QED.jl` and the project to test is `QEDbase.jl` and is located at `$HOME/projects/QEDbase.jl`.
 
