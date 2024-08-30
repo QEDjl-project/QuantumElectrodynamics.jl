@@ -1,6 +1,6 @@
 using QED
-using Test
+using SafeTestsets
 
-@testset "QED.jl" begin
-    # Write your tests here.
+@time @safetestset "Reexport" begin
+    include("reexport.jl")
 end

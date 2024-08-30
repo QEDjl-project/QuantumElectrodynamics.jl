@@ -17,4 +17,6 @@ makedocs(;
     pages=["Home" => "index.md", "Automatic Testing" => "ci.md"],
 )
 
-deploydocs(; repo="github.com/QEDjl-project/QED.jl.git", push_preview=false)
+deploydocs(;
+    repo="github.com/QEDjl-project/QED.jl.git", push_preview=false, devbranch="main"
+)
