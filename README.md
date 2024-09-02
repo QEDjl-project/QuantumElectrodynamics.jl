@@ -23,15 +23,15 @@ or you use the Pkg prompt by hitting `]` within the Julia REPL and then type
 
 ```julia
 # add local registry, where QED is registered
-(@v1.9) pkg> registry add https://github.com/QEDjl-project/registry
+(@v1.10) pkg> registry add https://github.com/QEDjl-project/registry
 # add general registry again to have it join the local registry
-(@v1.9) pkg> registry add https://github.com/JuliaRegistries/General
+(@v1.10) pkg> registry add https://github.com/JuliaRegistries/General
 
-(@v1.9) pkg> add QED
+(@v1.10) pkg> add QED
 ```
 
 To install the locally downloaded package on Windows, change to the parent directory and type within the Pkg prompt
 
 ```julia
-(@v1.9) pkg> add ./QED.jl
+(@v1.10) pkg> add ./QED.jl
 ```
