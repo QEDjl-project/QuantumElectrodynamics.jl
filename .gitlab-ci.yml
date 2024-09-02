@@ -1,0 +1,87 @@
+stages:
+  - unit-test
+  - verify-unit-test-deps
+
+.untit_test_template:
+  stage: unit-test
+  script:
+    # test SetupDevEnv.jl
+    - cd ${CI_PROJECT_DIR}/.ci/SetupDevEnv/
+    - julia --project=. -e 'import Pkg; Pkg.instantiate()'
+    - julia --project=. -e 'import Pkg; Pkg.test(; coverage = true)'
+    - cd ${CI_PROJECT_DIR}
+    # test integTestGen
+    - julia --project=. -e 'import Pkg; Pkg.Registry.add(Pkg.RegistrySpec(url="https://github.com/QEDjl-project/registry.git"));'
+    - julia --project=. -e 'import Pkg; Pkg.Registry.add(Pkg.RegistrySpec(url="https://github.com/JuliaRegistries/General"));'
+    - cd ${CI_PROJECT_DIR}/.ci/integTestGen
+    - julia --project=. -e 'import Pkg; Pkg.instantiate()'
+    - julia --project=. -e 'import Pkg; Pkg.test(; coverage = true)'
+    - cd ${CI_PROJECT_DIR}
+    # test QED.jl
+    - >
+      if [[ $CI_COMMIT_BRANCH == "main" || $CI_COMMIT_REF_NAME == "main" || $CI_COMMIT_BRANCH == "dev" || $CI_COMMIT_REF_NAME == "dev" ]]; then
+        # set name of the commit message from CI_COMMIT_MESSAGE to NO_MESSAGE, that the script does not read accidentally custom packages from the commit message of a merge commit
+        julia --project=. ${CI_PROJECT_DIR}/.ci/SetupDevEnv/src/SetupDevEnv.jl ${CI_PROJECT_DIR}/Project.toml NO_MESSAGE
+      else
+        julia --project=. ${CI_PROJECT_DIR}/.ci/SetupDevEnv/src/SetupDevEnv.jl ${CI_PROJECT_DIR}/Project.toml
+      fi
+    - julia --project=. -e 'import Pkg; Pkg.instantiate()'
+    - julia --project=. -e 'import Pkg; Pkg.test(; coverage = true)'
+  interruptible: true
+  tags:
+    - cpuonly
+
+unit_tests_releases:
+  extends: .untit_test_template
+  parallel:
+    matrix:
+      - JULIA_VERSION: ["1.6", "1.7", "1.8", "1.9", "1.10", "rc"]
+  image: julia:$JULIA_VERSION
+
+unit_tests_nightly:
+  extends: .untit_test_template
+  # use the same baseimage like the official julia images
+  image: debian:bookworm-slim
+  variables:
+    # path where julia tar bal should be downloaded
+    JULIA_DONWLOAD: /julia/download
+    # path where julia should be extracted
+    JULIA_EXTRACT: /julia/extract
+  before_script:
+    - apt update && apt install -y wget
+    - mkdir -p $JULIA_DONWLOAD
+    - mkdir -p $JULIA_EXTRACT
+    - >
+      if [[ $CI_RUNNER_EXECUTABLE_ARCH == "linux/arm64" ]]; then
+        wget https://julialangnightlies-s3.julialang.org/bin/linux/aarch64/julia-latest-linux-aarch64.tar.gz -O $JULIA_DONWLOAD/julia-nightly.tar.gz
+      elif [[ $CI_RUNNER_EXECUTABLE_ARCH == "linux/amd64" ]]; then
+        wget https://julialangnightlies-s3.julialang.org/bin/linux/x86_64/julia-latest-linux-x86_64.tar.gz -O $JULIA_DONWLOAD/julia-nightly.tar.gz
+      else
+        echo "unknown runner architecture -> $CI_RUNNER_EXECUTABLE_ARCH"
+        exit 1
+      fi
+    - tar -xf $JULIA_DONWLOAD/julia-nightly.tar.gz -C $JULIA_EXTRACT
+    # we need to search for the julia base folder name, because the second part of the name is the git commit hash
+    # e.g. julia-b0c6781676f
+    - JULIA_EXTRACT_FOLDER=${JULIA_EXTRACT}/$(ls $JULIA_EXTRACT | grep -m1 julia)
+    # copy everything to /usr to make julia public available
+    # mv is not possible, because it cannot merge folder
+    - cp -r $JULIA_EXTRACT_FOLDER/* /usr
+  allow_failure: true
+  tags:
+    - cpuonly
+
+verify-unit-test-deps:
+  image: julia:1.10
+  stage: verify-unit-test-deps
+  script:
+    - >
+      if [[ $CI_COMMIT_BRANCH == "main" || $CI_COMMIT_REF_NAME == "main" || $CI_COMMIT_BRANCH == "dev" || $CI_COMMIT_REF_NAME == "dev" ]]; then
+        # does not check for custom package URLs on the main and dev branch
+        echo "no custom package URL check necessary"
+      else
+        julia ${CI_PROJECT_DIR}/.ci/verify_env.jl
+      fi
+  interruptible: true
+  tags:
+    - cpuonly

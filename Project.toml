@@ -3,5 +3,25 @@ uuid = "bb1fba1d-cf9b-41b3-874e-4b81465537b9"
 authors = ["Uwe Hernandez Acosta <u.hernandez@hzdr.de>", "Simeon Ehrig", "Klaus Steiniger", "Tom Jungnickel", "Anton Reinhard"]
 version = "0.1.0"
 
+[deps]
+QEDbase = "10e22c08-3ccb-4172-bfcf-7d7aa3d04d93"
+QEDcore = "35dc0263-cb5f-4c33-a114-1d7f54ab753e"
+QEDevents = "fc3ce04a-5be5-4f3a-acff-eceaab723759"
+QEDfields = "ac3a6c97-e859-4b9f-96bb-63d2a216042c"
+QEDprocesses = "46de9c38-1bb3-4547-a1ec-da24d767fdad"
+Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
+
 [compat]
-julia = "1.9"
+julia = "1.6"
+QEDbase = "0.2.2"
+QEDcore = "0.1"
+QEDevents = "0.1"
+QEDfields = "0.1"
+QEDprocesses = "0.2"
+
+[extras]
+SafeTestsets = "1bc83da4-3b8d-516f-aca4-4fe02f6d838f"
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["SafeTestsets", "Test"]
