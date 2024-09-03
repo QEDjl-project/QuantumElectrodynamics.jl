@@ -9,7 +9,7 @@ jobs:
       - name: install Julia
         uses: julia-actions/setup-julia@v1
         with:
-          version: 1.9
+          version: "1.10"
       - name: Install Julia requirements
         run: julia --project=${GITHUB_WORKSPACE}/.formatting -e 'import Pkg; Pkg.instantiate()'
       - name: Check code style

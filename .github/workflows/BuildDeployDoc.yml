@@ -3,7 +3,7 @@ name: Build and Deploy Documentation
 on:
   push:
     branches:
-      - master
+      - main
       - dev
     tags: '*'
   pull_request:
@@ -18,7 +18,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: julia-actions/setup-julia@v1
         with:
-          version: '1.9'
+          version: "1.10"
       - name: Add custom registry 
         run: |
           julia --project=docs/ -e 'import Pkg; Pkg.Registry.add(Pkg.RegistrySpec(url="https://github.com/QEDjl-project/registry.git"));'
