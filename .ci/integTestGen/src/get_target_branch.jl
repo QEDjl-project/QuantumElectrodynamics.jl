@@ -20,10 +20,16 @@ function get_target_branch()::AbstractString
         error("Environment variable CI_COMMIT_REF_NAME is not set.")
     end
 
+    if ENV["CI_COMMIT_REF_NAME"] == "main"
+        # run on main branch
+        return "main"
+    end
+
     splited_commit_ref_name = split(ENV["CI_COMMIT_REF_NAME"], "/")
 
     if (!startswith(splited_commit_ref_name[1], "pr-"))
-        error("CI_COMMIT_REF_NAME does not start with pr-")
+        # fallback for unknown branches and dev branch
+        return "dev"
     end
 
     # parse to Int only to check if it is a number
