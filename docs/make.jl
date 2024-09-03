@@ -14,7 +14,11 @@ makedocs(;
         edit_link="dev",
         assets=String[],
     ),
-    pages=["Home" => "index.md", "Automatic Testing" => "ci.md"],
+    pages=[
+        "Home" => "index.md",
+        "Automatic Testing" => "ci.md",
+        "Release Pipeline" => "release_template.md",
+    ],
 )
 
 deploydocs(; repo="github.com/QEDjl-project/QED.jl.git", push_preview=false)
