@@ -297,7 +297,7 @@ if abspath(PROGRAM_FILE) == @__FILE__
         @warn "Environemnt variable CI_COMMIT_REF_NAME not defined. Use default branch `dev`."
         target_branch = "dev"
     else
-        target_branch = getTargetBranch.get_target_branch()
+        target_branch = get_target()
     end
 
     package_infos = Dict(
