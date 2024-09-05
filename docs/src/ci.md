@@ -90,6 +90,7 @@ The following table shows the names of the environment variables to use custom U
 Package Name    | Unit Test                      | Integration Test
 ----------------|--------------------------------|-------------------------------
 QEDbase.jl      | `CI_UNIT_PKG_URL_QEDbase`      | `CI_INTG_PKG_URL_QEDbase`
+QEDcore.jl      | `CI_UNIT_PKG_URL_QEDcore`      | `CI_INTG_PKG_URL_QEDcore`
 QEDevents.jl    | `CI_UNIT_PKG_URL_QEDevents`    | `CI_INTG_PKG_URL_QEDevents`
 QEDfields.jl    | `CI_UNIT_PKG_URL_QEDfields`    | `CI_INTG_PKG_URL_QEDfields`
 QEDprocesses.jl | `CI_UNIT_PKG_URL_QEDprocesses` | `CI_INTG_PKG_URL_QEDprocesses`

@@ -17,7 +17,7 @@ makedocs(;
     pages=[
         "Home" => "index.md",
         "Automatic Testing" => "ci.md",
-        "Release Pipeline" => "release_template.md",
+        "Development Guide" => "dev_guide.md",
     ],
 )
 
