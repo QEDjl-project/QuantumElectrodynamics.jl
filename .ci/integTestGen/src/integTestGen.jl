@@ -211,13 +211,18 @@ Generate GitLab CI job yaml for integration testing of a given package.
 # Args
 - `package_name::String`: Name of the package to test.
 - `target_branch::AbstractString`: Name of the target branch of the pull request.
+- `ci_project_dir::AbstractString`: Path of QED project which should be used for the integration test.
 - `job_yaml::Dict`: Add generated job to this dict.
+- `package_infos::AbstractDict{String,PackageInfo}`: Contains serveral information about QED packages
+- `can_fail::Bool=false`: If true add `allow_failure=true` to the job yaml
 """
 function generate_job_yaml!(
     package_name::String,
     target_branch::AbstractString,
+    ci_project_dir::AbstractString,
     job_yaml::Dict,
     package_infos::AbstractDict{String,PackageInfo},
+    can_fail::Bool=false,
 )
     package_info = package_infos[package_name]
     # if modified_url is empty, use original url
@@ -257,7 +262,6 @@ function generate_job_yaml!(
         script,
         "julia --project=. -e 'import Pkg; Pkg.Registry.add(Pkg.RegistrySpec(url=\"https://github.com/JuliaRegistries/General\"));'",
     )
-    ci_project_dir = ENV["CI_PROJECT_DIR"]
     push!(
         script, "julia --project=. -e 'import Pkg; Pkg.develop(path=\"$ci_project_dir\");'"
     )
@@ -268,12 +272,19 @@ function generate_job_yaml!(
     end
     push!(script, "julia --project=. -e 'import Pkg; Pkg.test(; coverage = true)'")
 
-    return job_yaml["IntegrationTest$package_name"] = Dict(
+    current_job_yaml = Dict(
         "image" => "julia:1.9",
         "interruptible" => true,
         "tags" => ["cpuonly"],
         "script" => script,
     )
+
+    if can_fail
+        current_job_yaml["allow_failure"] = true
+        return job_yaml["IntegrationTest$(package_name)ReleaseTest"] = current_job_yaml
+    else
+        return job_yaml["IntegrationTest$package_name"] = current_job_yaml
+    end
 end
 
 """
@@ -292,15 +303,13 @@ function generate_dummy_job_yaml!(job_yaml::Dict)
     )
 end
 
-if abspath(PROGRAM_FILE) == @__FILE__
-    if !haskey(ENV, "CI_COMMIT_REF_NAME")
-        @warn "Environemnt variable CI_COMMIT_REF_NAME not defined. Use default branch `dev`."
-        target_branch = "dev"
-    else
-        target_branch = get_target()
-    end
+"""
+    get_package_info()::Dict{String,PackageInfo}
 
-    package_infos = Dict(
+Returns a list with QED project package information.
+"""
+function get_package_info()::Dict{String,PackageInfo}
+    return Dict(
         "QED" => PackageInfo(
             "https://github.com/QEDjl-project/QED.jl.git", "CI_INTG_PKG_URL_QED"
         ),
@@ -323,6 +332,17 @@ if abspath(PROGRAM_FILE) == @__FILE__
             "https://github.com/QEDjl-project/QEDcore.jl.git", "CI_INTG_PKG_URL_QEDcore"
         ),
     )
+end
+
+if abspath(PROGRAM_FILE) == @__FILE__
+    if !haskey(ENV, "CI_COMMIT_REF_NAME")
+        @warn "Environemnt variable CI_COMMIT_REF_NAME not defined. Use default branch `dev`."
+        target_branch = "dev"
+    else
+        target_branch = get_target()
+    end
+
+    package_infos = get_package_info()
 
     # custom commit message variable can be set as first argument
     if length(ARGS) < 1
@@ -343,7 +363,29 @@ if abspath(PROGRAM_FILE) == @__FILE__
 
     if !isempty(depending_pkg)
         for p in depending_pkg
-            generate_job_yaml!(p, target_branch, job_yaml, package_infos)
+            # Handles the case of merging in the main branch. If we want to merge in the main branch, 
+            # we do it because we want to publish the package. Therefore, we need to be sure that there 
+            # is an existing version of the dependent QED packages that works with the new version of 
+            # the package we want to release. The integration tests are tested against the development 
+            # branch and the release version.
+            #  - The dev branch version must pass, as this means that the latest version of the other 
+            #    QED packages is compatible with our release version.
+            #  - The release version integration tests may or may not pass. 
+            #    1. If all of these pass, we will not need to increase the minor version of this package. 
+            #    2. If they do not all pass, the minor version must be increased and the failing packages 
+            #    must also be released later with an updated compat entry.
+            #    In either case the release can proceed, as the released packages will continue to work
+            #    because of their current compat entries.
+            if target_branch == "main" && is_pull_request()
+                generate_job_yaml!(p, "dev", ENV["CI_PROJECT_DIR"], job_yaml, package_infos)
+                generate_job_yaml!(
+                    p, "main", ENV["CI_PROJECT_DIR"], job_yaml, package_infos, true
+                )
+            else
+                generate_job_yaml!(
+                    p, target_branch, ENV["CI_PROJECT_DIR"], job_yaml, package_infos
+                )
+            end
         end
     else
         generate_dummy_job_yaml!(job_yaml)
