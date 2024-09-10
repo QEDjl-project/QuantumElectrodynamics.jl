@@ -12,7 +12,7 @@
     end
 
     for (ref_name, expected_result) in (
-        ("pr-41/SimeonEhrig/QED.jl/setDevDepDeps", true),
+        ("pr-41/SimeonEhrig/QuantumElectrodynamics.jl/setDevDepDeps", true),
         ("main", false),
         ("dev", false),
         ("v0.1.0", false),
@@ -34,8 +34,8 @@ end
 
     for (ref_name, expected_result) in (
         (
-            "pr-41/SimeonEhrig/QED.jl/setDevDepDeps",
-            "pr-41/SimeonEhrig/QED.jl/setDevDepDeps",
+            "pr-41/SimeonEhrig/QuantumElectrodynamics.jl/setDevDepDeps",
+            "pr-41/SimeonEhrig/QuantumElectrodynamics.jl/setDevDepDeps",
         ),
         ("main", "main"),
         ("dev", "dev"),

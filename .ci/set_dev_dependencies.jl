@@ -1,10 +1,11 @@
 """
-The script sets all QED dependencies of QED dependencies to the version of the current
-development branch. For our example we use the project QEDprocess which has a dependency
-to QEDfields and QEDfields has a dependency to QEDcore (I haven't checked if this is the
-case, it's just hypothetical). If we install the dev-branch version of QEDfields, the last
-registered version of QEDcore is still installed. If QEDfields uses a function which only
-exist in dev branch of QEDcore and is not released yet, the integration test will fail.
+The script sets all QuantumElectrodynamics dependencies of QuantumElectrodynamics
+dependencies to the version of the current development branch. For our example we use the
+project QEDprocess which has a dependency to QEDfields and QEDfields has a dependency to
+QEDcore (I haven't checked if this is the case, it's just hypothetical). If we install
+the dev-branch version of QEDfields, the last registered version of QEDcore is still
+installed. If QEDfields uses a function which only exist in dev branch of QEDcore and
+is not released yet, the integration test will fail.
 
 The script needs to be executed the project space, which should be modified.
 """
@@ -97,6 +98,6 @@ function set_dev_dependencies(
 end
 
 if abspath(PROGRAM_FILE) == @__FILE__
-    deps = get_filtered_dependencies(r"^QED*")
+    deps = get_filtered_dependencies(r"^QuantumElectrodynamics*")
     set_dev_dependencies(deps)
 end

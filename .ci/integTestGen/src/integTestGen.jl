@@ -33,7 +33,7 @@ to analyze as a dependency.
 
 # Args
     `project_path::AbstractString`: Absolute path to the project folder of the package to be analyzed
-    `package_infos::AbstractDict{String,PackageInfo}`: List depending QED pojects of QED.jl. Use the list to
+    `package_infos::AbstractDict{String,PackageInfo}`: List depending QED pojects of QuantumElectrodynamics.jl. Use the list to
         add the current dev branch version of the packages to the environment or a custom repository with 
         custom branch.
 """
@@ -243,7 +243,7 @@ function generate_job_yaml!(
     if (target_branch != "main")
         push!(
             script,
-            "git clone -b dev https://github.com/QEDjl-project/QED.jl.git /integration_test_tools",
+            "git clone -b dev https://github.com/QEDjl-project/QuantumElectrodynamics.jl.git /integration_test_tools",
         )
     end
     push!(script, "cd integration_test")
@@ -310,8 +310,9 @@ Returns a list with QED project package information.
 """
 function get_package_info()::Dict{String,PackageInfo}
     return Dict(
-        "QED" => PackageInfo(
-            "https://github.com/QEDjl-project/QED.jl.git", "CI_INTG_PKG_URL_QED"
+        "QuantumElectrodynamics" => PackageInfo(
+            "https://github.com/QEDjl-project/QuantumElectrodynamics.jl.git",
+            "CI_INTG_PKG_URL_QED",
         ),
         "QEDfields" => PackageInfo(
             "https://github.com/QEDjl-project/QEDfields.jl.git",
@@ -355,7 +356,7 @@ if abspath(PROGRAM_FILE) == @__FILE__
     modified_pkg = modified_package_name(package_infos)
 
     # the script is locate in ci/integTestGen/src
-    # so we need to go 3 steps upwards in hierarchy to get the QED.jl Project.toml
+    # so we need to go 3 steps upwards in hierarchy to get the QuantumElectrodynamics.jl Project.toml
     create_working_env(abspath(joinpath((@__DIR__), "../../..")), package_infos)
     depending_pkg = depending_projects(modified_pkg, collect(keys(package_infos)))
 

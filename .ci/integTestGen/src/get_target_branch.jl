@@ -13,7 +13,7 @@ Checks whether the GitLab CI mirror branch was created by a GitHub pull request.
 function is_pull_request()::Bool
     # GitLab CI provides the environemnt variable with the following pattern
     # # pr-<PR number>/<repo owner of the source branch>/<project name>/<source branch name> 
-    # e.g. pr-41/SimeonEhrig/QED.jl/setDevDepDeps
+    # e.g. pr-41/SimeonEhrig/QuantumElectrodynamics.jl/setDevDepDeps
     if !haskey(ENV, "CI_COMMIT_REF_NAME")
         error("Environment variable CI_COMMIT_REF_NAME is not set.")
     end
@@ -57,7 +57,7 @@ depending on the repository name and PR number.
 function get_target_branch_pull_request()::AbstractString
     # GitLab CI provides the environemnt variable with the following pattern
     # # pr-<PR number>/<repo owner of the source branch>/<project name>/<source branch name> 
-    # e.g. pr-41/SimeonEhrig/QED.jl/setDevDepDeps
+    # e.g. pr-41/SimeonEhrig/QuantumElectrodynamics.jl/setDevDepDeps
     if !haskey(ENV, "CI_COMMIT_REF_NAME")
         error("Environment variable CI_COMMIT_REF_NAME is not set.")
     end

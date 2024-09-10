@@ -1,18 +1,18 @@
-using QED
+using QuantumElectrodynamics
 
-# just test one basic symbol of each project to make sure the project has been reexported into QED.jl
+# just test one basic symbol of each project to make sure the project has been reexported into QuantumElectrodynamics.jl
 @testset "QEDbase" begin
-    @test isdefined(QED, :AbstractParticle)
+    @test isdefined(QuantumElectrodynamics, :AbstractParticle)
 end
 @testset "QEDcore" begin
-    @test isdefined(QED, :ParticleStateful)
+    @test isdefined(QuantumElectrodynamics, :ParticleStateful)
 end
 @testset "QEDprocesses" begin
-    @test isdefined(QED, :Compton)
+    @test isdefined(QuantumElectrodynamics, :Compton)
 end
 @testset "QEDfields" begin
-    @test isdefined(QED, :AbstractBackgroundField)
+    @test isdefined(QuantumElectrodynamics, :AbstractBackgroundField)
 end
 @testset "QEDevents" begin
-    @test isdefined(QED, :SingleParticleDistribution)
+    @test isdefined(QuantumElectrodynamics, :SingleParticleDistribution)
 end

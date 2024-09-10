@@ -1,6 +1,6 @@
 # Automatic Testing
 
-In the `QED.jl` eco-system, we use [Continuous integration](https://en.wikipedia.org/wiki/Continuous_integration) (CIs) for running automatic tests. Each time, when a pull request is opened on GitHub.com or changes are committed to an existing pull request, the CI pipeline is triggered and starts a test script. The result of the tests will be reported in the pull request. In `QED.jl`, we distinguish between two kinds of tests
+In the `QuantumElectrodynamics.jl` eco-system, we use [Continuous integration](https://en.wikipedia.org/wiki/Continuous_integration) (CIs) for running automatic tests. Each time, when a pull request is opened on GitHub.com or changes are committed to an existing pull request, the CI pipeline is triggered and starts a test script. The result of the tests will be reported in the pull request. In `QuantumElectrodynamics.jl`, we distinguish between two kinds of tests
 
 - **Unit tests**: tests which check the functionality of the modified (sub-) package. Those tests can either run standalone or use the functionality of other (third-party) packages.
 - **Integration tests**: tests which check the interoperatebility of the modified package with all sub-packages. For example, if package `A` depends on package `B` and you change package `B`, the integration test will check, if package `A` still works with the new version of package `B`.
@@ -12,9 +12,9 @@ Our CI uses the [GitLab CI](https://docs.gitlab.com/ee/ci/) because it allows us
 
 # Unit Tests for CI Users
 
-The unit tests are automatically triggered, if you open a pull request, which target the `main` or `dev` branch. Before the tests start, the CI sets up the test environment.  Thus, the `Project.toml` of the project is taken and the latest development version of each QED.jl dependency is added. Other dependencies will regularly be resolved by the Julia Package manager. Afterwards the unit tests will be executed.
+The unit tests are automatically triggered, if you open a pull request, which target the `main` or `dev` branch. Before the tests start, the CI sets up the test environment.  Thus, the `Project.toml` of the project is taken and the latest development version of each QuantumElectrodynamics.jl dependency is added. Other dependencies will regularly be resolved by the Julia Package manager. Afterwards the unit tests will be executed.
 
-You can also modify which version of a `QED.jl` dependency should be used. For example if you need to test your code with a function, which is not merged in the development branch yet. Thus, you need to add a specific line to your commit message with the following format:
+You can also modify which version of a `QuantumElectrodynamics.jl` dependency should be used. For example if you need to test your code with a function, which is not merged in the development branch yet. Thus, you need to add a specific line to your commit message with the following format:
 
 ```
 CI_UNIT_PKG_URL_<dep_name>: https://github.com/<user>/<dep_name>#<commit_hash>
@@ -52,7 +52,7 @@ The integration tests are automatically triggered if you open a pull request tha
 
 ![CI pipeline with unit and integration tests](CI_pipeline.png)
 
-If the tests pass successfully, you don't need to do anything. If they fail, i.e. the change breaks the interoperability with another package in the `QED.jl` ecosystem, the pull request will suspend, and one has two options to proceed:
+If the tests pass successfully, you don't need to do anything. If they fail, i.e. the change breaks the interoperability with another package in the `QuantumElectrodynamics.jl` ecosystem, the pull request will suspend, and one has two options to proceed:
 
 1. One can solve the problem locally, by changing the code of the modified (sub-) package. The workflow is the same as for fixing unit tests.
 2. One needs to modify the depending package, which failed in the integration test. In the following, we describe how to provide the necessary changes to the downstream package and make the CI pass the integration tests, which will resume the pull request.
@@ -127,9 +127,9 @@ This stage executes the unit tests of `orig` via `Pkg.test()`. The integration t
 
 The integration tests checks, if all (sub-) packages which use the package `orig` as dependency still work with the code modification of the current pull request.
 
-Before we talk about the details, here is a small overview on what the `integTestGen.jl` script is doing. First the CI needs to determine, which (sub-) packages has `orig` as dependency. Therefore the CI downloads the `integTestGen.jl` script from the `QED.jl` project via `git clone`. The `integTestGen.jl` script finds out, which (sub-) package use `orig` and generates for each (sub-) package a new CI test job. So the output of the `integTestGen.jl` is a GitLab CI yaml file, which can be executed via [GitLab CI child pipeline](https://about.gitlab.com/blog/2020/04/24/parent-child-pipelines/#dynamically-generating-pipelines).
+Before we talk about the details, here is a small overview on what the `integTestGen.jl` script is doing. First the CI needs to determine, which (sub-) packages has `orig` as dependency. Therefore the CI downloads the `integTestGen.jl` script from the `QuantumElectrodynamics.jl` project via `git clone`. The `integTestGen.jl` script finds out, which (sub-) package use `orig` and generates for each (sub-) package a new CI test job. So the output of the `integTestGen.jl` is a GitLab CI yaml file, which can be executed via [GitLab CI child pipeline](https://about.gitlab.com/blog/2020/04/24/parent-child-pipelines/#dynamically-generating-pipelines).
 
-The `integTestGen.jl` script traverses the dependency tree of `QED.jl` package. Because each QED sub-package is a dependency of the `QED.jl` package, the `QED.jl` dependency tree contains implicitly all dependency trees of the sub-packages. So the script is traversing the tree and creating a list of sub-packages who depends on `orig`. This list is called `users`.
+The `integTestGen.jl` script traverses the dependency tree of `QuantumElectrodynamics.jl` package. Because each QED sub-package is a dependency of the `QuantumElectrodynamics.jl` package, the `QuantumElectrodynamics.jl` dependency tree contains implicitly all dependency trees of the sub-packages. So the script is traversing the tree and creating a list of sub-packages who depends on `orig`. This list is called `users`.
 
 For each `user` from the list of `users` we need to define a separate CI job. First, the job checkouts the `dev` branch of the git repository of `user`. Then it sets the modified version of `orig` as dependency (`Pkg.develop(path="$CI_package_DIR")`). Finally, it executes the unit tests of `user`. The unit tests of `user` are tested with the code changes of the current pull request.
 
@@ -137,7 +137,7 @@ If the `dev` branch of `user` does not work, it is also possible to define a cus
 
 !!! note
 
-    If a sub-package triggers an integration test, the main package `QED.jl` is passive. It does not get any notification or trigger any script. The repository is simply cloned.
+    If a sub-package triggers an integration test, the main package `QuantumElectrodynamics.jl` is passive. It does not get any notification or trigger any script. The repository is simply cloned.
 
 !!! note
 
@@ -167,8 +167,8 @@ The `integTestGen.jl` script has a special behavior. It creates its own `Project
 - **CI\_DEPENDENCY\_NAME:** Name of the `orig`. For example `QEDbase`.
 - **CI\_PROJECT\_DIR:** Path to the project root directory of `orig`. This path is used in the generated integration test, to set the dependency the modified code of `orig`.
 
-The following example assumes that the `QED.jl` project is located at `$HOME/projects/QED.jl` and the project to test is `QEDbase.jl` and is located at `$HOME/projects/QEDbase.jl`.
+The following example assumes that the `QuantumElectrodynamics.jl` project is located at `$HOME/projects/QuantumElectrodynamics.jl` and the project to test is `QEDbase.jl` and is located at `$HOME/projects/QEDbase.jl`.
 
 ```bash
-CI_DEPENDENCY_NAME=QEDbase CI_PROJECT_DIR="$HOME/projects/QEDbase.jl" julia --project=$HOME/projects/QED.jl/ci/integTestGen $HOME/projects/QED.jl/ci/integTestGen/src/integTestGen.jl
+CI_DEPENDENCY_NAME=QEDbase CI_PROJECT_DIR="$HOME/projects/QEDbase.jl" julia --project=$HOME/projects/QuantumElectrodynamics.jl/ci/integTestGen $HOME/projects/QuantumElectrodynamics.jl/ci/integTestGen/src/integTestGen.jl
 ```
