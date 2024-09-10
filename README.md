@@ -6,7 +6,7 @@
 
 ## Installation
 
-To install the current stable version of `QuantumElectrodynamics.jl` you may use the standard julia package manager within the julia REPL
+To install the current stable version of `QuantumElectrodynamics.jl`, you may use the standard julia package manager within the julia REPL:
 
 ```julia
 julia> using Pkg
