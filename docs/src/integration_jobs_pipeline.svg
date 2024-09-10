@@ -7,7 +7,7 @@
    viewBox="0 0 352.58188 100.40265"
    version="1.1"
    id="svg5"
-   inkscape:version="1.3 (0e150ed6c4, 2023-07-21)"
+   inkscape:version="1.3.2 (091e20ef0f, 2023-11-25, custom)"
    sodipodi:docname="integration_jobs_pipeline.svg"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
@@ -28,14 +28,14 @@
      fit-margin-right="2"
      fit-margin-bottom="2"
      inkscape:zoom="0.81691218"
-     inkscape:cx="831.1787"
-     inkscape:cy="251.55703"
-     inkscape:window-width="2560"
-     inkscape:window-height="1367"
-     inkscape:window-x="0"
-     inkscape:window-y="0"
+     inkscape:cx="189.12682"
+     inkscape:cy="252.78115"
+     inkscape:window-width="920"
+     inkscape:window-height="998"
+     inkscape:window-x="972"
+     inkscape:window-y="204"
      inkscape:window-maximized="1"
-     inkscape:current-layer="layer1"
+     inkscape:current-layer="g71229"
      inkscape:showpageshadow="2"
      inkscape:deskcolor="#d1d1d1" />
   <defs
@@ -107,21 +107,26 @@
            style="fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.264583px"
            x="95.508743"
            y="24.843534"
-           id="tspan29952-5">- git clone jobGenertor </tspan><tspan
+           id="tspan29952-5">- git clone jobGenerator</tspan><tspan
            sodipodi:role="line"
            style="fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.264583px"
            x="95.508743"
            y="31.899084"
-           id="tspan36719"> from QuantumElectrodynamics.jl</tspan><tspan
+           id="tspan36719">from Quantum-</tspan><tspan
            sodipodi:role="line"
            style="fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.264583px"
            x="95.508743"
            y="38.954636"
-           id="tspan36725">- execute the script and </tspan><tspan
+           id="tspan2">Electrodynamics.jl</tspan><tspan
            sodipodi:role="line"
            style="fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.264583px"
            x="95.508743"
            y="46.010185"
+           id="tspan36725">- execute the script and </tspan><tspan
+           sodipodi:role="line"
+           style="fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.264583px"
+           x="95.508743"
+           y="53.065735"
            id="tspan36727">  generate job yaml's</tspan></text>
     </g>
     <g
