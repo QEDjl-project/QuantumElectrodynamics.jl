@@ -78,7 +78,7 @@ using Test
                 write(
                     f,
                     """
-           name = "QED"
+           name = "QuantumElectrodynamics"
            uuid = "bb1fba1d-cf9b-41b3-874e-4b81465537b9"
            authors = ["Uwe Hernandez Acosta <u.hernandez@hzdr.de>", "Simeon Ehrig", "Klaus Steiniger", "Tom Jungnickel", "Anton Reinhard"]
            version = "0.1.0"
@@ -98,7 +98,7 @@ using Test
                 write(
                     f,
                     """
-           name = "QED"
+           name = "QuantumElectrodynamics"
            uuid = "bb1fba1d-cf9b-41b3-874e-4b81465537b9"
            authors = ["Uwe Hernandez Acosta <u.hernandez@hzdr.de>", "Simeon Ehrig", "Klaus Steiniger", "Tom Jungnickel", "Anton Reinhard"]
            version = "0.1.0"

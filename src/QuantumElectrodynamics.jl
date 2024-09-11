@@ -1,4 +1,4 @@
-module QED
+module QuantumElectrodynamics
 
 using Reexport
 

@@ -1,10 +1,10 @@
 ```@meta
-CurrentModule = QED
+CurrentModule = QuantumElectrodynamics
 ```
 
-# QED.jl
+# QuantumElectrodynamics.jl
 
-This is the documentation for [`QED.jl`](https://github.com/QEDjl-project/QED.jl). It represents the combination of the following subpackages:
+This is the documentation for [`QuantumElectrodynamics.jl`](https://github.com/QEDjl-project/QuantumElectrodynamics.jl). It represents the combination of the following subpackages:
 
 **The two fundamental packages**:
 - [`QEDbase.jl`](https://github.com/QEDjl-project/QEDbase.jl): Interfaces and some functionality on abstract types. [Docs](https://qedjl-project.github.io/QEDbase.jl/stable/)
@@ -21,5 +21,5 @@ For detailed information on the packages, please refer to their respective docs,
 ```
 
 ```@autodocs
-Modules = [QED]
+Modules = [QuantumElectrodynamics]
 ```
