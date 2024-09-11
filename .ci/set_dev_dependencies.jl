@@ -98,6 +98,6 @@ function set_dev_dependencies(
 end
 
 if abspath(PROGRAM_FILE) == @__FILE__
-    deps = get_filtered_dependencies(r"^QuantumElectrodynamics*")
+    deps = get_filtered_dependencies(r"^(QED|QuantumElectrodynamics)*")
     set_dev_dependencies(deps)
 end
