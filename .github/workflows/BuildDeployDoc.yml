@@ -28,7 +28,7 @@ jobs:
       - name: set dependencies to dev branch version
         if: (github.event_name == 'push' && github.ref_name != 'main') || (github.event_name == 'pull_request' && github.base_ref != 'main')
         run: |
-          git clone -b dev https://github.com/QEDjl-project/QED.jl.git /tmp/integration_test_tools
+          git clone -b dev https://github.com/QEDjl-project/QuantumElectrodynamics.jl.git /tmp/integration_test_tools
           julia --project=docs/ /tmp/integration_test_tools/.ci/set_dev_dependencies.jl
       - name: Build and deploy
         env:

@@ -1,4 +1,4 @@
-using QED
+using QuantumElectrodynamics
 using SafeTestsets
 
 @time @safetestset "Reexport" begin
