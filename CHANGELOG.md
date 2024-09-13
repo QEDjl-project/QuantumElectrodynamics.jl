@@ -25,6 +25,10 @@ Most of the functionality outside of these packages is concerned with continuous
 - [#43](https://github.com/QEDjl-project/QuantumElectrodynamics.jl/pull/43): Add script to determine PR target branch in GitLab CI
 - [#44](https://github.com/QEDjl-project/QuantumElectrodynamics.jl/pull/44): Add script to set all dependencies to their `dev` versions
 - [#45](https://github.com/QEDjl-project/QuantumElectrodynamics.jl/pull/45): Set dependencies to dev versions in doc building job when target is not main
+- [#57](https://github.com/QEDjl-project/QuantumElectrodynamics.jl/pull/57): Correctly handle dev and main branches in `get_target_branch.jl`
+- [#58](https://github.com/QEDjl-project/QuantumElectrodynamics.jl/pull/58): Add a template for release issues in QEDjl-project repositories to the docs
+- [#62](https://github.com/QEDjl-project/QuantumElectrodynamics.jl/pull/62): Add more documentation for the release process of QEDjl-project repositories
+- [#64](https://github.com/QEDjl-project/QuantumElectrodynamics.jl/pull/64): Rename the project and repository to `QuantumElectrodynamics.jl` (previously `QED.jl`, rejected in the general registry because of only 3 letters)
 
 ### Fixes
 
@@ -35,6 +39,10 @@ Most of the functionality outside of these packages is concerned with continuous
 - [#25](https://github.com/QEDjl-project/QuantumElectrodynamics.jl/pull/25): Run compat helper only on upstream repositories
 - [#31](https://github.com/QEDjl-project/QuantumElectrodynamics.jl/pull/31): Fix integration test generation after dependency updated
 - [#32](https://github.com/QEDjl-project/QuantumElectrodynamics.jl/pull/32): Second fix for dependency update, changed overlooked function signature
+- [#52](https://github.com/QEDjl-project/QuantumElectrodynamics.jl/pull/52): Fix CI script for docs deployment
+- [#53](https://github.com/QEDjl-project/QuantumElectrodynamics.jl/pull/53): Fix stable docs badge link
+- [#63](https://github.com/QEDjl-project/QuantumElectrodynamics.jl/pull/63): Fix integration tests for merges to the main branch
+- [#66](https://github.com/QEDjl-project/QuantumElectrodynamics.jl/pull/66): Fix regex in `dev_dependencies`, introduced while renaming the project in #64
 
 ### Maintenance
 
@@ -43,3 +51,5 @@ Most of the functionality outside of these packages is concerned with continuous
 - [#26](https://github.com/QEDjl-project/QuantumElectrodynamics.jl/pull/26): Add compat entry for QEDprocesses (`v0.1`)
 - [#38](https://github.com/QEDjl-project/QuantumElectrodynamics.jl/pull/38): Remove QEDprocesses compat
 - [#39](https://github.com/QEDjl-project/QuantumElectrodynamics.jl/pull/39): Add new package QEDcore.jl to integration test package info
+- [#51](https://github.com/QEDjl-project/QuantumElectrodynamics.jl/pull/51): Add Reexport compat entry (v1.2)
+- [#60](https://github.com/QEDjl-project/QuantumElectrodynamics.jl/pull/60): Refactoring of `get_target_branch.jl`
