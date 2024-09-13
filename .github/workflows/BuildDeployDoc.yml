@@ -19,10 +19,6 @@ jobs:
       - uses: julia-actions/setup-julia@v1
         with:
           version: "1.10"
-      - name: Add custom registry 
-        run: |
-          julia --project=docs/ -e 'import Pkg; Pkg.Registry.add(Pkg.RegistrySpec(url="https://github.com/QEDjl-project/registry.git"));'
-          julia --project=docs/ -e 'import Pkg; Pkg.Registry.add(Pkg.RegistrySpec(url="https://github.com/JuliaRegistries/General"));'
       - name: Install dependencies
         run: julia --project=docs/ -e 'using Pkg; Pkg.develop(PackageSpec(path=pwd())); Pkg.instantiate()'
       - name: set dependencies to dev branch version
