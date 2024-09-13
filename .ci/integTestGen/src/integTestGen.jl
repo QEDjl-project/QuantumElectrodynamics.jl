@@ -255,14 +255,6 @@ function generate_job_yaml!(
     end
 
     push!(
-        script,
-        "julia --project=. -e 'import Pkg; Pkg.Registry.add(Pkg.RegistrySpec(url=\"https://github.com/QEDjl-project/registry.git\"));'",
-    )
-    push!(
-        script,
-        "julia --project=. -e 'import Pkg; Pkg.Registry.add(Pkg.RegistrySpec(url=\"https://github.com/JuliaRegistries/General\"));'",
-    )
-    push!(
         script, "julia --project=. -e 'import Pkg; Pkg.develop(path=\"$ci_project_dir\");'"
     )
     if (target_branch != "main")
