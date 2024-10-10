@@ -29,7 +29,7 @@ end
 
         expected_job_yaml = Dict()
         expected_job_yaml["IntegrationTestQEDcore"] = Dict(
-            "image" => "julia:1.9",
+            "image" => "julia:1.10",
             "interruptible" => true,
             "tags" => ["cpuonly"],
             "script" => [
@@ -71,7 +71,7 @@ end
 
         expected_job_yaml = Dict()
         expected_job_yaml["IntegrationTestQEDcore"] = Dict(
-            "image" => "julia:1.9",
+            "image" => "julia:1.10",
             "interruptible" => true,
             "tags" => ["cpuonly"],
             "script" => [
@@ -118,7 +118,7 @@ end
 
         expected_job_yaml = Dict()
         expected_job_yaml["IntegrationTestQEDcore"] = Dict(
-            "image" => "julia:1.9",
+            "image" => "julia:1.10",
             "interruptible" => true,
             "tags" => ["cpuonly"],
             "script" => [
@@ -153,7 +153,7 @@ end
         )
 
         expected_job_yaml["IntegrationTestQEDcoreReleaseTest"] = Dict(
-            "image" => "julia:1.9",
+            "image" => "julia:1.10",
             "interruptible" => true,
             "tags" => ["cpuonly"],
             "allow_failure" => true,
