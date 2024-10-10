@@ -191,7 +191,7 @@ function generate_job_yaml!(
     push!(script, "julia --project=. -e 'import Pkg; Pkg.test(; coverage = true)'")
 
     current_job_yaml = Dict(
-        "image" => "julia:1.9",
+        "image" => "julia:1.10",
         "interruptible" => true,
         "tags" => ["cpuonly"],
         "script" => script,
