@@ -366,7 +366,10 @@ if abspath(PROGRAM_FILE) == @__FILE__
         println("$(i): $(pkg_ordering[i])")
     end
 
-    required_deps = get_filtered_dependencies(r"^(QED*|QuantumElectrodynamics*)", ENV["CI_DEPENDENCY_PATH"])
+    required_deps = get_filtered_dependencies(
+        r"^(QED*|QuantumElectrodynamics*)",
+        joinpath(ENV["CI_DEPENDENCY_PATH"], "Project.toml"),
+    )
 
     my_pkg_ordering = []
 
