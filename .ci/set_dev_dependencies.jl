@@ -141,7 +141,7 @@ dict key.
 - `Vector` of filtered dependencies.
 """
 function get_filtered_dependencies(
-    name_filter::Union{<:AbstractString,Regex}=r".*", project_toml_path::AbstractString
+    name_filter::Union{<:AbstractString,Regex}, project_toml_path::AbstractString
 )::AbstractVector{String}
     project_toml = TOML.parsefile(project_toml_path)
     deps = Vector{String}(undef, 0)
@@ -366,9 +366,7 @@ if abspath(PROGRAM_FILE) == @__FILE__
         println("$(i): $(pkg_ordering[i])")
     end
 
-    required_deps = get_filtered_dependencies(
-        r"^(QED*|QuantumElectrodynamics*)", ENV["CI_DEPENDENCY_PATH"]
-    )
+    required_deps = get_filtered_dependencies(r"^(QED*|QuantumElectrodynamics*)", ENV["CI_DEPENDENCY_PATH"])
 
     my_pkg_ordering = []
 
