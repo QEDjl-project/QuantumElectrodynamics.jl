@@ -145,10 +145,12 @@ function get_filtered_dependencies(
 )::AbstractVector{String}
     project_toml = TOML.parsefile(project_toml_path)
     deps = Vector{String}(undef, 0)
-    if haskey(project_toml, "deps")
-        for dep_pkg in keys(project_toml["deps"])
-            if _match_package_filter(name_filter, dep_pkg)
-                push!(deps, dep_pkg)
+    for toml_section in ("deps", "extras")
+        if haskey(project_toml, toml_section)
+            for dep_pkg in keys(project_toml[toml_section])
+                if _match_package_filter(name_filter, dep_pkg)
+                    push!(deps, dep_pkg)
+                end
             end
         end
     end
