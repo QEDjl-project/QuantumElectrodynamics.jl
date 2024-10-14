@@ -298,15 +298,24 @@ if abspath(PROGRAM_FILE) == @__FILE__
 
     println(my_pkg_ordering)
 
+    # remove all QED packages, because otherwise Julia tries to resolve the whole
+    # environment if a package is added via Pkg.develop() which can cause circulare dependencies
+    for pkg in my_pkg_ordering
+        Pkg.rm(pkg)
+    end
+
+    # add modified develop versions of the QED packages
     for pkg in my_pkg_ordering
         if pkg == ENV["CI_DEPENDENCY_NAME"]
-            println(ENV["CI_DEPENDENCY_PATH"])
+            println("dev project")
             Pkg.develop(;path=ENV["CI_DEPENDENCY_PATH"])
         else
             project_path=joinpath(qed_path, pkg)
             println(project_path)
-            for (compact_name, compact_version) in new_compat
-                set_compat_helper(compact_name, compact_version, project_path)
+            println("dev dependency")
+            for (compat_name, compat_version) in new_compat
+                println("set compat $(compat_name) to $(compat_version)")
+                set_compat_helper(compat_name, compat_version, project_path)
             end
             Pkg.develop(;path=project_path)
         end
