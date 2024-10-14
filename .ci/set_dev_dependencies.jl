@@ -386,7 +386,12 @@ if abspath(PROGRAM_FILE) == @__FILE__
     # remove all QED packages, because otherwise Julia tries to resolve the whole
     # environment if a package is added via Pkg.develop() which can cause circulare dependencies
     for pkg in my_pkg_ordering
+        # if the package is in the extra section, it cannot be removed
+        try
         Pkg.rm(pkg)
+        catch
+            @warn "tried to remove uninstalled package $(pkg)"
+        end
     end
 
     # add modified develop versions of the QED packages
