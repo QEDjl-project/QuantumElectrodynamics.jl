@@ -15,7 +15,6 @@ using TOML
 using Logging
 using LibGit2
 
-# TODO(SimeonEhrig): is copied from integTestGen.jl
 """
     _match_package_filter(
         package_filter::Union{<:AbstractString,Regex},
@@ -48,6 +47,87 @@ function _match_package_filter(
 end
 
 """
+    _git_clone(repo_url::AbstractString, directory::AbstractString)
+
+Clones git repository
+
+# Args
+- `repo_url::AbstractString`: Url of the repository. Can either be a plan URL or use the Julia Pkg
+    notation <URL>#<branchname>. e.g. https://https://github.com/user/repo.git#dev to clone the
+    dev branch of the repository `repo`.
+- `directory::AbstractString`: Path where the cloned repository is stored.
+"""
+function _git_clone(repo_url::AbstractString, directory::AbstractString)
+    splitted_url = split(repo_url, "#")
+    if length(splitted_url) < 2
+        _git_clone(repo_url, "dev", directory)
+    else
+        _git_clone(splitted_url[1], splitted_url[2], directory)
+    end
+end
+
+"""
+    _git_clone(repo_url::AbstractString, directory::AbstractString)
+
+Clones git repository
+
+# Args
+- `repo_url::AbstractString`: Url of the repository.
+- `branch::AbstractString`: Git branch name
+- `directory::AbstractString`: Path where the cloned repository is stored.
+"""
+function _git_clone(
+    repo_url::AbstractString, branch::AbstractString, directory::AbstractString
+)
+    try
+        run(`git clone --depth 1 -b $(branch) $(repo_url) $directory`)
+    catch
+        LibGit2.clone(repo_url, directory; branch=branch)
+    end
+end
+
+"""
+    get_compat_changes()::Dict{String,String}
+
+Generates a list of new compatibility versions for dependency packages.
+
+# Returns
+
+Returns a dictionary, where the key is the name and the value is the version to be changed.
+    
+"""
+function get_compat_changes()::Dict{String,String}
+    compat_changes = Dict{String,String}()
+    if haskey(ENV, "CI_DEPENDENCY_VERSION")
+        compat_changes[string(ENV["CI_DEPENDENCY_NAME"])] = string(
+            ENV["CI_DEPENDENCY_VERSION"]
+        )
+    end
+    return compat_changes
+end
+
+"""
+    get_repository_custom_urls()::Dict{String,String}
+
+Reads user-defined repository URLs from the environment variables. An environment variable must begin
+with `CI_DEV_DEV_URL_`. This is followed by the package name, e.g. `CI_DEV_DEV_URL_QEDbase`. If the
+variable is set, the user-defined URL is used instead of the standard URL for the Git clone.
+
+# Returns
+
+Dict of custom URLs where the key is the package name and the value the custom URL.
+"""
+function get_repository_custom_urls()::Dict{String,String}
+    custom_urls = Dict{String,String}()
+    for (var_name, var_value) in ENV
+        if startswith(var_name, "CI_DEV_DEV_URL_")
+            custom_urls[var_name[(length("CI_DEV_DEV_URL_") + 1):end]] = var_value
+        end
+    end
+    return custom_urls
+end
+
+"""
     get_filtered_dependencies(
         name_filter::Union{<:AbstractString,Regex}=r".*",
         project_source=Pkg.dependencies()
@@ -61,8 +141,7 @@ dict key.
 - `Vector` of filtered dependencies.
 """
 function get_filtered_dependencies(
-    name_filter::Union{<:AbstractString,Regex}=r".*",
-    project_toml_path=Pkg.project().path,
+    name_filter::Union{<:AbstractString,Regex}=r".*", project_toml_path=Pkg.project().path
 )::AbstractVector{String}
     project_toml = TOML.parsefile(project_toml_path)
     deps = Vector{String}(undef, 0)
@@ -76,46 +155,66 @@ function get_filtered_dependencies(
     return deps
 end
 
-function build_qed_dev_dependency_graph(qed_path, custom_urls=Dict{String,String}(), package_name="QuantumElectrodynamics", origin=["QuantumElectrodynamics"]
-    )::AbstractDict
-    graph=Dict()
+function build_qed_dependency_graph!(
+    qed_path::AbstractString, custom_urls::Dict{String,String}=Dict{String,String}()
+)::Dict
+    qed_dependency_graph = Dict()
+    qed_dependency_graph["QuantumElectrodynamics"] = _build_qed_dependency_graph!(
+        qed_path, custom_urls, "QuantumElectrodynamics", ["QuantumElectrodynamics"]
+    )
+    return qed_dependency_graph
+end
+
+function _build_qed_dependency_graph!(
+    qed_path::AbstractString,
+    custom_urls::Dict{String,String},
+    package_name::String,
+    origin::Vector{String},
+)::Dict
+    qed_dependency_graph = Dict()
     repository_path = joinpath(qed_path, package_name)
     if !isdir(repository_path)
         if haskey(custom_urls, package_name)
-            splitted_url = split(custom_urls[package_name], "#")
-            if length(splitted_url) < 2
-                LibGit2.clone(splitted_url[1], repository_path, branch="dev")
-            else
-                LibGit2.clone(splitted_url[1], repository_path, branch=splitted_url[2])
-            end
+            _git_clone(custom_urls[package_name], repository_path)
         else
-            # could be optimized with clone depth=1, but no idea if LibGit2.jl support it
-            LibGit2.clone("https://github.com/QEDjl-project/$(package_name).jl", repository_path, branch="dev")
+            _git_clone(
+                "https://github.com/QEDjl-project/$(package_name).jl",
+                "dev",
+                repository_path,
+            )
         end
     end
-    # implement graph building algorithm with `git clone`
+
+    # read dependencies from Project.toml and clone next packages until no 
+    # QED dependencies are left
     project_toml = TOML.parsefile(joinpath(repository_path, "Project.toml"))
     if haskey(project_toml, "deps")
         for dep_pkg in keys(project_toml["deps"])
+            # check for circular dependency
+            # actual there should be no circular dependency in graph
+            # if there is a circular dependency in the graph, find a good way to appease the CI 
+            # developer
             if dep_pkg in origin
                 dep_chain = ""
                 for dep in origin
                     dep_chain *= dep * " -> "
                 end
-                throw(ErrorException("detect circular dependency in graph: $(dep_chain)$(dep_pkg)"))
+                throw(
+                    ErrorException(
+                        "detect circular dependency in graph: $(dep_chain)$(dep_pkg)"
+                    ),
+                )
             end
+            # handle only dependency starting with QED
             if startswith(dep_pkg, "QED")
-                graph[dep_pkg] = build_qed_dev_dependency_graph(qed_path, custom_urls, dep_pkg, vcat(origin, [dep_pkg]))
+                qed_dependency_graph[dep_pkg] = _build_qed_dependency_graph!(
+                    qed_path, custom_urls, dep_pkg, vcat(origin, [dep_pkg])
+                )
             end
         end
     end
 
-    if package_name=="QuantumElectrodynamics"
-        head_node = Dict()
-        head_node[package_name] = graph
-        return head_node
-    end
-    return graph
+    return qed_dependency_graph
 end
 
 function search_leaf(graph, leaf_list)
@@ -134,16 +233,16 @@ function get_package_dependecy_list(graph, stop_package="")
     pkg_ordering = []
     while true
         if isempty(keys(graph_copy["QuantumElectrodynamics"]))
-            push!(pkg_ordering,Set{String}(["QuantumElectrodynamics"]))
+            push!(pkg_ordering, Set{String}(["QuantumElectrodynamics"]))
             return pkg_ordering
         end
         leafs = Set{String}()
         search_leaf(graph_copy, leafs)
         if stop_package in leafs
-            push!(pkg_ordering,Set{String}([stop_package]))
+            push!(pkg_ordering, Set{String}([stop_package]))
             return pkg_ordering
         end
-        push!(pkg_ordering, leafs) 
+        push!(pkg_ordering, leafs)
     end
     return pkg_ordering
 end
@@ -203,7 +302,6 @@ function set_dev_dependencies(
     end
 end
 
-
 """
     set_compat_helper(
         name::AbstractString, version::AbstractString, project_path::AbstractString
@@ -239,20 +337,10 @@ function set_compat_helper(
     return close(f)
 end
 
-function get_custom_urls_from_env_variables()::AbstractDict{String,String}
-    custom_urls=Dict{String,String}()
-    for (var_name, var_value) in ENV
-        if startswith(var_name, "CI_DEV_DEV_URL_")
-            custom_urls[var_name[length("CI_DEV_DEV_URL_")+1:end]] = var_value
-        end
-    end
-    return custom_urls
-end
-
 function print_tree(graph, level=0)
     for key in keys(graph)
-        println(repeat(".", level)*key)
-        print_tree(graph[key], level+1)
+        println(repeat(".", level) * key)
+        print_tree(graph[key], level + 1)
     end
 end
 
@@ -264,21 +352,13 @@ if abspath(PROGRAM_FILE) == @__FILE__
         end
     end
 
-    qed_path=mktempdir(;cleanup=false)
-    #qed_path="/tmp/jl_1H5Kco"
+    compat_changes = get_compat_changes()
+    custom_urls = get_repository_custom_urls()
+
+    qed_path = mktempdir(; cleanup=false)
     println(qed_path)
 
-    custom_urls = get_custom_urls_from_env_variables()
-
-    new_compat = Vector{Tuple{String,String}}()
-    if haskey(ENV, "CI_DEPENDENCY_NAME") && haskey(ENV, "CI_DEPENDENCY_VERSION")
-        push!(
-            new_compat,
-            (string(ENV["CI_DEPENDENCY_NAME"]), string(ENV["CI_DEPENDENCY_VERSION"])),
-        )
-    end
-
-    pkg_tree = build_qed_dev_dependency_graph(qed_path, custom_urls)
+    pkg_tree = build_qed_dependency_graph!(qed_path, custom_urls)
     pkg_ordering = get_package_dependecy_list(pkg_tree)
     for i in keys(pkg_ordering)
         println("$(i): $(pkg_ordering[i])")
@@ -308,16 +388,16 @@ if abspath(PROGRAM_FILE) == @__FILE__
     for pkg in my_pkg_ordering
         if pkg == ENV["CI_DEPENDENCY_NAME"]
             println("dev project")
-            Pkg.develop(;path=ENV["CI_DEPENDENCY_PATH"])
+            Pkg.develop(; path=ENV["CI_DEPENDENCY_PATH"])
         else
-            project_path=joinpath(qed_path, pkg)
+            project_path = joinpath(qed_path, pkg)
             println(project_path)
             println("dev dependency")
-            for (compat_name, compat_version) in new_compat
+            for (compat_name, compat_version) in compat_changes
                 println("set compat $(compat_name) to $(compat_version)")
                 set_compat_helper(compat_name, compat_version, project_path)
             end
-            Pkg.develop(;path=project_path)
+            Pkg.develop(; path=project_path)
         end
     end
 
