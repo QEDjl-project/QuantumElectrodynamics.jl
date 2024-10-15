@@ -272,10 +272,13 @@ function generate_job_yaml!(
         "script" => script,
     )
 
-    if haskey(ENV, "CI_DEPENDENCY_NAME") && haskey(ENV, "CI_DEPENDENCY_VERSION")
+    if haskey(ENV, "CI_DEPENDENCY_NAME") &&
+        haskey(ENV, "CI_DEPENDENCY_VERSION") &&
+        haskey(ENV, "CI_DEPENDENCY_PATH")
         current_job_yaml["variables"] = Dict(
             "CI_DEPENDENCY_NAME" => ENV["CI_DEPENDENCY_NAME"],
             "CI_DEPENDENCY_VERSION" => ENV["CI_DEPENDENCY_VERSION"],
+            "CI_DEPENDENCY_PATH" => ENV["CI_DEPENDENCY_PATH"],
         )
     end
 
