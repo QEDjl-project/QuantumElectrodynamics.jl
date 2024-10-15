@@ -254,10 +254,12 @@ function generate_job_yaml!(
         push!(script, "git checkout $(split_url[2])")
     end
 
-    push!(
-        script, "julia --project=. -e 'import Pkg; Pkg.develop(path=\"$ci_project_dir\");'"
-    )
-    if (target_branch != "main")
+    if (target_branch == "main")
+        push!(
+            script,
+            "julia --project=. -e 'import Pkg; Pkg.develop(path=\"$ci_project_dir\");'",
+        )
+    else
         push!(
             script, "julia --project=. /integration_test_tools/.ci/set_dev_dependencies.jl"
         )
