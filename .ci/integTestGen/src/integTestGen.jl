@@ -243,7 +243,8 @@ function generate_job_yaml!(
     if (target_branch != "main")
         push!(
             script,
-            "git clone -b dev https://github.com/QEDjl-project/QuantumElectrodynamics.jl.git /integration_test_tools",
+            #"git clone -b dev https://github.com/QEDjl-project/QuantumElectrodynamics.jl.git /integration_test_tools",
+            "git clone -b setDevDevCompat https://github.com/SimeonEhrig/QED.jl.git /integration_test_tools",
         )
     end
     push!(script, "cd integration_test")
