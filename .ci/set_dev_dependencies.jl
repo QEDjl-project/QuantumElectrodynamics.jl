@@ -15,6 +15,9 @@ using TOML
 using Logging
 using LibGit2
 
+debug_logger_io = IOBuffer()
+debuglogger = ConsoleLogger(debug_logger_io, Logging.Debug)
+
 """
     _match_package_filter(
         package_filter::Union{<:AbstractString,Regex},
@@ -79,11 +82,46 @@ Clones git repository
 function _git_clone(
     repo_url::AbstractString, branch::AbstractString, directory::AbstractString
 )
-    try
-        run(`git clone --depth 1 -b $(branch) $(repo_url) $directory`)
-    catch
-        LibGit2.clone(repo_url, directory; branch=branch)
+    @info "clone repository: $(repo_url)#$(branch) -> $(directory)"
+    with_logger(debuglogger) do
+        try
+            @debug "git clone --depth 1 -b $(branch) $(repo_url) $directory"
+            run(
+                pipeline(
+                    `git clone --depth 1 -b $(branch) $(repo_url) $directory`;
+                    stdout=devnull,
+                    stderr=devnull,
+                ),
+            )
+        catch
+            @debug "LibGit2.clone($(repo_url), $(directory); branch=$(branch))"
+            LibGit2.clone(repo_url, directory; branch=branch)
+        end
     end
+end
+
+function check_environemnt_variables()
+    for var in ("CI_DEV_PKG_NAME", "CI_DEV_PKG_PATH")
+        if !haskey(ENV, var)
+            @error "environemnt variable $(var) needs to be set"
+            exit(1)
+        end
+    end
+
+    io = IOBuffer()
+    println(io, "following environement variables are set:")
+    for e in ("CI_DEV_PKG_NAME", "CI_DEV_PKG_VERSION", "CI_DEV_PKG_PATH")
+        if haskey(ENV, e)
+            println(io, "$(e): $(ENV[e])")
+        end
+    end
+
+    for (var_name, var_value) in ENV
+        if startswith(var_name, "CI_DEV_DEV_URL_")
+            println(io, "$(var_name): $(var_value)")
+        end
+    end
+    @info String(take!(io))
 end
 
 """
@@ -97,11 +135,15 @@ Returns a dictionary, where the key is the name and the value is the version to 
     
 """
 function get_compat_changes()::Dict{String,String}
+    @info "check for comapt changes"
     compat_changes = Dict{String,String}()
-    if haskey(ENV, "CI_DEPENDENCY_VERSION")
-        compat_changes[string(ENV["CI_DEPENDENCY_NAME"])] = string(
-            ENV["CI_DEPENDENCY_VERSION"]
-        )
+    with_logger(debuglogger) do
+        if haskey(ENV, "CI_DEV_PKG_VERSION")
+            compat_changes[string(ENV["CI_DEV_PKG_NAME"])] = string(
+                ENV["CI_DEV_PKG_VERSION"]
+            )
+        end
+        @debug "compat_changes: $(compat_changes)"
     end
     return compat_changes
 end
@@ -118,11 +160,15 @@ variable is set, the user-defined URL is used instead of the standard URL for th
 Dict of custom URLs where the key is the package name and the value the custom URL.
 """
 function get_repository_custom_urls()::Dict{String,String}
+    @info "get custom repository URLs from environemnt variables"
     custom_urls = Dict{String,String}()
-    for (var_name, var_value) in ENV
-        if startswith(var_name, "CI_DEV_DEV_URL_")
-            custom_urls[var_name[(length("CI_DEV_DEV_URL_") + 1):end]] = var_value
+    with_logger(debuglogger) do
+        for (var_name, var_value) in ENV
+            if startswith(var_name, "CI_DEV_DEV_URL_")
+                custom_urls[var_name[(length("CI_DEV_DEV_URL_") + 1):end]] = var_value
+            end
         end
+        @debug "custom_urls: $(custom_urls)"
     end
     return custom_urls
 end
@@ -143,27 +189,55 @@ dict key.
 function get_filtered_dependencies(
     name_filter::Union{<:AbstractString,Regex}, project_toml_path::AbstractString
 )::AbstractVector{String}
+    @info "get required QED dependencies for $(project_toml_path)"
+    io = IOBuffer()
+    println(io, "found dependencies:")
+
     project_toml = TOML.parsefile(project_toml_path)
     deps = Vector{String}(undef, 0)
     for toml_section in ("deps", "extras")
         if haskey(project_toml, toml_section)
             for dep_pkg in keys(project_toml[toml_section])
                 if _match_package_filter(name_filter, dep_pkg)
-                    push!(deps, dep_pkg)
+                    if !(dep_pkg in deps)
+                        push!(deps, dep_pkg)
+                    end
+                    println(io, "[$(toml_section)] -> $(dep_pkg)")
                 end
             end
         end
     end
+    with_logger(debuglogger) do 
+        @debug "required dependencies: $(deps)\n" * String(take!(io))
+    end
     return deps
+end
+
+function _render_qed_tree(graph)
+    io = IOBuffer()
+    _render_qed_tree!(io, graph, 0, "")
+    return String(take!(io))
+end
+
+function _render_qed_tree!(io, graph, level, input_string)
+    for key in keys(graph)
+        println(io, repeat(".", level) * key)
+        _render_qed_tree!(io, graph[key], level + 1, input_string)
+    end
+    return input_string
 end
 
 function build_qed_dependency_graph!(
     qed_path::AbstractString, custom_urls::Dict{String,String}=Dict{String,String}()
 )::Dict
+    @info "build QED dependency graph"
     qed_dependency_graph = Dict()
     qed_dependency_graph["QuantumElectrodynamics"] = _build_qed_dependency_graph!(
         qed_path, custom_urls, "QuantumElectrodynamics", ["QuantumElectrodynamics"]
     )
+    with_logger(debuglogger) do
+        @debug "QED graph:\n$(_render_qed_tree(qed_dependency_graph))"
+    end
     return qed_dependency_graph
 end
 
@@ -231,6 +305,22 @@ function search_leaf(graph, leaf_list)
 end
 
 function get_package_dependecy_list(graph, stop_package="")
+    pkg_ordering = _get_package_dependecy_list(graph, stop_package)
+    
+    with_logger(debuglogger) do
+        io = IOBuffer()
+        for i in keys(pkg_ordering)
+            println(io, "$(i): $(pkg_ordering[i])")
+        end
+        pkg_ordering_str = String(take!(io))
+        @debug "generate dependency ordering list:\n$(pkg_ordering_str)"
+    end
+
+    return pkg_ordering
+end
+
+function _get_package_dependecy_list(graph, stop_package)
+    @info "calculate the correct sequence for adding QED packages"
     graph_copy = deepcopy(graph)
     pkg_ordering = []
     while true
@@ -246,7 +336,40 @@ function get_package_dependecy_list(graph, stop_package="")
         end
         push!(pkg_ordering, leafs)
     end
+
+    # unreachable
     return pkg_ordering
+end
+
+function calculate_linear_dependency_ordering(qed_package_ordering, required_dependencies)::Vector{String}
+    @info "calculate linare ordering to add QED packages"
+    linear_pkg_ordering = Vector{String}()
+
+    for init_level in qed_package_ordering
+        for required_dep in required_dependencies
+            if required_dep in init_level
+                push!(linear_pkg_ordering, required_dep)
+            end
+        end
+    end
+
+    with_logger(debuglogger) do 
+        @debug "linear ordering of QED packages to add: $(linear_pkg_ordering)"
+    end
+
+    return linear_pkg_ordering
+end
+
+function remove_packages(dependencies::Vector{String})
+    @info "remove packages: $(dependencies)"
+    for pkg in dependencies
+        # if the package is in the extra section, it cannot be removed
+        try
+            Pkg.rm(pkg)
+        catch
+            @warn "tried to remove uninstalled package $(pkg)"
+        end
+    end
 end
 
 """
@@ -339,80 +462,49 @@ function set_compat_helper(
     return close(f)
 end
 
-function print_tree(graph, level=0)
-    for key in keys(graph)
-        println(repeat(".", level) * key)
-        print_tree(graph[key], level + 1)
-    end
-end
-
 if abspath(PROGRAM_FILE) == @__FILE__
-    for var in ("CI_DEPENDENCY_NAME", "CI_DEPENDENCY_PATH")
-        if !haskey(ENV, var)
-            @error "environemnt variable $(var) needs to be set"
-            exit(1)
-        end
-    end
+    try
+        check_environemnt_variables()
+        active_project_project_toml=Pkg.project().path
 
-    compat_changes = get_compat_changes()
-    custom_urls = get_repository_custom_urls()
+        compat_changes = get_compat_changes()
+        custom_urls = get_repository_custom_urls()
 
-    qed_path = mktempdir(; cleanup=false)
-    println(qed_path)
+        qed_path = mktempdir(; cleanup=false)
 
-    pkg_tree = build_qed_dependency_graph!(qed_path, custom_urls)
-    pkg_ordering = get_package_dependecy_list(pkg_tree)
-    for i in keys(pkg_ordering)
-        println("$(i): $(pkg_ordering[i])")
-    end
+        pkg_tree = build_qed_dependency_graph!(qed_path, custom_urls)
+        pkg_ordering = get_package_dependecy_list(pkg_tree)
 
-    required_deps = get_filtered_dependencies(
-        r"^(QED*|QuantumElectrodynamics*)",
-        joinpath(ENV["CI_DEPENDENCY_PATH"], "Project.toml"),
-    )
+        required_deps = get_filtered_dependencies(
+            r"^(QED*|QuantumElectrodynamics*)",
+            active_project_project_toml,
+        )
 
-    my_pkg_ordering = []
+        linear_pkg_ordering = calculate_linear_dependency_ordering(pkg_ordering, required_deps)
 
-    for init_level in pkg_ordering
-        for required_dep in required_deps
-            if required_dep in init_level
-                push!(my_pkg_ordering, required_dep)
+        # remove all QED packages, because otherwise Julia tries to resolve the whole
+        # environment if a package is added via Pkg.develop() which can cause circulare dependencies
+        remove_packages(linear_pkg_ordering)
+        
+        # add modified develop versions of the QED packages
+        for pkg in linear_pkg_ordering
+            if pkg == ENV["CI_DEV_PKG_NAME"]
+                println("dev project")
+                Pkg.develop(; path=ENV["CI_DEV_PKG_PATH"])
+            else
+                project_path = joinpath(qed_path, pkg)
+                println(project_path)
+                println("dev dependency")
+                for (compat_name, compat_version) in compat_changes
+                    println("set compat $(compat_name) to $(compat_version)")
+                    set_compat_helper(compat_name, compat_version, project_path)
+                end
+                Pkg.develop(; path=project_path)
             end
         end
+    catch e
+        # print debug information if uncatch error is thrown
+        println(String(take!(debug_logger_io)))
+        throw(e)
     end
-
-    println(my_pkg_ordering)
-
-    # remove all QED packages, because otherwise Julia tries to resolve the whole
-    # environment if a package is added via Pkg.develop() which can cause circulare dependencies
-    for pkg in my_pkg_ordering
-        # if the package is in the extra section, it cannot be removed
-        try
-        Pkg.rm(pkg)
-        catch
-            @warn "tried to remove uninstalled package $(pkg)"
-        end
-    end
-
-    # add modified develop versions of the QED packages
-    for pkg in my_pkg_ordering
-        if pkg == ENV["CI_DEPENDENCY_NAME"]
-            println("dev project")
-            Pkg.develop(; path=ENV["CI_DEPENDENCY_PATH"])
-        else
-            project_path = joinpath(qed_path, pkg)
-            println(project_path)
-            println("dev dependency")
-            for (compat_name, compat_version) in compat_changes
-                println("set compat $(compat_name) to $(compat_version)")
-                set_compat_helper(compat_name, compat_version, project_path)
-            end
-            Pkg.develop(; path=project_path)
-        end
-    end
-
-    exit()
-
-    #deps = get_filtered_dependencies(r"^(QED*|QuantumElectrodynamics*)")
-    #set_dev_dependencies(deps, new_compat, custom_urls)
 end
