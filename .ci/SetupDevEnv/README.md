@@ -1,9 +1,9 @@
 # Usage
 
-The application `SetupDevEnv.jl` takes a `Project.toml` and adds all dependencies which match a filter rule as the development version to the current Julia environment. The first application parameter sets the Project.toml path.
+The script `SetupDevEnv.jl` checks the dependencies of the current project and provides a Julia environment that provides all current development versions of the QED dependencies.
 
 ```bash
-julia --project=/path/to/the/julia/environment src/SetupDevEnv.jl /path/to/Project.toml
+julia --project=/path/to/the/julia/environment src/SetupDevEnv.jl
 ```
 
 # Optional Environment variables

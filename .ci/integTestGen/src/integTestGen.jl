@@ -187,7 +187,8 @@ function generate_job_yaml!(
         )
     else
         push!(
-            script, "julia --project=. /integration_test_tools/.ci/set_dev_dependencies.jl"
+            script,
+            "julia --project=. /integration_test_tools/.ci/SetupDevEnv/src/SetupDevEnv.jl",
         )
     end
     push!(script, "julia --project=. -e 'import Pkg; Pkg.instantiate()'")
