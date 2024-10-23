@@ -4,13 +4,13 @@ The application `integTestGen.jl` searches for all packages that depend on the s
 
 ## Required Environment Variables
 
-- **CI_DEPENDENCY_NAME**: Name of the searched dependency.
+- **CI_DEV_PKG_NAME**: Name of the searched dependency.
 - **CI_PROJECT_DIR**: Directory path of a package (containing the `Project.toml`) providing the dependency graph. Usually it is the absolute base path of the `QuantumElectrodynamics.jl` project.
 
 You can set the environment variables in two different ways:
 
 1. Permanent for the terminal session via: `export CI_PROJECT_DIR=/path/to/the/project`
-2. Only for a single command (Julia call): `CI_PROJECT_DIR=/path/to/the/project CI_DEPENDENCY_NAME=QEDproject julia --project=. src/integTestGen.jl`
+2. Only for a single command (Julia call): `CI_PROJECT_DIR=/path/to/the/project CI_DEV_PKG_NAME=QEDproject julia --project=. src/integTestGen.jl`
 
 ## Optional Environment Variables
 

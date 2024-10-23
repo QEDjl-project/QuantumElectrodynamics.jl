@@ -104,23 +104,23 @@ end
 """
     modified_package_name(package_infos::AbstractDict{String, PackageInfo})
 
-Read the name of the modified (project) package from the environment variable `CI_DEPENDENCY_NAME`.
+Read the name of the modified (project) package from the environment variable `CI_DEV_PKG_NAME`.
 
 # Returns
 - The name of the modified (project) package
 """
 function modified_package_name(package_infos::AbstractDict{String,PackageInfo})
-    for env_var in ["CI_DEPENDENCY_NAME", "CI_PROJECT_DIR"]
+    for env_var in ["CI_DEV_PKG_NAME", "CI_PROJECT_DIR"]
         if !haskey(ENV, env_var)
             error("Environment variable $env_var is not set.")
         end
     end
 
-    if !haskey(package_infos, ENV["CI_DEPENDENCY_NAME"])
-        package_name = ENV["CI_DEPENDENCY_NAME"]
+    if !haskey(package_infos, ENV["CI_DEV_PKG_NAME"])
+        package_name = ENV["CI_DEV_PKG_NAME"]
         error("Error unknown package name $package_name}")
     else
-        return ENV["CI_DEPENDENCY_NAME"]
+        return ENV["CI_DEV_PKG_NAME"]
     end
 end
 
@@ -180,14 +180,18 @@ function generate_job_yaml!(
         push!(script, "git checkout $(split_url[2])")
     end
 
-    push!(
-        script, "julia --project=. -e 'import Pkg; Pkg.develop(path=\"$ci_project_dir\");'"
-    )
-    if (target_branch != "main")
+    if (target_branch == "main")
         push!(
-            script, "julia --project=. /integration_test_tools/.ci/set_dev_dependencies.jl"
+            script,
+            "julia --project=. -e 'import Pkg; Pkg.develop(path=\"$ci_project_dir\");'",
+        )
+    else
+        push!(
+            script,
+            "julia --project=. /integration_test_tools/.ci/SetupDevEnv/src/SetupDevEnv.jl",
         )
     end
+    push!(script, "julia --project=. -e 'import Pkg; Pkg.instantiate()'")
     push!(script, "julia --project=. -e 'import Pkg; Pkg.test(; coverage = true)'")
 
     current_job_yaml = Dict(
@@ -196,6 +200,16 @@ function generate_job_yaml!(
         "tags" => ["cpuonly"],
         "script" => script,
     )
+
+    if haskey(ENV, "CI_DEV_PKG_NAME") &&
+        haskey(ENV, "CI_DEV_PKG_VERSION") &&
+        haskey(ENV, "CI_DEV_PKG_PATH")
+        current_job_yaml["variables"] = Dict(
+            "CI_DEV_PKG_NAME" => ENV["CI_DEV_PKG_NAME"],
+            "CI_DEV_PKG_VERSION" => ENV["CI_DEV_PKG_VERSION"],
+            "CI_DEV_PKG_PATH" => ENV["CI_DEV_PKG_PATH"],
+        )
+    end
 
     if can_fail
         current_job_yaml["allow_failure"] = true

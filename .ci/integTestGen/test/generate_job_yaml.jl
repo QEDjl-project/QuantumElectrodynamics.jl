@@ -39,6 +39,7 @@ end
                 "git clone -b main $(package_infos["QEDcore"].url) integration_test",
                 "cd integration_test",
                 "julia --project=. -e 'import Pkg; Pkg.develop(path=\"/path/to/QEDcore.jl\");'",
+                "julia --project=. -e 'import Pkg; Pkg.instantiate()'",
                 "julia --project=. -e 'import Pkg; Pkg.test(; coverage = true)'",
             ],
         )
@@ -81,8 +82,8 @@ end
                 "git clone -b feature3 $(package_infos["QEDcore"].url) integration_test",
                 "git clone -b dev https://github.com/QEDjl-project/QuantumElectrodynamics.jl.git /integration_test_tools",
                 "cd integration_test",
-                "julia --project=. -e 'import Pkg; Pkg.develop(path=\"/path/to/QEDcore.jl\");'",
-                "julia --project=. /integration_test_tools/.ci/set_dev_dependencies.jl",
+                "julia --project=. /integration_test_tools/.ci/SetupDevEnv/src/SetupDevEnv.jl",
+                "julia --project=. -e 'import Pkg; Pkg.instantiate()'",
                 "julia --project=. -e 'import Pkg; Pkg.test(; coverage = true)'",
             ],
         )
@@ -128,8 +129,8 @@ end
                 "git clone -b dev $(package_infos["QEDcore"].url) integration_test",
                 "git clone -b dev https://github.com/QEDjl-project/QuantumElectrodynamics.jl.git /integration_test_tools",
                 "cd integration_test",
-                "julia --project=. -e 'import Pkg; Pkg.develop(path=\"/path/to/QEDcore.jl\");'",
-                "julia --project=. /integration_test_tools/.ci/set_dev_dependencies.jl",
+                "julia --project=. /integration_test_tools/.ci/SetupDevEnv/src/SetupDevEnv.jl",
+                "julia --project=. -e 'import Pkg; Pkg.instantiate()'",
                 "julia --project=. -e 'import Pkg; Pkg.test(; coverage = true)'",
             ],
         )
@@ -164,6 +165,7 @@ end
                 "git clone -b main $(package_infos["QEDcore"].url) integration_test",
                 "cd integration_test",
                 "julia --project=. -e 'import Pkg; Pkg.develop(path=\"/path/to/QEDcore.jl\");'",
+                "julia --project=. -e 'import Pkg; Pkg.instantiate()'",
                 "julia --project=. -e 'import Pkg; Pkg.test(; coverage = true)'",
             ],
         )

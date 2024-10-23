@@ -4,6 +4,8 @@ authors = ["Simeon Ehrig <s.ehrig@hzdr.de> and contributors"]
 version = "1.0.0"
 
 [deps]
+LibGit2 = "76f85450-5226-5b5a-8eaa-529ad045b433"
+Logging = "56ddb016-857b-54e1-b83d-db4d58db5568"
 Pkg = "44cfe95a-1eb2-52ea-b672-e2afdf69b78f"
 TOML = "fa267f1f-6049-4f14-aa54-33bafae1ed76"
 
