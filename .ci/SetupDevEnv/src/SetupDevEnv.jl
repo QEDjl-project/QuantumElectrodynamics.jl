@@ -263,6 +263,8 @@ Side effects of the function are:
 # Args
 
 - `repository_base_path::AbstractString`: Base folder into which the QED projects are to be cloned.
+- `compat_changes::Dict{String,String}`: All QED package versions are added so that they can be set
+    correctly in the Compat section of the other QED packages. Existing entries are not changed.
 - `custom_urls::Dict{String,String}`: By default, the URL pattern
     `https://github.com/QEDjl-project/<package name>.jl` is used for the clone and the dev branch
     is checked out. The dict allows the use of custom URLs and branches for each QED project. The
@@ -276,18 +278,25 @@ possible.
 """
 function build_qed_dependency_graph!(
     repository_base_path::AbstractString,
+    compat_changes::Dict{String,String},
     custom_urls::Dict{String,String}=Dict{String,String}(),
 )::Dict
     @info "build QED dependency graph"
+    io = IOBuffer()
+    println(io, "input compat_changes: $(compat_changes)")
+
     qed_dependency_graph = Dict()
     qed_dependency_graph["QuantumElectrodynamics"] = _build_qed_dependency_graph!(
         repository_base_path,
+        compat_changes,
         custom_urls,
         "QuantumElectrodynamics",
         ["QuantumElectrodynamics"],
     )
+    println(io, "output compat_changes: $(compat_changes)")
     with_logger(debuglogger) do
-        @debug "QED graph:\n$(_render_qed_tree(qed_dependency_graph))"
+        println(io, "QED graph:\n$(_render_qed_tree(qed_dependency_graph))")
+        @debug String(take!(io))
     end
     return qed_dependency_graph
 end
@@ -303,6 +312,8 @@ end
 # Args
 
 - `repository_base_path::AbstractString`: Base folder into which the QED projects will be cloned.
+- `compat_changes::Dict{String,String}`: All QED package versions are added so that they can be set
+    correctly in the Compat section of the other QED packages. Existing entries are not changed.
 - `custom_urls::Dict{String,String}`: By default, the URL pattern
     `https://github.com/QEDjl-project/<package name>.jl` is used for the clone and the dev branch
     is checked out. The dict allows the use of custom URLs and branches for each QED project. The
@@ -318,6 +329,7 @@ possible.
 """
 function _build_qed_dependency_graph!(
     repository_base_path::AbstractString,
+    compat_changes::Dict{String,String},
     custom_urls::Dict{String,String},
     package_name::String,
     origin::Vector{String},
@@ -339,6 +351,13 @@ function _build_qed_dependency_graph!(
     # read dependencies from Project.toml and clone next packages until no 
     # QED dependencies are left
     project_toml = TOML.parsefile(joinpath(repository_path, "Project.toml"))
+
+    # add package version to compat entires, that they can be set correctly in the compat section of
+    # other packages
+    if !(project_toml["name"] in keys(compat_changes))
+        compat_changes[project_toml["name"]] = project_toml["version"]
+    end
+
     if haskey(project_toml, "deps")
         for dep_pkg in keys(project_toml["deps"])
             # check for circular dependency
@@ -359,7 +378,11 @@ function _build_qed_dependency_graph!(
             # handle only dependency starting with QED
             if startswith(dep_pkg, "QED")
                 qed_dependency_graph[dep_pkg] = _build_qed_dependency_graph!(
-                    repository_base_path, custom_urls, dep_pkg, vcat(origin, [dep_pkg])
+                    repository_base_path,
+                    compat_changes,
+                    custom_urls,
+                    dep_pkg,
+                    vcat(origin, [dep_pkg]),
                 )
             end
         end
@@ -593,14 +616,16 @@ function set_compat_helper(
     name::AbstractString, version::AbstractString, project_path::AbstractString
 )
     project_toml_path = joinpath(project_path, "Project.toml")
-    @info "change compat of $project_toml_path: $(name) -> $(version)"
 
     f = open(project_toml_path, "r")
     project_toml = TOML.parse(f)
     close(f)
 
     if haskey(project_toml, "compat") && haskey(project_toml["compat"], name)
-        project_toml["compat"][name] = version
+        if project_toml["compat"][name] != version
+            @info "change compat of $project_toml_path: $(name) -> $(version)"
+            project_toml["compat"][name] = version
+        end
     end
 
     # for GitHub Actions to fix permission denied error
@@ -622,7 +647,7 @@ if abspath(PROGRAM_FILE) == @__FILE__
 
         qed_path = mktempdir(; cleanup=false)
 
-        pkg_tree = build_qed_dependency_graph!(qed_path, custom_urls)
+        pkg_tree = build_qed_dependency_graph!(qed_path, compat_changes, custom_urls)
         pkg_ordering = get_package_dependecy_list(pkg_tree)
 
         required_deps = get_filtered_dependencies(
