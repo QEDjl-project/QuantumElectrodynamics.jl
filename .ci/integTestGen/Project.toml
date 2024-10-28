@@ -7,8 +7,10 @@ version = "0.1.0"
 HTTP = "cd3eb016-35fb-5094-929b-558a96fad6f3"
 IntegrationTests = "6be7cfa2-1838-408e-bc49-3a824ac3a1fb"
 JSON = "682c06a0-de6a-54ab-a142-c8b1cf79cde6"
+LibGit2 = "76f85450-5226-5b5a-8eaa-529ad045b433"
 Logging = "56ddb016-857b-54e1-b83d-db4d58db5568"
 Pkg = "44cfe95a-1eb2-52ea-b672-e2afdf69b78f"
+TOML = "fa267f1f-6049-4f14-aa54-33bafae1ed76"
 YAML = "ddb6d928-2868-570f-bddf-ab3f9cf99eb6"
 
 [compat]
