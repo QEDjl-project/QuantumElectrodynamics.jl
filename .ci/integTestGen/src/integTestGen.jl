@@ -1,6 +1,7 @@
 module integTestGen
 
 include("get_target_branch.jl")
+include("utils.jl")
 
 using Pkg: Pkg
 using YAML: YAML
@@ -20,49 +21,6 @@ mutable struct PackageInfo
     modified_url::String
     env_var::String
     PackageInfo(url, env_var) = new(url, "", env_var)
-end
-
-"""
-    create_working_env(project_path::AbstractString, package_infos::AbstractDict{String,PackageInfo})
-
-Create a temporary folder, and set up a new Project.toml and activate it. Checking the dependencies of
-a project only works, if it is a dependency of the integTestGen.jl. The package to be analyzed
-is only a temporary dependency, it must not change the Project.toml of integTestGen.jl permanently.
-Therefore, the script generates a temporary Julia environment and adds the package
-to analyze as a dependency.
-
-# Args
-    `project_path::AbstractString`: Absolute path to the project folder of the package to be analyzed
-    `package_infos::AbstractDict{String,PackageInfo}`: List depending QED pojects of QuantumElectrodynamics.jl. Use the list to
-        add the current dev branch version of the packages to the environment or a custom repository with 
-        custom branch.
-"""
-function create_working_env(
-    project_path::AbstractString, package_infos::AbstractDict{String,PackageInfo}
-)
-    tmp_path = mktempdir()
-    Pkg.activate(tmp_path)
-    # same dependency like in the Project.toml of integTestGen.jl
-    Pkg.add("Pkg")
-    Pkg.add("YAML")
-    # add main project as dependency
-    Pkg.develop(; path=project_path)
-
-    for package_info in values(package_infos)
-        if package_info.modified_url == ""
-            # add current dev branch version of the package
-            Pkg.add(; url=package_info.url)
-            continue
-        end
-        split_url = split(package_info.modified_url, "#")
-        if length(split_url) == 2
-            # add custom branch version of a custom repository
-            Pkg.add(; url=split_url[1], rev=split_url[2])
-        else
-            # add current dev branch version of a custom repository
-            Pkg.add(; url=split_url[1])
-        end
-    end
 end
 
 """
@@ -287,11 +245,19 @@ if abspath(PROGRAM_FILE) == @__FILE__
     modify_package_url!(package_infos)
     modified_pkg = modified_package_name(package_infos)
 
-    # the script is locate in ci/integTestGen/src
-    # so we need to go 3 steps upwards in hierarchy to get the QuantumElectrodynamics.jl Project.toml
-    create_working_env(abspath(joinpath((@__DIR__), "../../..")), package_infos)
+    # TODO(SimeonEhrig): refactor me, that the conversion is not required anymore
+    custom_urls = Dict{String,String}()
+    for (name, info) in package_infos
+        if info.modified_url != ""
+            custom_urls[name] = info.modified_url
+        end
+    end
+    qed_path = mktempdir(; cleanup=false)
+    compat_changes = Dict{String,String}()
+
+    pkg_tree = build_qed_dependency_graph!(qed_path, compat_changes, custom_urls)
     depending_pkg = IntegrationTests.depending_projects(
-        modified_pkg, collect(keys(package_infos))
+        modified_pkg, collect(keys(package_infos)), pkg_tree
     )
 
     job_yaml = Dict()
