@@ -18,8 +18,8 @@ jobs:
       - uses: actions/checkout@v4
       - uses: julia-actions/setup-julia@v1
         with:
-          version: "1.10"
-      - name: set dependencies to dev branch version
+          version: '1.10'
+      - name: set dev dependencies
         run: |
           $(julia --project=. .ci/integTestGen/src/get_project_name_version_path.jl)
           echo "CI_DEV_PKG_NAME -> $CI_DEV_PKG_NAME"
