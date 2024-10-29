@@ -22,28 +22,16 @@ In case breaking changes are introduced by the pull request the integration test
 
 Several steps are involved in releasing a new version of a package. For versioning, we follow [Julia's versioning guidelines](https://julialang.org/blog/2019/08/release-process/). However, we do not provide patches for previous minor or major versions.
 
-### Release Issue Template
+### Release Procedure
 
-The following is a template that can be used to open issues for a specific release of one of the QED-project packages. Customize it by simply replacing `<version>` with the version to-be-released.
+The following is a description of our release process for a version `<version>`.
 
-```md
-With this issue, we keep track of the workflow for version `<version>` release.
-
-## Preparation for the release
-
-- [ ] Tag all PRs that are part of this release by adding them to a milestone named `Release-<version>`.
-- [ ] Create a release branch `release-<version>` on your fork.
-- [ ] Adjust `./Project.toml` on the new `release-<version>` branch by ticking up the version.
-- [ ] Check if it is necessary to adjust the `compat` entry of upstream QED-project packages.
-- [ ] Add/Update the file `./CHANGELOG.md` on the `release-<version>` branch by appending a summary section. This can be done by using the tagged PRs associated with this release.
-
-## Release procedure
-
-- [ ] Open a PR for merging `release-<version>` into the `main`-branch of the QEDjl-project repository with at least one reviewer who only needs to check the points above, the code additions were reviewed in the respective PRs. Do not delete the `release-<version>` branch yet. :warning: **Do not squash this PR, use a simple merge commit** :warning:
-- [ ] *After* the release branch is merged into `main`, open another PR for merging `release-<version>` into the `dev`-branch of the QEDjl-project repository. This can be merged without much review because the relevant changes were already reviewed in the PR `release-<version> -> main`. After this merge, you are free to delete the `release-<version>`-branch on your fork. :warning: **Do not squash this PR, use a simple merge commit** :warning:
-- [ ] Registration: Go to the issues and search for `Release`. There, write a comment with `<at>JuliaRegistrator register(branch="main")` with a real `@` to trigger the registration bot opening a PR on Julia's general registry. Also add a small general description of the release, so TagBot adds it to the GitHub release later.
-- [ ] Once the registration is completed, check that the TagBot correctly tagged the version and built a GitHub release.
-```
+- Create a release branch `release-<version>` on your fork.
+- Adjust `./Project.toml` on the new `release-<version>` branch by ticking up the version.
+- Open a PR for merging `release-<version>` into the `main`-branch of the QEDjl-project repository with at least one reviewer who only needs to check the points above, the code additions were reviewed in the respective PRs. Do not delete the `release-<version>` branch yet. :warning: **Do not squash this PR, use a simple merge commit** :warning:
+- *After* the release branch is merged into `main`, open another PR for merging `release-<version>` into the `dev`-branch of the QEDjl-project repository. This can be merged without much review because the relevant changes were already reviewed in the PR `release-<version> -> main`. After this merge, you are free to delete the `release-<version>`-branch on your fork. :warning: **Do not squash this PR, use a simple merge commit** :warning:
+- Registration: Go to the issues and search for `Release`. There, write a comment with `@JuliaRegistrator register(branch="main")` to trigger the registration bot opening a PR on Julia's general registry. Also add a small general description of the release, so TagBot adds it to the GitHub release later.
+- Once the registration is completed, check that the TagBot correctly tagged the version and built a GitHub release.
 
 ### Releasing Breaking Changes
 
