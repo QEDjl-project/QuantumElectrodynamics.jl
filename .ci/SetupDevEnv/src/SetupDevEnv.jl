@@ -513,11 +513,35 @@ function calculate_linear_dependency_ordering(
     @info "calculate linare ordering to add QED packages"
     linear_pkg_ordering = Vector{String}()
 
-    for init_level in package_dependecy_list
+    # First we search for the highest level containing a required dependency
+    # All dependencies in the levels below the highest level needs to be installed
+    # and there be part of the output.
+    highest_level = 0
+
+    for level in 1:length(package_dependecy_list)
         for required_dep in required_dependencies
-            if required_dep in init_level
-                push!(linear_pkg_ordering, required_dep)
+            if required_dep in package_dependecy_list[level]
+                highest_level = level
             end
+        end
+    end
+
+    # could not find required dependency
+    if highest_level == 0
+        return linear_pkg_ordering
+    end
+
+    # copy complete level
+    for level in 1:(highest_level - 1)
+        for pkg in package_dependecy_list[level]
+            push!(linear_pkg_ordering, pkg)
+        end
+    end
+
+    # copy only the dependencies from the highest_level, which are required
+    for pkg in package_dependecy_list[highest_level]
+        if pkg in required_dependencies
+            push!(linear_pkg_ordering, pkg)
         end
     end
 
