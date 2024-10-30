@@ -32,8 +32,29 @@ function get_unit_test_julia_versions()::Vector{String}
     return ["1.10", "1.11", "rc", "nightly"]
 end
 
+function get_git_ci_tools_url_branch()::Tuple{String, String}
+    url = "https://github.com/QEDjl-project/QuantumElectrodynamics.jl.git"
+    branch = "dev"
+
+    if haskey(ENV, "CI_GIT_CI_TOOLS_URL")
+        url = ENV["CI_GIT_CI_TOOLS_URL"]
+        @warn "use custom git URL for CI tools: $(url)"
+    end
+
+    if haskey(ENV, "CI_GIT_CI_TOOLS_BRANCH")
+        branch = ENV["CI_GIT_CI_TOOLS_BRANCH"]
+        @warn "use custom git branch for CI tools: $(branch)"
+    end
+
+    return (url, branch)
+end
+
 function add_unit_test_job_yaml!(
-    job_dict::Dict, julia_versions::Vector{String}, target_branch::String
+    job_dict::Dict,
+    julia_versions::Vector{String},
+    target_branch::String,
+    git_ci_tools_url::String="https://github.com/QEDjl-project/QuantumElectrodynamics.jl.git",
+    git_ci_tools_branch::String="dev",
 )
     if !haskey(job_dict, "stages")
         job_dict["stages"] = []
@@ -50,11 +71,27 @@ function add_unit_test_job_yaml!(
             job_dict["unit_test_julia_nightly"] = get_nighlty_unit_test(target_branch)
         end
     end
+
+    # verification script that no custom URLs are used in unit tests
+    if target_branch != "main"
+        push!(job_dict["stages"], "verify-unit-test-deps")
+        job_dict["verify-unit-test-deps"] = Dict(
+            "image" => "julia:1.10",
+            "stage" => "verify-unit-test-deps",
+            "script" => [
+                "apt update && apt install -y git",
+                "git clone --depth 1 -b $(git_ci_tools_branch) $(git_ci_tools_url) /tools",
+                "julia /tools/.ci/verify_env.jl",
+            ],
+            "interruptible" => true,
+            "tags" => ["cpuonly"]
+        )
+    end
 end
 
 function get_normal_unit_test(version::String, target_branch::String)::Dict
     job_yaml = Dict()
-    job_yaml["stage"] = "unit-test"
+    job_yaml["stages"] = "unit-test"
     job_yaml["image"] = "julia:$(version)"
 
     script = [
@@ -158,8 +195,7 @@ if abspath(PROGRAM_FILE) == @__FILE__
 
     package_path = ENV["CI_PROJECT_DIR"]
     (package_name, package_version) = get_package_name_version(package_path)
-    #target_branch = TargetBranch.get_target()
-    target_branch = "main"
+    target_branch = TargetBranch.get_target()
 
     @info "Test package name: $(package_name)"
     @info "Test package version: $(package_version)"
@@ -171,7 +207,9 @@ if abspath(PROGRAM_FILE) == @__FILE__
 
     job_yaml = Dict()
 
-    add_unit_test_job_yaml!(job_yaml, unit_test_julia_versions, target_branch)
+    (git_ci_tools_url, git_ci_tools_branch) = get_git_ci_tools_url_branch()
+
+    add_unit_test_job_yaml!(job_yaml, unit_test_julia_versions, target_branch, git_ci_tools_url, git_ci_tools_branch)
 
     print_job_yaml(job_yaml)
 end
