@@ -3,6 +3,7 @@ module integTestGen
 include("get_target_branch.jl")
 include("utils.jl")
 
+using .TargetBranch
 using Pkg: Pkg
 using YAML: YAML
 using Logging
@@ -277,7 +278,7 @@ if abspath(PROGRAM_FILE) == @__FILE__
             #    must also be released later with an updated compat entry.
             #    In either case the release can proceed, as the released packages will continue to work
             #    because of their current compat entries.
-            if target_branch == "main" && is_pull_request()
+            if target_branch == "main" && TargetBranch.is_pull_request()
                 generate_job_yaml!(p, "dev", ENV["CI_PROJECT_DIR"], job_yaml, package_infos)
                 generate_job_yaml!(
                     p, "main", ENV["CI_PROJECT_DIR"], job_yaml, package_infos, true

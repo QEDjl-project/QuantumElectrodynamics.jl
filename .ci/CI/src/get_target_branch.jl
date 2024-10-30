@@ -1,3 +1,5 @@
+module TargetBranch
+
 using HTTP
 using JSON
 using Pkg
@@ -125,4 +127,6 @@ end
 
 if abspath(PROGRAM_FILE) == @__FILE__
     print(get_target())
+end
+
 end
