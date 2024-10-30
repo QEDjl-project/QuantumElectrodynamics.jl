@@ -5,27 +5,22 @@ stages:
 .untit_test_template:
   stage: unit-test
   script:
-    # test SetupDevEnv.jl
-    - cd ${CI_PROJECT_DIR}/.ci/SetupDevEnv/
-    - julia --project=. -e 'import Pkg; Pkg.instantiate()'
-    - julia --project=. -e 'import Pkg; Pkg.test(; coverage = true)'
-    - cd ${CI_PROJECT_DIR}
-    # test integTestGen
-    - cd ${CI_PROJECT_DIR}/.ci/integTestGen
+    # test CI scripts
+    - cd ${CI_PROJECT_DIR}/.ci/CI/
     - julia --project=. -e 'import Pkg; Pkg.instantiate()'
     - julia --project=. -e 'import Pkg; Pkg.test(; coverage = true)'
     - cd ${CI_PROJECT_DIR}
     # test QuantumElectrodynamics.jl
-    - $(julia --project=. ${CI_PROJECT_DIR}/.ci/integTestGen/src/get_project_name_version_path.jl)
+    - $(julia --project=. ${CI_PROJECT_DIR}/.ci/CI/src/get_project_name_version_path.jl)
     - echo "CI_DEV_PKG_NAME -> $CI_DEV_PKG_NAME"
     - echo "CI_DEV_PKG_VERSION -> $CI_DEV_PKG_VERSION"
     - echo "CI_DEV_PKG_PATH -> $CI_DEV_PKG_PATH"
     - >
       if [[ $CI_COMMIT_BRANCH == "main" || $CI_COMMIT_REF_NAME == "main" || $CI_COMMIT_BRANCH == "dev" || $CI_COMMIT_REF_NAME == "dev" ]]; then
         # set name of the commit message from CI_COMMIT_MESSAGE to NO_MESSAGE, that the script does not read accidentally custom packages from the commit message of a merge commit
-        julia --project=. ${CI_PROJECT_DIR}/.ci/SetupDevEnv/src/SetupDevEnv.jl ${CI_PROJECT_DIR}/Project.toml NO_MESSAGE
+        julia --project=. ${CI_PROJECT_DIR}/.ci/CI/src/SetupDevEnv.jl ${CI_PROJECT_DIR}/Project.toml NO_MESSAGE
       else
-        julia --project=. ${CI_PROJECT_DIR}/.ci/SetupDevEnv/src/SetupDevEnv.jl ${CI_PROJECT_DIR}/Project.toml
+        julia --project=. ${CI_PROJECT_DIR}/.ci/CI/src/SetupDevEnv.jl ${CI_PROJECT_DIR}/Project.toml
       fi
     - julia --project=. -e 'import Pkg; Pkg.instantiate()'
     - julia --project=. -e 'import Pkg; Pkg.test(; coverage = true)'
