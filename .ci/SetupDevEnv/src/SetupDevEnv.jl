@@ -608,17 +608,26 @@ function install_qed_dev_packages(
     for pkg in pkg_to_install
         if pkg == dev_package_name
             @info "install dev package: $(dev_package_path)"
-            Pkg.develop(; path=dev_package_path)
-        else
-            project_path = joinpath(qed_path, pkg)
-
-            for (compat_name, compat_version) in compat_changes
-                set_compat_helper(compat_name, compat_version, project_path)
+            try
+                Pkg.develop(; path=dev_package_path)
+            catch e
+                if isa(e, LoadError)
+                    @info "already loaded, skipping"
+                else
+                    rethrow()
+                end
             end
-
-            @info "install dependency package: $(project_path)"
-            Pkg.develop(; path=project_path)
+            continue
         end
+
+        project_path = joinpath(qed_path, pkg)
+
+        for (compat_name, compat_version) in compat_changes
+            set_compat_helper(compat_name, compat_version, project_path)
+        end
+
+        @info "install dependency package: $(project_path)"
+        Pkg.develop(; path=project_path)
     end
 end
 
