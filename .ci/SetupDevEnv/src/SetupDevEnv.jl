@@ -562,7 +562,15 @@ Remove the given packages from the active environment.
 """
 function remove_packages(dependencies::Vector{String})
     @info "remove packages: $(dependencies)"
+    project_pkg_name = Pkg.project().name
+
     for pkg in dependencies
+        if pkg == project_pkg_name
+            @warn "Skipped uninstallation: Try to uninstall the dependency $(pkg), " *
+                "but it is the name of the active project."
+            continue
+        end
+
         # if the package is in the extra section, it cannot be removed
         try
             Pkg.rm(pkg)
@@ -605,7 +613,15 @@ function install_qed_dev_packages(
 )
     @info "install QED packages"
 
+    project_pkg_name = Pkg.project().name
+
     for pkg in pkg_to_install
+        if pkg == project_pkg_name
+            @warn "Skipped installation: Try to install the dependency $(pkg), " *
+                "but it is the name of the active project."
+            continue
+        end
+
         if pkg == dev_package_name
             @info "install dev package: $(dev_package_path)"
             Pkg.develop(; path=dev_package_path)
