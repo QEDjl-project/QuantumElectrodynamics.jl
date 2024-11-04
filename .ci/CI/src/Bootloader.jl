@@ -65,10 +65,12 @@ function add_unit_test_job_yaml!(
     for version in julia_versions
         if version != "nightly"
             job_dict["unit_test_julia_$(replace(version, "." => "_"))"] = get_normal_unit_test(
-                version, target_branch
+                version, target_branch, git_ci_tools_url, git_ci_tools_branch
             )
         else
-            job_dict["unit_test_julia_nightly"] = get_nighlty_unit_test(target_branch)
+            job_dict["unit_test_julia_nightly"] = get_nighlty_unit_test(
+                target_branch, git_ci_tools_url, git_ci_tools_branch
+            )
         end
     end
 
@@ -84,19 +86,24 @@ function add_unit_test_job_yaml!(
                 "julia /tools/.ci/verify_env.jl",
             ],
             "interruptible" => true,
-            "tags" => ["cpuonly"]
+            "tags" => ["cpuonly"],
         )
     end
 end
 
-function get_normal_unit_test(version::String, target_branch::String)::Dict
+function get_normal_unit_test(
+    version::String,
+    target_branch::String,
+    git_ci_tools_url::String,
+    git_ci_tools_branch::String,
+)::Dict
     job_yaml = Dict()
     job_yaml["stage"] = "unit-test"
     job_yaml["image"] = "julia:$(version)"
 
     script = [
         "apt update && apt install -y git",
-        "git clone --depth 1 -b dev https://github.com/QEDjl-project/QuantumElectrodynamics.jl.git /tmp/integration_test_tools/",
+        "git clone --depth 1 -b $(git_ci_tools_branch) $(git_ci_tools_url) /tmp/integration_test_tools/",
         "\$(julia --project=. /tmp/integration_test_tools/.ci/integTestGen/src/get_project_name_version_path.jl)",
         "echo \"CI_DEV_PKG_NAME -> \$CI_DEV_PKG_NAME\"",
         "echo \"CI_DEV_PKG_VERSION -> \$CI_DEV_PKG_VERSION\"",
@@ -130,8 +137,12 @@ function get_normal_unit_test(version::String, target_branch::String)::Dict
     return job_yaml
 end
 
-function get_nighlty_unit_test(target_branch::String)
-    job_yaml = get_normal_unit_test("1", target_branch)
+function get_nighlty_unit_test(
+    target_branch::String, git_ci_tools_url::String, git_ci_tools_branch::String
+)
+    job_yaml = get_normal_unit_test(
+        "1", target_branch, git_ci_tools_url, git_ci_tools_branch
+    )
     job_yaml["image"] = "debian:bookworm-slim"
 
     job_yaml["variables"] = Dict()
@@ -209,7 +220,13 @@ if abspath(PROGRAM_FILE) == @__FILE__
 
     (git_ci_tools_url, git_ci_tools_branch) = get_git_ci_tools_url_branch()
 
-    add_unit_test_job_yaml!(job_yaml, unit_test_julia_versions, target_branch, git_ci_tools_url, git_ci_tools_branch)
+    add_unit_test_job_yaml!(
+        job_yaml,
+        unit_test_julia_versions,
+        target_branch,
+        git_ci_tools_url,
+        git_ci_tools_branch,
+    )
 
     print_job_yaml(job_yaml)
 end
