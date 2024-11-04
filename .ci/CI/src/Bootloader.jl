@@ -91,7 +91,7 @@ end
 
 function get_normal_unit_test(version::String, target_branch::String)::Dict
     job_yaml = Dict()
-    job_yaml["stages"] = "unit-test"
+    job_yaml["stage"] = "unit-test"
     job_yaml["image"] = "julia:$(version)"
 
     script = [
