@@ -23,13 +23,26 @@ end
     @testset "target main branch, no PR" begin
         job_yaml = Dict()
         CI.integTestGen.generate_job_yaml!(
-            "QEDcore", "main", "/path/to/QEDcore.jl", job_yaml, package_infos
+            "QEDcore",
+            "main",
+            "QEDtest",
+            "1.0.0",
+            "/path/to/QEDcore.jl",
+            job_yaml,
+            package_infos,
+            "",
+            "",
         )
         @test length(job_yaml) == 1
 
         expected_job_yaml = Dict()
-        expected_job_yaml["IntegrationTestQEDcore"] = Dict(
+        expected_job_yaml["integration_test_QEDcore"] = Dict(
             "image" => "julia:1.10",
+            "variables" => Dict(
+                "CI_DEV_PKG_NAME" => "QEDtest",
+                "CI_DEV_PKG_VERSION" => "1.0.0",
+                "CI_DEV_PKG_PATH" => "/path/to/QEDcore.jl",
+            ),
             "interruptible" => true,
             "tags" => ["cpuonly"],
             "script" => [
@@ -45,19 +58,19 @@ end
         )
 
         @test (
-            @assert job_yaml["IntegrationTestQEDcore"]["script"] ==
-                expected_job_yaml["IntegrationTestQEDcore"]["script"] yaml_diff(
-                job_yaml["IntegrationTestQEDcore"]["script"],
-                expected_job_yaml["IntegrationTestQEDcore"]["script"],
+            @assert job_yaml["integration_test_QEDcore"]["script"] ==
+                expected_job_yaml["integration_test_QEDcore"]["script"] yaml_diff(
+                job_yaml["integration_test_QEDcore"]["script"],
+                expected_job_yaml["integration_test_QEDcore"]["script"],
             );
             true
         )
 
         @test (
-            @assert job_yaml["IntegrationTestQEDcore"] ==
-                expected_job_yaml["IntegrationTestQEDcore"] yaml_diff(
-                job_yaml["IntegrationTestQEDcore"],
-                expected_job_yaml["IntegrationTestQEDcore"],
+            @assert job_yaml["integration_test_QEDcore"] ==
+                expected_job_yaml["integration_test_QEDcore"] yaml_diff(
+                job_yaml["integration_test_QEDcore"],
+                expected_job_yaml["integration_test_QEDcore"],
             );
             true
         )
@@ -66,13 +79,26 @@ end
     @testset "target non main branch, if PR or not is the same" begin
         job_yaml = Dict()
         CI.integTestGen.generate_job_yaml!(
-            "QEDcore", "feature3", "/path/to/QEDcore.jl", job_yaml, package_infos
+            "QEDcore",
+            "feature3",
+            "QEDtest",
+            "1.0.0",
+            "/path/to/QEDcore.jl",
+            job_yaml,
+            package_infos,
+            "https://github.com/QEDjl-project/QuantumElectrodynamics.jl.git",
+            "dev",
         )
         @test length(job_yaml) == 1
 
         expected_job_yaml = Dict()
-        expected_job_yaml["IntegrationTestQEDcore"] = Dict(
+        expected_job_yaml["integration_test_QEDcore"] = Dict(
             "image" => "julia:1.10",
+            "variables" => Dict(
+                "CI_DEV_PKG_NAME" => "QEDtest",
+                "CI_DEV_PKG_VERSION" => "1.0.0",
+                "CI_DEV_PKG_PATH" => "/path/to/QEDcore.jl",
+            ),
             "interruptible" => true,
             "tags" => ["cpuonly"],
             "script" => [
@@ -82,26 +108,26 @@ end
                 "git clone -b feature3 $(package_infos["QEDcore"].url) integration_test",
                 "git clone -b dev https://github.com/QEDjl-project/QuantumElectrodynamics.jl.git /integration_test_tools",
                 "cd integration_test",
-                "julia --project=. /integration_test_tools/.ci/SetupDevEnv/src/SetupDevEnv.jl",
+                "julia --project=. /integration_test_tools/.ci/CI/src/SetupDevEnv.jl",
                 "julia --project=. -e 'import Pkg; Pkg.instantiate()'",
                 "julia --project=. -e 'import Pkg; Pkg.test(; coverage = true)'",
             ],
         )
 
         @test (
-            @assert job_yaml["IntegrationTestQEDcore"]["script"] ==
-                expected_job_yaml["IntegrationTestQEDcore"]["script"] yaml_diff(
-                job_yaml["IntegrationTestQEDcore"]["script"],
-                expected_job_yaml["IntegrationTestQEDcore"]["script"],
+            @assert job_yaml["integration_test_QEDcore"]["script"] ==
+                expected_job_yaml["integration_test_QEDcore"]["script"] yaml_diff(
+                job_yaml["integration_test_QEDcore"]["script"],
+                expected_job_yaml["integration_test_QEDcore"]["script"],
             );
             true
         )
 
         @test (
-            @assert job_yaml["IntegrationTestQEDcore"] ==
-                expected_job_yaml["IntegrationTestQEDcore"] yaml_diff(
-                job_yaml["IntegrationTestQEDcore"],
-                expected_job_yaml["IntegrationTestQEDcore"],
+            @assert job_yaml["integration_test_QEDcore"] ==
+                expected_job_yaml["integration_test_QEDcore"] yaml_diff(
+                job_yaml["integration_test_QEDcore"],
+                expected_job_yaml["integration_test_QEDcore"],
             );
             true
         )
@@ -110,16 +136,41 @@ end
     @testset "target main branch, PR" begin
         job_yaml = Dict()
         CI.integTestGen.generate_job_yaml!(
-            "QEDcore", "dev", "/path/to/QEDcore.jl", job_yaml, package_infos
+            "QEDcore",
+            "dev",
+            "QEDtest",
+            "1.0.0",
+            "/path/to/QEDcore.jl",
+            job_yaml,
+            package_infos,
+            "https://github.com/fork/QEDTest.jl.git",
+            "ciDev",
+            "integ-test",
         )
         CI.integTestGen.generate_job_yaml!(
-            "QEDcore", "main", "/path/to/QEDcore.jl", job_yaml, package_infos, true
+            "QEDcore",
+            "main",
+            "QEDtest",
+            "1.0.0",
+            "/path/to/QEDcore.jl",
+            job_yaml,
+            package_infos,
+            "https://github.com/fork_other/QEDTest.jl.git",
+            "ciDevOther",
+            "integ-test",
+            true,
         )
         @test length(job_yaml) == 2
 
         expected_job_yaml = Dict()
-        expected_job_yaml["IntegrationTestQEDcore"] = Dict(
+        expected_job_yaml["integration_test_QEDcore"] = Dict(
             "image" => "julia:1.10",
+            "stage" => "integ-test",
+            "variables" => Dict(
+                "CI_DEV_PKG_NAME" => "QEDtest",
+                "CI_DEV_PKG_VERSION" => "1.0.0",
+                "CI_DEV_PKG_PATH" => "/path/to/QEDcore.jl",
+            ),
             "interruptible" => true,
             "tags" => ["cpuonly"],
             "script" => [
@@ -127,34 +178,40 @@ end
                 "apt install -y git",
                 "cd /",
                 "git clone -b dev $(package_infos["QEDcore"].url) integration_test",
-                "git clone -b dev https://github.com/QEDjl-project/QuantumElectrodynamics.jl.git /integration_test_tools",
+                "git clone -b ciDev https://github.com/fork/QEDTest.jl.git /integration_test_tools",
                 "cd integration_test",
-                "julia --project=. /integration_test_tools/.ci/SetupDevEnv/src/SetupDevEnv.jl",
+                "julia --project=. /integration_test_tools/.ci/CI/src/SetupDevEnv.jl",
                 "julia --project=. -e 'import Pkg; Pkg.instantiate()'",
                 "julia --project=. -e 'import Pkg; Pkg.test(; coverage = true)'",
             ],
         )
 
         @test (
-            @assert job_yaml["IntegrationTestQEDcore"]["script"] ==
-                expected_job_yaml["IntegrationTestQEDcore"]["script"] yaml_diff(
-                job_yaml["IntegrationTestQEDcore"]["script"],
-                expected_job_yaml["IntegrationTestQEDcore"]["script"],
+            @assert job_yaml["integration_test_QEDcore"]["script"] ==
+                expected_job_yaml["integration_test_QEDcore"]["script"] yaml_diff(
+                job_yaml["integration_test_QEDcore"]["script"],
+                expected_job_yaml["integration_test_QEDcore"]["script"],
             );
             true
         )
 
         @test (
-            @assert job_yaml["IntegrationTestQEDcore"] ==
-                expected_job_yaml["IntegrationTestQEDcore"] yaml_diff(
-                job_yaml["IntegrationTestQEDcore"],
-                expected_job_yaml["IntegrationTestQEDcore"],
+            @assert job_yaml["integration_test_QEDcore"] ==
+                expected_job_yaml["integration_test_QEDcore"] yaml_diff(
+                job_yaml["integration_test_QEDcore"],
+                expected_job_yaml["integration_test_QEDcore"],
             );
             true
         )
 
-        expected_job_yaml["IntegrationTestQEDcoreReleaseTest"] = Dict(
+        expected_job_yaml["integration_test_QEDcore_release_test"] = Dict(
             "image" => "julia:1.10",
+            "stage" => "integ-test",
+            "variables" => Dict(
+                "CI_DEV_PKG_NAME" => "QEDtest",
+                "CI_DEV_PKG_VERSION" => "1.0.0",
+                "CI_DEV_PKG_PATH" => "/path/to/QEDcore.jl",
+            ),
             "interruptible" => true,
             "tags" => ["cpuonly"],
             "allow_failure" => true,
@@ -171,19 +228,19 @@ end
         )
 
         @test (
-            @assert job_yaml["IntegrationTestQEDcoreReleaseTest"]["script"] ==
-                expected_job_yaml["IntegrationTestQEDcoreReleaseTest"]["script"] yaml_diff(
-                job_yaml["IntegrationTestQEDcoreReleaseTest"]["script"],
-                expected_job_yaml["IntegrationTestQEDcoreReleaseTest"]["script"],
+            @assert job_yaml["integration_test_QEDcore_release_test"]["script"] ==
+                expected_job_yaml["integration_test_QEDcore_release_test"]["script"] yaml_diff(
+                job_yaml["integration_test_QEDcore_release_test"]["script"],
+                expected_job_yaml["integration_test_QEDcore_release_test"]["script"],
             );
             true
         )
 
         @test (
-            @assert job_yaml["IntegrationTestQEDcoreReleaseTest"] ==
-                expected_job_yaml["IntegrationTestQEDcoreReleaseTest"] yaml_diff(
-                job_yaml["IntegrationTestQEDcoreReleaseTest"],
-                expected_job_yaml["IntegrationTestQEDcoreReleaseTest"],
+            @assert job_yaml["integration_test_QEDcore_release_test"] ==
+                expected_job_yaml["integration_test_QEDcore_release_test"] yaml_diff(
+                job_yaml["integration_test_QEDcore_release_test"],
+                expected_job_yaml["integration_test_QEDcore_release_test"],
             );
             true
         )

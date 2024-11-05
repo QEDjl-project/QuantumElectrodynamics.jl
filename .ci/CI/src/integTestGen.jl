@@ -104,9 +104,14 @@ Generate GitLab CI job yaml for integration testing of a given package.
 function generate_job_yaml!(
     package_name::String,
     target_branch::AbstractString,
-    ci_project_dir::AbstractString,
+    dev_package_name::AbstractString,
+    dev_package_version::AbstractString,
+    dev_package_path::AbstractString,
     job_yaml::Dict,
     package_infos::AbstractDict{String,PackageInfo},
+    git_ci_tools_url::String,
+    git_ci_tools_branch::String,
+    stage::AbstractString="",
     can_fail::Bool=false,
 )
     package_info = package_infos[package_name]
@@ -128,7 +133,7 @@ function generate_job_yaml!(
     if (target_branch != "main")
         push!(
             script,
-            "git clone -b dev https://github.com/QEDjl-project/QuantumElectrodynamics.jl.git /integration_test_tools",
+            "git clone -b $(git_ci_tools_branch) $(git_ci_tools_url) /integration_test_tools",
         )
     end
     push!(script, "cd integration_test")
@@ -142,23 +147,29 @@ function generate_job_yaml!(
     if (target_branch == "main")
         push!(
             script,
-            "julia --project=. -e 'import Pkg; Pkg.develop(path=\"$ci_project_dir\");'",
+            "julia --project=. -e 'import Pkg; Pkg.develop(path=\"$dev_package_path\");'",
         )
     else
-        push!(
-            script,
-            "julia --project=. /integration_test_tools/.ci/SetupDevEnv/src/SetupDevEnv.jl",
-        )
+        push!(script, "julia --project=. /integration_test_tools/.ci/CI/src/SetupDevEnv.jl")
     end
     push!(script, "julia --project=. -e 'import Pkg; Pkg.instantiate()'")
     push!(script, "julia --project=. -e 'import Pkg; Pkg.test(; coverage = true)'")
 
     current_job_yaml = Dict(
         "image" => "julia:1.10",
+        "variables" => Dict(
+            "CI_DEV_PKG_NAME" => dev_package_name,
+            "CI_DEV_PKG_VERSION" => dev_package_version,
+            "CI_DEV_PKG_PATH" => dev_package_path,
+        ),
         "interruptible" => true,
         "tags" => ["cpuonly"],
         "script" => script,
     )
+
+    if stage != ""
+        current_job_yaml["stage"] = stage
+    end
 
     if haskey(ENV, "CI_DEV_PKG_NAME") &&
         haskey(ENV, "CI_DEV_PKG_VERSION") &&
@@ -172,9 +183,9 @@ function generate_job_yaml!(
 
     if can_fail
         current_job_yaml["allow_failure"] = true
-        return job_yaml["IntegrationTest$(package_name)ReleaseTest"] = current_job_yaml
+        return job_yaml["integration_test_$(package_name)_release_test"] = current_job_yaml
     else
-        return job_yaml["IntegrationTest$package_name"] = current_job_yaml
+        return job_yaml["integration_test_$package_name"] = current_job_yaml
     end
 end
 
@@ -226,73 +237,73 @@ function get_package_info()::Dict{String,PackageInfo}
     )
 end
 
-if abspath(PROGRAM_FILE) == @__FILE__
-    if !haskey(ENV, "CI_COMMIT_REF_NAME")
-        @warn "Environemnt variable CI_COMMIT_REF_NAME not defined. Use default branch `dev`."
-        target_branch = "dev"
-    else
-        target_branch = get_target()
-    end
+# if abspath(PROGRAM_FILE) == @__FILE__
+#     if !haskey(ENV, "CI_COMMIT_REF_NAME")
+#         @warn "Environemnt variable CI_COMMIT_REF_NAME not defined. Use default branch `dev`."
+#         target_branch = "dev"
+#     else
+#         target_branch = get_target()
+#     end
 
-    package_infos = get_package_info()
+#     package_infos = get_package_info()
 
-    # custom commit message variable can be set as first argument
-    if length(ARGS) < 1
-        extract_env_vars_from_git_message!(package_infos)
-    else
-        extract_env_vars_from_git_message!(package_infos, ARGS[1])
-    end
+#     # custom commit message variable can be set as first argument
+#     if length(ARGS) < 1
+#         extract_env_vars_from_git_message!(package_infos)
+#     else
+#         extract_env_vars_from_git_message!(package_infos, ARGS[1])
+#     end
 
-    modify_package_url!(package_infos)
-    modified_pkg = modified_package_name(package_infos)
+#     modify_package_url!(package_infos)
+#     modified_pkg = modified_package_name(package_infos)
 
-    # TODO(SimeonEhrig): refactor me, that the conversion is not required anymore
-    custom_urls = Dict{String,String}()
-    for (name, info) in package_infos
-        if info.modified_url != ""
-            custom_urls[name] = info.modified_url
-        end
-    end
-    qed_path = mktempdir(; cleanup=false)
-    compat_changes = Dict{String,String}()
+#     # TODO(SimeonEhrig): refactor me, that the conversion is not required anymore
+#     custom_urls = Dict{String,String}()
+#     for (name, info) in package_infos
+#         if info.modified_url != ""
+#             custom_urls[name] = info.modified_url
+#         end
+#     end
+#     qed_path = mktempdir(; cleanup=false)
+#     compat_changes = Dict{String,String}()
 
-    pkg_tree = build_qed_dependency_graph!(qed_path, compat_changes, custom_urls)
-    depending_pkg = IntegrationTests.depending_projects(
-        modified_pkg, collect(keys(package_infos)), pkg_tree
-    )
+#     pkg_tree = build_qed_dependency_graph!(qed_path, compat_changes, custom_urls)
+#     depending_pkg = IntegrationTests.depending_projects(
+#         modified_pkg, collect(keys(package_infos)), pkg_tree
+#     )
 
-    job_yaml = Dict()
+#     job_yaml = Dict()
 
-    if !isempty(depending_pkg)
-        for p in depending_pkg
-            # Handles the case of merging in the main branch. If we want to merge in the main branch, 
-            # we do it because we want to publish the package. Therefore, we need to be sure that there 
-            # is an existing version of the dependent QED packages that works with the new version of 
-            # the package we want to release. The integration tests are tested against the development 
-            # branch and the release version.
-            #  - The dev branch version must pass, as this means that the latest version of the other 
-            #    QED packages is compatible with our release version.
-            #  - The release version integration tests may or may not pass. 
-            #    1. If all of these pass, we will not need to increase the minor version of this package. 
-            #    2. If they do not all pass, the minor version must be increased and the failing packages 
-            #    must also be released later with an updated compat entry.
-            #    In either case the release can proceed, as the released packages will continue to work
-            #    because of their current compat entries.
-            if target_branch == "main" && TargetBranch.is_pull_request()
-                generate_job_yaml!(p, "dev", ENV["CI_PROJECT_DIR"], job_yaml, package_infos)
-                generate_job_yaml!(
-                    p, "main", ENV["CI_PROJECT_DIR"], job_yaml, package_infos, true
-                )
-            else
-                generate_job_yaml!(
-                    p, target_branch, ENV["CI_PROJECT_DIR"], job_yaml, package_infos
-                )
-            end
-        end
-    else
-        generate_dummy_job_yaml!(job_yaml)
-    end
-    println(YAML.write(job_yaml))
-end
+#     if !isempty(depending_pkg)
+#         for p in depending_pkg
+#             # Handles the case of merging in the main branch. If we want to merge in the main branch, 
+#             # we do it because we want to publish the package. Therefore, we need to be sure that there 
+#             # is an existing version of the dependent QED packages that works with the new version of 
+#             # the package we want to release. The integration tests are tested against the development 
+#             # branch and the release version.
+#             #  - The dev branch version must pass, as this means that the latest version of the other 
+#             #    QED packages is compatible with our release version.
+#             #  - The release version integration tests may or may not pass. 
+#             #    1. If all of these pass, we will not need to increase the minor version of this package. 
+#             #    2. If they do not all pass, the minor version must be increased and the failing packages 
+#             #    must also be released later with an updated compat entry.
+#             #    In either case the release can proceed, as the released packages will continue to work
+#             #    because of their current compat entries.
+#             if target_branch == "main" && TargetBranch.is_pull_request()
+#                 generate_job_yaml!(p, "dev", ENV["CI_PROJECT_DIR"], job_yaml, package_infos)
+#                 generate_job_yaml!(
+#                     p, "main", ENV["CI_PROJECT_DIR"], job_yaml, package_infos, true
+#                 )
+#             else
+#                 generate_job_yaml!(
+#                     p, target_branch, ENV["CI_PROJECT_DIR"], job_yaml, package_infos
+#                 )
+#             end
+#         end
+#     else
+#         generate_dummy_job_yaml!(job_yaml)
+#     end
+#     println(YAML.write(job_yaml))
+# end
 
 end # module integTestGen
