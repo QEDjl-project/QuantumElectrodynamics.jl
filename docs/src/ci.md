@@ -170,5 +170,5 @@ The `integTestGen.jl` script has a special behavior. It creates its own `Project
 The following example assumes that the `QuantumElectrodynamics.jl` project is located at `$HOME/projects/QuantumElectrodynamics.jl` and the project to test is `QEDbase.jl` and is located at `$HOME/projects/QEDbase.jl`.
 
 ```bash
-CI_DEPENDENCY_NAME=QEDbase CI_PROJECT_DIR="$HOME/projects/QEDbase.jl" julia --project=$HOME/projects/QuantumElectrodynamics.jl/ci/integTestGen $HOME/projects/QuantumElectrodynamics.jl/ci/integTestGen/src/integTestGen.jl
+CI_DEV_PKG_NAME=QEDbase CI_PROJECT_DIR="$HOME/projects/QEDbase.jl" julia --project=$HOME/projects/QuantumElectrodynamics.jl/ci/integTestGen $HOME/projects/QuantumElectrodynamics.jl/ci/integTestGen/src/integTestGen.jl
 ```

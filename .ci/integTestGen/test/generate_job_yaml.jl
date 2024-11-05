@@ -29,7 +29,7 @@ end
 
         expected_job_yaml = Dict()
         expected_job_yaml["IntegrationTestQEDcore"] = Dict(
-            "image" => "julia:1.9",
+            "image" => "julia:1.10",
             "interruptible" => true,
             "tags" => ["cpuonly"],
             "script" => [
@@ -38,9 +38,8 @@ end
                 "cd /",
                 "git clone -b main $(package_infos["QEDcore"].url) integration_test",
                 "cd integration_test",
-                "julia --project=. -e 'import Pkg; Pkg.Registry.add(Pkg.RegistrySpec(url=\"https://github.com/QEDjl-project/registry.git\"));'",
-                "julia --project=. -e 'import Pkg; Pkg.Registry.add(Pkg.RegistrySpec(url=\"https://github.com/JuliaRegistries/General\"));'",
                 "julia --project=. -e 'import Pkg; Pkg.develop(path=\"/path/to/QEDcore.jl\");'",
+                "julia --project=. -e 'import Pkg; Pkg.instantiate()'",
                 "julia --project=. -e 'import Pkg; Pkg.test(; coverage = true)'",
             ],
         )
@@ -73,7 +72,7 @@ end
 
         expected_job_yaml = Dict()
         expected_job_yaml["IntegrationTestQEDcore"] = Dict(
-            "image" => "julia:1.9",
+            "image" => "julia:1.10",
             "interruptible" => true,
             "tags" => ["cpuonly"],
             "script" => [
@@ -83,10 +82,8 @@ end
                 "git clone -b feature3 $(package_infos["QEDcore"].url) integration_test",
                 "git clone -b dev https://github.com/QEDjl-project/QuantumElectrodynamics.jl.git /integration_test_tools",
                 "cd integration_test",
-                "julia --project=. -e 'import Pkg; Pkg.Registry.add(Pkg.RegistrySpec(url=\"https://github.com/QEDjl-project/registry.git\"));'",
-                "julia --project=. -e 'import Pkg; Pkg.Registry.add(Pkg.RegistrySpec(url=\"https://github.com/JuliaRegistries/General\"));'",
-                "julia --project=. -e 'import Pkg; Pkg.develop(path=\"/path/to/QEDcore.jl\");'",
-                "julia --project=. /integration_test_tools/.ci/set_dev_dependencies.jl",
+                "julia --project=. /integration_test_tools/.ci/SetupDevEnv/src/SetupDevEnv.jl",
+                "julia --project=. -e 'import Pkg; Pkg.instantiate()'",
                 "julia --project=. -e 'import Pkg; Pkg.test(; coverage = true)'",
             ],
         )
@@ -122,7 +119,7 @@ end
 
         expected_job_yaml = Dict()
         expected_job_yaml["IntegrationTestQEDcore"] = Dict(
-            "image" => "julia:1.9",
+            "image" => "julia:1.10",
             "interruptible" => true,
             "tags" => ["cpuonly"],
             "script" => [
@@ -132,10 +129,8 @@ end
                 "git clone -b dev $(package_infos["QEDcore"].url) integration_test",
                 "git clone -b dev https://github.com/QEDjl-project/QuantumElectrodynamics.jl.git /integration_test_tools",
                 "cd integration_test",
-                "julia --project=. -e 'import Pkg; Pkg.Registry.add(Pkg.RegistrySpec(url=\"https://github.com/QEDjl-project/registry.git\"));'",
-                "julia --project=. -e 'import Pkg; Pkg.Registry.add(Pkg.RegistrySpec(url=\"https://github.com/JuliaRegistries/General\"));'",
-                "julia --project=. -e 'import Pkg; Pkg.develop(path=\"/path/to/QEDcore.jl\");'",
-                "julia --project=. /integration_test_tools/.ci/set_dev_dependencies.jl",
+                "julia --project=. /integration_test_tools/.ci/SetupDevEnv/src/SetupDevEnv.jl",
+                "julia --project=. -e 'import Pkg; Pkg.instantiate()'",
                 "julia --project=. -e 'import Pkg; Pkg.test(; coverage = true)'",
             ],
         )
@@ -159,7 +154,7 @@ end
         )
 
         expected_job_yaml["IntegrationTestQEDcoreReleaseTest"] = Dict(
-            "image" => "julia:1.9",
+            "image" => "julia:1.10",
             "interruptible" => true,
             "tags" => ["cpuonly"],
             "allow_failure" => true,
@@ -169,9 +164,8 @@ end
                 "cd /",
                 "git clone -b main $(package_infos["QEDcore"].url) integration_test",
                 "cd integration_test",
-                "julia --project=. -e 'import Pkg; Pkg.Registry.add(Pkg.RegistrySpec(url=\"https://github.com/QEDjl-project/registry.git\"));'",
-                "julia --project=. -e 'import Pkg; Pkg.Registry.add(Pkg.RegistrySpec(url=\"https://github.com/JuliaRegistries/General\"));'",
                 "julia --project=. -e 'import Pkg; Pkg.develop(path=\"/path/to/QEDcore.jl\");'",
+                "julia --project=. -e 'import Pkg; Pkg.instantiate()'",
                 "julia --project=. -e 'import Pkg; Pkg.test(; coverage = true)'",
             ],
         )

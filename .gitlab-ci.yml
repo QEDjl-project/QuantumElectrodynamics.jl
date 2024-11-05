@@ -11,13 +11,15 @@ stages:
     - julia --project=. -e 'import Pkg; Pkg.test(; coverage = true)'
     - cd ${CI_PROJECT_DIR}
     # test integTestGen
-    - julia --project=. -e 'import Pkg; Pkg.Registry.add(Pkg.RegistrySpec(url="https://github.com/QEDjl-project/registry.git"));'
-    - julia --project=. -e 'import Pkg; Pkg.Registry.add(Pkg.RegistrySpec(url="https://github.com/JuliaRegistries/General"));'
     - cd ${CI_PROJECT_DIR}/.ci/integTestGen
     - julia --project=. -e 'import Pkg; Pkg.instantiate()'
     - julia --project=. -e 'import Pkg; Pkg.test(; coverage = true)'
     - cd ${CI_PROJECT_DIR}
     # test QuantumElectrodynamics.jl
+    - $(julia --project=. ${CI_PROJECT_DIR}/.ci/integTestGen/src/get_project_name_version_path.jl)
+    - echo "CI_DEV_PKG_NAME -> $CI_DEV_PKG_NAME"
+    - echo "CI_DEV_PKG_VERSION -> $CI_DEV_PKG_VERSION"
+    - echo "CI_DEV_PKG_PATH -> $CI_DEV_PKG_PATH"
     - >
       if [[ $CI_COMMIT_BRANCH == "main" || $CI_COMMIT_REF_NAME == "main" || $CI_COMMIT_BRANCH == "dev" || $CI_COMMIT_REF_NAME == "dev" ]]; then
         # set name of the commit message from CI_COMMIT_MESSAGE to NO_MESSAGE, that the script does not read accidentally custom packages from the commit message of a merge commit
@@ -35,7 +37,7 @@ unit_tests_releases:
   extends: .untit_test_template
   parallel:
     matrix:
-      - JULIA_VERSION: ["1.6", "1.7", "1.8", "1.9", "1.10", "rc"]
+      - JULIA_VERSION: ["1.10", "1.11", "rc"]
   image: julia:$JULIA_VERSION
 
 unit_tests_nightly:
