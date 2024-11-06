@@ -1,13 +1,11 @@
-module UnitTest
 function add_unit_test_job_yaml!(
     job_dict::Dict,
+    test_package::TestPackage,
     julia_versions::Vector{String},
-    target_branch::String,
-    dev_package_name::AbstractString,
-    dev_package_version::AbstractString,
-    dev_package_path::AbstractString,
-    git_ci_tools_url::String="https://github.com/QEDjl-project/QuantumElectrodynamics.jl.git",
-    git_ci_tools_branch::String="dev",
+    target_branch::AbstractString,
+    tools_git_repo::ToolsGitRepo=ToolsGitRepo(
+        "https://github.com/QEDjl-project/QuantumElectrodynamics.jl.git", "dev"
+    ),
     nightly_base_image::AbstractString="debian:bookworm-slim",
 )
     if !haskey(job_dict, "stages")
@@ -19,23 +17,11 @@ function add_unit_test_job_yaml!(
     for version in julia_versions
         if version != "nightly"
             job_dict["unit_test_julia_$(replace(version, "." => "_"))"] = get_normal_unit_test(
-                version,
-                target_branch,
-                dev_package_name,
-                dev_package_version,
-                dev_package_path,
-                git_ci_tools_url,
-                git_ci_tools_branch,
+                version, test_package, target_branch, tools_git_repo
             )
         else
             job_dict["unit_test_julia_nightly"] = get_nightly_unit_test(
-                target_branch,
-                dev_package_name,
-                dev_package_version,
-                dev_package_path,
-                git_ci_tools_url,
-                git_ci_tools_branch,
-                nightly_base_image,
+                test_package, target_branch, tools_git_repo, nightly_base_image
             )
         end
     end
@@ -43,9 +29,10 @@ end
 
 function add_unit_test_verify_job_yaml!(
     job_dict::Dict,
-    target_branch::String,
-    git_ci_tools_url::String="https://github.com/QEDjl-project/QuantumElectrodynamics.jl.git",
-    git_ci_tools_branch::String="dev",
+    target_branch::AbstractString,
+    tools_git_repo::ToolsGitRepo=ToolsGitRepo(
+        "https://github.com/QEDjl-project/QuantumElectrodynamics.jl.git", "dev"
+    ),
 )
     # verification script that no custom URLs are used in unit tests
     if target_branch != "main"
@@ -55,7 +42,7 @@ function add_unit_test_verify_job_yaml!(
             "stage" => "verify-unit-test-deps",
             "script" => [
                 "apt update && apt install -y git",
-                "git clone --depth 1 -b $(git_ci_tools_branch) $(git_ci_tools_url) /tools",
+                "git clone --depth 1 -b $(tools_git_repo.branch) $(tools_git_repo.url) /tools",
                 "julia /tools/.ci/verify_env.jl",
             ],
             "interruptible" => true,
@@ -65,26 +52,23 @@ function add_unit_test_verify_job_yaml!(
 end
 
 function get_normal_unit_test(
-    version::String,
-    target_branch::String,
-    dev_package_name::AbstractString,
-    dev_package_version::AbstractString,
-    dev_package_path::AbstractString,
-    git_ci_tools_url::String,
-    git_ci_tools_branch::String,
+    version::AbstractString,
+    test_package::TestPackage,
+    target_branch::AbstractString,
+    tools_git_repo::ToolsGitRepo,
 )::Dict
     job_yaml = Dict()
     job_yaml["stage"] = "unit-test"
     job_yaml["variables"] = Dict(
-        "CI_DEV_PKG_NAME" => dev_package_name,
-        "CI_DEV_PKG_VERSION" => dev_package_version,
-        "CI_DEV_PKG_PATH" => dev_package_path,
+        "CI_DEV_PKG_NAME" => test_package.name,
+        "CI_DEV_PKG_VERSION" => test_package.version,
+        "CI_DEV_PKG_PATH" => test_package.path,
     )
     job_yaml["image"] = "julia:$(version)"
 
     script = [
         "apt update && apt install -y git",
-        "git clone --depth 1 -b $(git_ci_tools_branch) $(git_ci_tools_url) /tmp/integration_test_tools/",
+        "git clone --depth 1 -b $(tools_git_repo.branch) $(tools_git_repo.url) /tmp/integration_test_tools/",
     ]
 
     if target_branch == "main"
@@ -115,23 +99,12 @@ function get_normal_unit_test(
 end
 
 function get_nightly_unit_test(
-    target_branch::String,
-    dev_package_name::AbstractString,
-    dev_package_version::AbstractString,
-    dev_package_path::AbstractString,
-    git_ci_tools_url::String,
-    git_ci_tools_branch::String,
+    test_package::TestPackage,
+    target_branch::AbstractString,
+    tools_git_repo::ToolsGitRepo,
     nightly_base_image::AbstractString,
 )
-    job_yaml = get_normal_unit_test(
-        "1",
-        target_branch,
-        dev_package_name,
-        dev_package_version,
-        dev_package_path,
-        git_ci_tools_url,
-        git_ci_tools_branch,
-    )
+    job_yaml = get_normal_unit_test("1", test_package, target_branch, tools_git_repo)
     job_yaml["image"] = nightly_base_image
 
     if !haskey(job_yaml, "variables")
@@ -165,5 +138,4 @@ fi",
 
     job_yaml["allow_failure"] = true
     return job_yaml
-end
 end

@@ -1,5 +1,3 @@
-module GitLabTargetBranch
-
 using HTTP
 using JSON
 using Pkg
@@ -123,6 +121,4 @@ function get_target()::AbstractString
     else
         return get_build_branch()
     end
-end
-
 end

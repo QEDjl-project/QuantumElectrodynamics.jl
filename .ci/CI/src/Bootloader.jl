@@ -1,12 +1,8 @@
-module Bootloader
-
+include("./modules/Utils.jl")
 include("./modules/GitLabTargetBranch.jl")
 include("./modules/UnitTest.jl")
 include("./modules/IntegTest.jl")
 
-using .GitLabTargetBranch
-using .UnitTest
-using .IntegGen
 using IntegrationTests
 using TOML
 using Logging
@@ -22,13 +18,13 @@ function _check_env_vars()
     end
 end
 
-function get_package_name_version(package_path::AbstractString)::Tuple{String,String}
+function get_package_name_version(package_path::AbstractString)::TestPackage
     project_toml_path = joinpath(package_path, "Project.toml")
 
     f = open(project_toml_path, "r")
     project_toml = TOML.parse(f)
     close(f)
-    return (project_toml["name"], project_toml["version"])
+    return TestPackage(project_toml["name"], project_toml["version"], package_path)
 end
 
 function get_unit_test_julia_versions()::Vector{String}
@@ -43,7 +39,7 @@ function get_unit_test_nightly_baseimage()::String
     return "debian:bookworm-slim"
 end
 
-function get_git_ci_tools_url_branch()::Tuple{String,String}
+function get_git_ci_tools_url_branch()::ToolsGitRepo
     url = "https://github.com/QEDjl-project/QuantumElectrodynamics.jl.git"
     branch = "dev"
 
@@ -57,7 +53,7 @@ function get_git_ci_tools_url_branch()::Tuple{String,String}
         @warn "use custom git branch for CI tools: $(branch)"
     end
 
-    return (url, branch)
+    return ToolsGitRepo(url, branch)
 end
 
 function print_job_yaml(job_yaml::Dict, io::IO=stdout)
@@ -99,12 +95,13 @@ function main()
     _check_env_vars()
 
     package_path = ENV["CI_PROJECT_DIR"]
-    (package_name, package_version) = get_package_name_version(package_path)
-    target_branch = GitLabTargetBranch.get_target()
+    test_package = get_package_name_version(package_path)
+    #target_branch = GitLabTargetBranch.get_target()
+    target_branch = "dev"
 
-    @info "Test package name: $(package_name)"
-    @info "Test package version: $(package_version)"
-    @info "Test package path: $(package_path)"
+    @info "Test package name: $(test_package.name)"
+    @info "Test package version: $(test_package.version)"
+    @info "Test package path: $(test_package.path)"
     @info "PR target branch: $(target_branch)"
 
     unit_test_julia_versions = get_unit_test_julia_versions()
@@ -112,33 +109,20 @@ function main()
 
     job_yaml = Dict()
 
-    (git_ci_tools_url, git_ci_tools_branch) = get_git_ci_tools_url_branch()
+    tools_git_repo = get_git_ci_tools_url_branch()
 
-    UnitTest.add_unit_test_job_yaml!(
+    add_unit_test_job_yaml!(
         job_yaml,
+        test_package,
         unit_test_julia_versions,
         target_branch,
-        package_name,
-        package_version,
-        package_path,
-        git_ci_tools_url,
-        git_ci_tools_branch,
+        tools_git_repo,
         get_unit_test_nightly_baseimage(),
     )
 
-    IntegGen.add_integration_test_job_yaml!(
-        job_yaml,
-        package_name,
-        package_version,
-        package_path,
-        target_branch,
-        git_ci_tools_url,
-        git_ci_tools_branch,
-    )
+    add_integration_test_job_yaml!(job_yaml, test_package, target_branch, tools_git_repo)
 
-    UnitTest.add_unit_test_verify_job_yaml!(
-        job_yaml, target_branch, git_ci_tools_url, git_ci_tools_branch
-    )
+    add_unit_test_verify_job_yaml!(job_yaml, target_branch, tools_git_repo)
 
     return print_job_yaml(job_yaml)
 end
@@ -146,6 +130,4 @@ end
 # TODO: if Julia 1.11 is minimum, replace it it with: function (@main)(args)
 if abspath(PROGRAM_FILE) == @__FILE__
     main()
-end
-
 end

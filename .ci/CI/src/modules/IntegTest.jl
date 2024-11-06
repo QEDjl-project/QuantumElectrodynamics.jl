@@ -1,9 +1,3 @@
-module IntegGen
-
-include("./GitLabTargetBranch.jl")
-include("./Utils.jl")
-
-using .GitLabTargetBranch
 using Pkg: Pkg
 using YAML: YAML
 using Logging
@@ -103,14 +97,11 @@ Generate GitLab CI job yaml for integration testing of a given package.
 """
 function generate_job_yaml!(
     package_name::String,
+    test_package::TestPackage,
     target_branch::AbstractString,
-    dev_package_name::AbstractString,
-    dev_package_version::AbstractString,
-    dev_package_path::AbstractString,
     job_yaml::Dict,
     package_infos::AbstractDict{String,PackageInfo},
-    git_ci_tools_url::String,
-    git_ci_tools_branch::String,
+    tools_git_repo::ToolsGitRepo,
     stage::AbstractString="",
     can_fail::Bool=false,
 )
@@ -133,7 +124,7 @@ function generate_job_yaml!(
     if (target_branch != "main")
         push!(
             script,
-            "git clone -b $(git_ci_tools_branch) $(git_ci_tools_url) /integration_test_tools",
+            "git clone -b $(tools_git_repo.branch) $(tools_git_repo.url) /integration_test_tools",
         )
     end
     push!(script, "cd integration_test")
@@ -147,7 +138,7 @@ function generate_job_yaml!(
     if (target_branch == "main")
         push!(
             script,
-            "julia --project=. -e 'import Pkg; Pkg.develop(path=\"$dev_package_path\");'",
+            "julia --project=. -e 'import Pkg; Pkg.develop(path=\"$(test_package.path)\");'",
         )
     else
         push!(script, "julia --project=. /integration_test_tools/.ci/CI/src/SetupDevEnv.jl")
@@ -158,9 +149,9 @@ function generate_job_yaml!(
     current_job_yaml = Dict(
         "image" => "julia:1.10",
         "variables" => Dict(
-            "CI_DEV_PKG_NAME" => dev_package_name,
-            "CI_DEV_PKG_VERSION" => dev_package_version,
-            "CI_DEV_PKG_PATH" => dev_package_path,
+            "CI_DEV_PKG_NAME" => test_package.name,
+            "CI_DEV_PKG_VERSION" => test_package.version,
+            "CI_DEV_PKG_PATH" => test_package.path,
         ),
         "interruptible" => true,
         "tags" => ["cpuonly"],
@@ -169,16 +160,6 @@ function generate_job_yaml!(
 
     if stage != ""
         current_job_yaml["stage"] = stage
-    end
-
-    if haskey(ENV, "CI_DEV_PKG_NAME") &&
-        haskey(ENV, "CI_DEV_PKG_VERSION") &&
-        haskey(ENV, "CI_DEV_PKG_PATH")
-        current_job_yaml["variables"] = Dict(
-            "CI_DEV_PKG_NAME" => ENV["CI_DEV_PKG_NAME"],
-            "CI_DEV_PKG_VERSION" => ENV["CI_DEV_PKG_VERSION"],
-            "CI_DEV_PKG_PATH" => ENV["CI_DEV_PKG_PATH"],
-        )
     end
 
     if can_fail
@@ -239,22 +220,19 @@ end
 
 function add_integration_test_job_yaml!(
     job_dict::Dict,
-    package_name::AbstractString,
-    package_version::AbstractString,
-    package_path::AbstractString,
+    test_package::TestPackage,
     target_branch::AbstractString,
-    git_ci_tools_url::String,
-    git_ci_tools_branch::String,
+    tools_git_repo::ToolsGitRepo,
 )
     if !haskey(job_dict, "stages")
         job_dict["stages"] = []
     end
 
-    package_infos = IntegGen.get_package_info()
+    package_infos = get_package_info()
     if target_branch != "main"
-        IntegGen.extract_env_vars_from_git_message!(package_infos)
+        extract_env_vars_from_git_message!(package_infos)
     end
-    IntegGen.modify_package_url!(package_infos)
+    modify_package_url!(package_infos)
 
     custom_urls = Dict{String,String}()
     for (name, info) in package_infos
@@ -265,9 +243,9 @@ function add_integration_test_job_yaml!(
     qed_path = mktempdir(; cleanup=false)
     compat_changes = Dict{String,String}()
 
-    pkg_tree = IntegGen.build_qed_dependency_graph!(qed_path, compat_changes, custom_urls)
+    pkg_tree = build_qed_dependency_graph!(qed_path, compat_changes, custom_urls)
     depending_pkg = IntegrationTests.depending_projects(
-        package_name, collect(keys(package_infos)), pkg_tree
+        test_package.name, collect(keys(package_infos)), pkg_tree
     )
 
     if isempty(depending_pkg)
@@ -277,7 +255,7 @@ function add_integration_test_job_yaml!(
     push!(job_dict["stages"], "integ-test")
     for p in depending_pkg
         if target_branch == "main" && GitLabTargetBranch.is_pull_request()
-            IntegGen.generate_job_yaml!(
+            generate_job_yaml!(
                 p,
                 "dev",
                 package_name,
@@ -285,33 +263,26 @@ function add_integration_test_job_yaml!(
                 package_path,
                 job_dict,
                 package_infos,
-                git_ci_tools_url,
-                git_ci_tools_branch,
+                tools_git_repo,
             )
-            IntegGen.generate_job_yaml!(
+            generate_job_yaml!(
                 p,
+                test_package,
                 "main",
-                package_name,
-                package_version,
-                package_path,
                 job_dict,
                 package_infos,
-                git_ci_tools_url,
-                git_ci_tools_branch,
+                tools_git_repo,
                 "integ-test",
                 true,
             )
         else
-            IntegGen.generate_job_yaml!(
+            generate_job_yaml!(
                 p,
+                test_package,
                 target_branch,
-                package_name,
-                package_version,
-                package_path,
                 job_dict,
                 package_infos,
-                git_ci_tools_url,
-                git_ci_tools_branch,
+                tools_git_repo,
                 "integ-test",
             )
         end
@@ -386,5 +357,3 @@ end
 #     end
 #     println(YAML.write(job_yaml))
 # end
-
-end # module IntegGen

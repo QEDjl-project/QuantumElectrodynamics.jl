@@ -18,20 +18,17 @@ function yaml_diff(given, expected)::AbstractString
 end
 
 @testset "generate_job_yaml()" begin
-    package_infos = CI.IntegGen.get_package_info()
+    package_infos = CI.get_package_info()
 
     @testset "target main branch, no PR" begin
         job_yaml = Dict()
-        CI.IntegGen.generate_job_yaml!(
+        CI.generate_job_yaml!(
             "QEDcore",
+            CI.TestPackage("QEDtest", "1.0.0", "/path/to/QEDcore.jl"),
             "main",
-            "QEDtest",
-            "1.0.0",
-            "/path/to/QEDcore.jl",
             job_yaml,
             package_infos,
-            "",
-            "",
+            CI.ToolsGitRepo("", ""),
         )
         @test length(job_yaml) == 1
 
@@ -78,16 +75,15 @@ end
 
     @testset "target non main branch, if PR or not is the same" begin
         job_yaml = Dict()
-        CI.IntegGen.generate_job_yaml!(
+        CI.generate_job_yaml!(
             "QEDcore",
+            CI.TestPackage("QEDtest", "1.0.0", "/path/to/QEDcore.jl"),
             "feature3",
-            "QEDtest",
-            "1.0.0",
-            "/path/to/QEDcore.jl",
             job_yaml,
             package_infos,
-            "https://github.com/QEDjl-project/QuantumElectrodynamics.jl.git",
-            "dev",
+            CI.ToolsGitRepo(
+                "https://github.com/QEDjl-project/QuantumElectrodynamics.jl.git", "dev"
+            ),
         )
         @test length(job_yaml) == 1
 
@@ -135,28 +131,22 @@ end
 
     @testset "target main branch, PR" begin
         job_yaml = Dict()
-        CI.IntegGen.generate_job_yaml!(
+        CI.generate_job_yaml!(
             "QEDcore",
+            CI.TestPackage("QEDtest", "1.0.0", "/path/to/QEDcore.jl"),
             "dev",
-            "QEDtest",
-            "1.0.0",
-            "/path/to/QEDcore.jl",
             job_yaml,
             package_infos,
-            "https://github.com/fork/QEDTest.jl.git",
-            "ciDev",
+            CI.ToolsGitRepo("https://github.com/fork/QEDTest.jl.git", "ciDev"),
             "integ-test",
         )
-        CI.IntegGen.generate_job_yaml!(
+        CI.generate_job_yaml!(
             "QEDcore",
+            CI.TestPackage("QEDtest", "1.0.0", "/path/to/QEDcore.jl"),
             "main",
-            "QEDtest",
-            "1.0.0",
-            "/path/to/QEDcore.jl",
             job_yaml,
             package_infos,
-            "https://github.com/fork_other/QEDTest.jl.git",
-            "ciDevOther",
+            CI.ToolsGitRepo("https://github.com/fork_other/QEDTest.jl.git", "ciDevOther"),
             "integ-test",
             true,
         )
