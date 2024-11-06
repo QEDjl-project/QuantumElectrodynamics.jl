@@ -18,11 +18,11 @@ function yaml_diff(given, expected)::AbstractString
 end
 
 @testset "generate_job_yaml()" begin
-    package_infos = CI.integTestGen.get_package_info()
+    package_infos = CI.IntegGen.get_package_info()
 
     @testset "target main branch, no PR" begin
         job_yaml = Dict()
-        CI.integTestGen.generate_job_yaml!(
+        CI.IntegGen.generate_job_yaml!(
             "QEDcore",
             "main",
             "QEDtest",
@@ -78,7 +78,7 @@ end
 
     @testset "target non main branch, if PR or not is the same" begin
         job_yaml = Dict()
-        CI.integTestGen.generate_job_yaml!(
+        CI.IntegGen.generate_job_yaml!(
             "QEDcore",
             "feature3",
             "QEDtest",
@@ -135,7 +135,7 @@ end
 
     @testset "target main branch, PR" begin
         job_yaml = Dict()
-        CI.integTestGen.generate_job_yaml!(
+        CI.IntegGen.generate_job_yaml!(
             "QEDcore",
             "dev",
             "QEDtest",
@@ -147,7 +147,7 @@ end
             "ciDev",
             "integ-test",
         )
-        CI.integTestGen.generate_job_yaml!(
+        CI.IntegGen.generate_job_yaml!(
             "QEDcore",
             "main",
             "QEDtest",

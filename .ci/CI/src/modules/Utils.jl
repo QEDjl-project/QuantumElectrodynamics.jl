@@ -226,3 +226,14 @@ function _render_qed_tree(io::IO, graph::Dict, level::Integer, input_string::Str
     end
     return input_string
 end
+
+"""
+    get_project_version_name()::Tuple{String,String}
+
+# Return
+
+Returns project name and version number
+"""
+function get_project_version_name_path()::Tuple{String,String,String}
+    return (Pkg.project().name, string(Pkg.project().version), dirname(Pkg.project().path))
+end

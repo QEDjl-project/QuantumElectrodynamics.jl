@@ -1,11 +1,11 @@
 module CI
-include("./integTestGen.jl")
-using .integTestGen
+include("./modules/IntegTest.jl")
+using .IntegGen
+
+include("./modules/GitLabTargetBranch.jl")
+using .GitLabTargetBranch
 
 include("./SetupDevEnv.jl")
 using .SetupDevEnv
-
-include("./get_target_branch.jl")
-using .TargetBranch
 
 end

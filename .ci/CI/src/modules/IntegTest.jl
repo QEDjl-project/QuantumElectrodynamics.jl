@@ -1,9 +1,9 @@
-module integTestGen
+module IntegGen
 
-include("get_target_branch.jl")
-include("utils.jl")
+include("./GitLabTargetBranch.jl")
+include("./Utils.jl")
 
-using .TargetBranch
+using .GitLabTargetBranch
 using Pkg: Pkg
 using YAML: YAML
 using Logging
@@ -237,6 +237,87 @@ function get_package_info()::Dict{String,PackageInfo}
     )
 end
 
+function add_integration_test_job_yaml!(
+    job_dict::Dict,
+    package_name::AbstractString,
+    package_version::AbstractString,
+    package_path::AbstractString,
+    target_branch::AbstractString,
+    git_ci_tools_url::String,
+    git_ci_tools_branch::String,
+)
+    if !haskey(job_dict, "stages")
+        job_dict["stages"] = []
+    end
+
+    package_infos = IntegGen.get_package_info()
+    if target_branch != "main"
+        IntegGen.extract_env_vars_from_git_message!(package_infos)
+    end
+    IntegGen.modify_package_url!(package_infos)
+
+    custom_urls = Dict{String,String}()
+    for (name, info) in package_infos
+        if info.modified_url != ""
+            custom_urls[name] = info.modified_url
+        end
+    end
+    qed_path = mktempdir(; cleanup=false)
+    compat_changes = Dict{String,String}()
+
+    pkg_tree = IntegGen.build_qed_dependency_graph!(qed_path, compat_changes, custom_urls)
+    depending_pkg = IntegrationTests.depending_projects(
+        package_name, collect(keys(package_infos)), pkg_tree
+    )
+
+    if isempty(depending_pkg)
+        return Nothing
+    end
+
+    push!(job_dict["stages"], "integ-test")
+    for p in depending_pkg
+        if target_branch == "main" && GitLabTargetBranch.is_pull_request()
+            IntegGen.generate_job_yaml!(
+                p,
+                "dev",
+                package_name,
+                package_version,
+                package_path,
+                job_dict,
+                package_infos,
+                git_ci_tools_url,
+                git_ci_tools_branch,
+            )
+            IntegGen.generate_job_yaml!(
+                p,
+                "main",
+                package_name,
+                package_version,
+                package_path,
+                job_dict,
+                package_infos,
+                git_ci_tools_url,
+                git_ci_tools_branch,
+                "integ-test",
+                true,
+            )
+        else
+            IntegGen.generate_job_yaml!(
+                p,
+                target_branch,
+                package_name,
+                package_version,
+                package_path,
+                job_dict,
+                package_infos,
+                git_ci_tools_url,
+                git_ci_tools_branch,
+                "integ-test",
+            )
+        end
+    end
+end
+
 # if abspath(PROGRAM_FILE) == @__FILE__
 #     if !haskey(ENV, "CI_COMMIT_REF_NAME")
 #         @warn "Environemnt variable CI_COMMIT_REF_NAME not defined. Use default branch `dev`."
@@ -289,7 +370,7 @@ end
 #             #    must also be released later with an updated compat entry.
 #             #    In either case the release can proceed, as the released packages will continue to work
 #             #    because of their current compat entries.
-#             if target_branch == "main" && TargetBranch.is_pull_request()
+#             if target_branch == "main" && GitLabTargetBranch.is_pull_request()
 #                 generate_job_yaml!(p, "dev", ENV["CI_PROJECT_DIR"], job_yaml, package_infos)
 #                 generate_job_yaml!(
 #                     p, "main", ENV["CI_PROJECT_DIR"], job_yaml, package_infos, true
@@ -306,4 +387,4 @@ end
 #     println(YAML.write(job_yaml))
 # end
 
-end # module integTestGen
+end # module IntegGen

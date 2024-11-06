@@ -11,7 +11,7 @@ stages:
     - julia --project=. -e 'import Pkg; Pkg.test(; coverage = true)'
     - cd ${CI_PROJECT_DIR}
     # test QuantumElectrodynamics.jl
-    - $(julia --project=. ${CI_PROJECT_DIR}/.ci/CI/src/get_project_name_version_path.jl)
+    - $(julia --project=. ${CI_PROJECT_DIR}/.ci/CI/src/GetProjectNameVersionPath.jl)
     - echo "CI_DEV_PKG_NAME -> $CI_DEV_PKG_NAME"
     - echo "CI_DEV_PKG_VERSION -> $CI_DEV_PKG_VERSION"
     - echo "CI_DEV_PKG_PATH -> $CI_DEV_PKG_PATH"

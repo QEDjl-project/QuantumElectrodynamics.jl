@@ -1,15 +1,6 @@
 using Pkg
 
-"""
-    get_project_version_name()::Tuple{String,String}
-
-# Return
-
-Returns project name and version number
-"""
-function get_project_version_name_path()::Tuple{String,String,String}
-    return (Pkg.project().name, string(Pkg.project().version), dirname(Pkg.project().path))
-end
+include("./modules/Utils.jl")
 
 # the script be directly executed in bash to set the environment variables
 # $(julia --project=/path/to/the/actual/project get_project_version_name)

@@ -21,7 +21,7 @@ jobs:
           version: '1.10'
       - name: set dev dependencies
         run: |
-          $(julia --project=. .ci/CI/src/get_project_name_version_path.jl)
+          $(julia --project=. .ci/CI/src/GetProjectNameVersionPath.jl)
           echo "CI_DEV_PKG_NAME -> $CI_DEV_PKG_NAME"
           echo "CI_DEV_PKG_VERSION -> $CI_DEV_PKG_VERSION"
           echo "CI_DEV_PKG_PATH -> $CI_DEV_PKG_PATH"

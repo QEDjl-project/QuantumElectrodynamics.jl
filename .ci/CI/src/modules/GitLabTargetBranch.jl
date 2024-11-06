@@ -1,4 +1,4 @@
-module TargetBranch
+module GitLabTargetBranch
 
 using HTTP
 using JSON
@@ -123,10 +123,6 @@ function get_target()::AbstractString
     else
         return get_build_branch()
     end
-end
-
-if abspath(PROGRAM_FILE) == @__FILE__
-    print(get_target())
 end
 
 end
