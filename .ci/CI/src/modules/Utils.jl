@@ -1,5 +1,4 @@
 
-# TODO(SimeonEhrig): copied from SetupDevEnv.jl -> unify code
 using TOML
 using Logging
 using LibGit2
@@ -93,6 +92,7 @@ end
 """
     build_qed_dependency_graph!(
         repository_base_path::AbstractString,
+        compat_changes::Dict{String,String},
         custom_urls::Dict{String,String}=Dict{String,String}(),
     )::Dict
 
@@ -149,6 +149,7 @@ end
 """
     _build_qed_dependency_graph!(
         repository_base_path::AbstractString,
+        compat_changes::Dict{String,String},
         custom_urls::Dict{String,String},
         package_name::String,
         origin::Vector{String},
@@ -164,7 +165,7 @@ end
     is checked out. The dict allows the use of custom URLs and branches for each QED project. The
     key is the package name and the value must have the following form: `<git_url>#<branch_name>`.
     The syntax is the same as for `Pkg.add()`.
-- `package_name::String`: Current package to clone
+- `package_name::AbstractString`: Current package to clone
 - `origin::Vector{String}`: List of already visited packages
 
 # Returns
@@ -176,7 +177,7 @@ function _build_qed_dependency_graph!(
     repository_base_path::AbstractString,
     compat_changes::Dict{String,String},
     custom_urls::Dict{String,String},
-    package_name::String,
+    package_name::AbstractString,
     origin::Vector{String},
 )::Dict
     qed_dependency_graph = Dict()
@@ -237,9 +238,12 @@ function _build_qed_dependency_graph!(
 end
 
 """
-    _render_qed_tree(graph)::String
+    _render_qed_tree(graph::Dict)::String
 
 Renders a given graph in ASCII art for debugging purposes.
+
+# Args
+- `graph::Dict`: The graph
 
 # Returns
 
@@ -251,7 +255,7 @@ function _render_qed_tree(graph::Dict)::String
     return String(take!(io))
 end
 
-function _render_qed_tree(io::IO, graph::Dict, level::Integer, input_string::String)
+function _render_qed_tree(io::IO, graph::Dict, level::Integer, input_string::AbstractString)
     for key in keys(graph)
         println(io, repeat(".", level) * key)
         _render_qed_tree(io, graph[key], level + 1, input_string)

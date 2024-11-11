@@ -8,6 +8,11 @@ using TOML
 using Logging
 using YAML
 
+"""
+    _check_env_vars()
+
+Check if required environemnt variables are set. Exit with error, if not set.
+"""
 function _check_env_vars()
     if !haskey(ENV, "CI_COMMIT_REF_NAME")
         @error "Environment variable CI_COMMIT_REF_NAME is not set. Required to determine target branch."
@@ -18,6 +23,18 @@ function _check_env_vars()
     end
 end
 
+"""
+    get_package_name_version(package_path::AbstractString)::TestPackage
+
+Extract package name and version from a Project.toml.
+
+# Args
+- `package_path::AbstractString`: Basepath of the package
+
+# Returns
+
+`TestPackage`: Contains name, versions and base path of the package.
+"""
 function get_package_name_version(package_path::AbstractString)::TestPackage
     project_toml_path = joinpath(package_path, "Project.toml")
 
@@ -27,18 +44,63 @@ function get_package_name_version(package_path::AbstractString)::TestPackage
     return TestPackage(project_toml["name"], project_toml["version"], package_path)
 end
 
+"""
+    get_unit_test_julia_versions()::Vector{String}
+
+Returns the test versions for the unit tests. If the environment variable CI_UNIT_TEST_VERSIONS is
+not set, standard versions are returned. The value of the environment variable is a string with the
+versions separated by commas. The versions are not tested for plausibility.
+
+CI_UNIT_TEST_VERSIONS="1.11, 1.12, rc"
+
+# Returns
+
+- `Vector{String}`: Test versions for the unit tests
+
+"""
 function get_unit_test_julia_versions()::Vector{String}
-    # TODO: support reading julia versions from env variables
-
-    return ["1.10", "1.11", "rc", "nightly"]
+    # CI_UNIT_TEST_VERSIONS
+    if haskey(ENV, "CI_UNIT_TEST_VERSIONS")
+        return strip.(split(ENV["CI_UNIT_TEST_VERSIONS"], ","))
+    else
+        return ["1.10", "1.11", "rc", "nightly"]
+    end
 end
 
+"""
+    get_unit_test_nightly_baseimage()::String
+
+Returns container base image for nightly unit tests.
+
+# Returns
+
+`String`: Returns value of environment CI_UNIT_TEST_NIGHTLY_BASE_IMAGE if set. Otherwise default 
+value.
+"""
 function get_unit_test_nightly_baseimage()::String
-    # TODO: support reading from env variables
-
-    return "debian:bookworm-slim"
+    if haskey(ENV, "CI_UNIT_TEST_NIGHTLY_BASE_IMAGE")
+        base_image = ENV["CI_UNIT_TEST_NIGHTLY_BASE_IMAGE"]
+        @warn "use user defined base image for nightly unit test: $(base_image)"
+        return base_image
+    else
+        return "debian:bookworm-slim"
+    end
 end
 
+"""
+    get_git_ci_tools_url_branch()::ToolsGitRepo
+
+Returns the URL and the branch of the Git repository for the location where the CI tools are 
+located. The default is the dev branch at 
+https://github.com/QEDjl-project/QuantumElectrodynamics.jl.git.
+User-defined URL and branch can be defined with the environment variables CI_GIT_CI_TOOLS_URL
+and CI_GIT_CI_TOOLS_BRANCH.
+
+# Return
+
+`ToolsGitRepo`: Contains git url and branch
+
+"""
 function get_git_ci_tools_url_branch()::ToolsGitRepo
     url = "https://github.com/QEDjl-project/QuantumElectrodynamics.jl.git"
     branch = "dev"
@@ -56,6 +118,15 @@ function get_git_ci_tools_url_branch()::ToolsGitRepo
     return ToolsGitRepo(url, branch)
 end
 
+"""
+    print_job_yaml(job_yaml::Dict, io::IO=stdout)
+
+Prints to dict as human readable GitLab CI job yaml.
+
+# Args
+- `job_yaml::Dict`: Contains job descriptions.
+- `io::IO=stdout`: Output for the rendered yaml.
+"""
 function print_job_yaml(job_yaml::Dict, io::IO=stdout)
     job_yaml_copy = deepcopy(job_yaml)
 
@@ -96,8 +167,7 @@ function main()
 
     package_path = ENV["CI_PROJECT_DIR"]
     test_package = get_package_name_version(package_path)
-    #target_branch = GitLabTargetBranch.get_target()
-    target_branch = "dev"
+    target_branch = get_target()
 
     @info "Test package name: $(test_package.name)"
     @info "Test package version: $(test_package.version)"
