@@ -122,7 +122,3 @@ function get_target()::AbstractString
         return get_build_branch()
     end
 end
-
-if abspath(PROGRAM_FILE) == @__FILE__
-    print(get_target())
-end

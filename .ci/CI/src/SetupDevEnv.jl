@@ -16,84 +16,14 @@ dependency, the compat entry is also changed to match the QED package under test
 The script must be executed in the project space, which should be modified.
 """
 
-module SetupDevEnv
-
 using Pkg
 using TOML
 using Logging
 using LibGit2
 
-debug_logger_io = IOBuffer()
-debuglogger = ConsoleLogger(debug_logger_io, Logging.Debug)
-
-"""
-    _git_clone(repo_url::AbstractString, directory::AbstractString)
-
-Clones git repository
-
-# Args
-- `repo_url::AbstractString`: Url of the repository. Can either be a plan URL or use the Julia Pkg
-    notation <URL>#<branchname>. e.g. https://https://github.com/user/repo.git#dev to clone the
-    dev branch of the repository `repo`.
-- `directory::AbstractString`: Path where the cloned repository is stored.
-"""
-function _git_clone(repo_url::AbstractString, directory::AbstractString)
-    splitted_url = split(repo_url, "#")
-    if length(splitted_url) < 2
-        _git_clone(repo_url, "dev", directory)
-    else
-        _git_clone(splitted_url[1], splitted_url[2], directory)
-    end
-end
-
-"""
-    _git_clone(repo_url::AbstractString, directory::AbstractString)
-
-Clones git repository
-
-# Args
-- `repo_url::AbstractString`: Url of the repository.
-- `branch::AbstractString`: Git branch name
-- `directory::AbstractString`: Path where the cloned repository is stored.
-"""
-function _git_clone(
-    repo_url::AbstractString, branch::AbstractString, directory::AbstractString
-)
-    @info "clone repository: $(repo_url)#$(branch) -> $(directory)"
-    with_logger(debuglogger) do
-        try
-            @debug "git clone --depth 1 -b $(branch) $(repo_url) $directory"
-            run(
-                pipeline(
-                    `git clone --depth 1 -b $(branch) $(repo_url) $directory`;
-                    stdout=devnull,
-                    stderr=devnull,
-                ),
-            )
-        catch
-            @debug "LibGit2.clone($(repo_url), $(directory); branch=$(branch))"
-            LibGit2.clone(repo_url, directory; branch=branch)
-        end
-    end
-end
-
-"""
-    extract_env_vars_from_git_message!(var_name::AbstractString="CI_COMMIT_MESSAGE")
-
-Parse the commit message, if set via variable (usual `CI_COMMIT_MESSAGE`) and set custom URLs.
-"""
-function extract_env_vars_from_git_message!(var_name::AbstractString="CI_COMMIT_MESSAGE")
-    if haskey(ENV, var_name)
-        @info "Found env variable $var_name"
-        for line in split(ENV[var_name], "\n")
-            line = strip(line)
-            if startswith(line, "CI_UNIT_PKG_URL_")
-                (pkg_name, url) = split(line, ":"; limit=2)
-                @info "add " * pkg_name * "=" * strip(url)
-                ENV[pkg_name] = strip(url)
-            end
-        end
-    end
+# workaround if it is included in CI.jl for testing purpose
+if abspath(PROGRAM_FILE) == @__FILE__
+    include("./modules/Utils.jl")
 end
 
 """
@@ -220,175 +150,6 @@ function get_filtered_dependencies(
         @debug "required dependencies: $(deps)\n" * String(take!(io))
     end
     return deps
-end
-
-"""
-    _render_qed_tree(graph)::String
-
-Renders a given graph in ASCII art for debugging purposes.
-
-# Returns
-
-Rendered graph
-"""
-function _render_qed_tree(graph::Dict)::String
-    io = IOBuffer()
-    _render_qed_tree(io, graph, 0, "")
-    return String(take!(io))
-end
-
-function _render_qed_tree(io::IO, graph::Dict, level::Integer, input_string::String)
-    for key in keys(graph)
-        println(io, repeat(".", level) * key)
-        _render_qed_tree(io, graph[key], level + 1, input_string)
-    end
-    return input_string
-end
-
-"""
-    build_qed_dependency_graph!(
-        repository_base_path::AbstractString,
-        custom_urls::Dict{String,String}=Dict{String,String}(),
-    )::Dict
-
-Creates the dependency graph of the QED package ecosystem just by parsing Projects.toml. The
-function starts by cloning the QuantumElectrodynamics.jl GitHub repository. Depending on
-QuantumElectrodynamics.jl `Project.toml`, clones all directly and indirectly dependent QED.jl
-GitHub repositories and constructs the dependency graph. 
-
-Side effects of the function are:
-    - the Git repositories remain in the path defined in the `repository_base_path` variable
-    - the environment is not initialized (creation of a Manifest.toml) or changed in any other way
-
-# Args
-
-- `repository_base_path::AbstractString`: Base folder into which the QED projects are to be cloned.
-- `compat_changes::Dict{String,String}`: All QED package versions are added so that they can be set
-    correctly in the Compat section of the other QED packages. Existing entries are not changed.
-- `custom_urls::Dict{String,String}`: By default, the URL pattern
-    `https://github.com/QEDjl-project/<package name>.jl` is used for the clone and the dev branch
-    is checked out. The dict allows the use of custom URLs and branches for each QED project. The
-    key is the package name and the value must have the following form: `<git_url>#<branch_name>`.
-    The syntax is the same as for `Pkg.add()`.
-
-# Returns
-
-Dict with the dependency graph. A leaf node has an empty dict. Duplications of dependencies are
-possible.
-"""
-function build_qed_dependency_graph!(
-    repository_base_path::AbstractString,
-    compat_changes::Dict{String,String},
-    custom_urls::Dict{String,String}=Dict{String,String}(),
-)::Dict
-    @info "build QED dependency graph"
-    io = IOBuffer()
-    println(io, "input compat_changes: $(compat_changes)")
-
-    qed_dependency_graph = Dict()
-    qed_dependency_graph["QuantumElectrodynamics"] = _build_qed_dependency_graph!(
-        repository_base_path,
-        compat_changes,
-        custom_urls,
-        "QuantumElectrodynamics",
-        ["QuantumElectrodynamics"],
-    )
-    println(io, "output compat_changes: $(compat_changes)")
-    with_logger(debuglogger) do
-        println(io, "QED graph:\n$(_render_qed_tree(qed_dependency_graph))")
-        @debug String(take!(io))
-    end
-    return qed_dependency_graph
-end
-
-"""
-    _build_qed_dependency_graph!(
-        repository_base_path::AbstractString,
-        custom_urls::Dict{String,String},
-        package_name::String,
-        origin::Vector{String},
-    )::Dict
-
-# Args
-
-- `repository_base_path::AbstractString`: Base folder into which the QED projects will be cloned.
-- `compat_changes::Dict{String,String}`: All QED package versions are added so that they can be set
-    correctly in the Compat section of the other QED packages. Existing entries are not changed.
-- `custom_urls::Dict{String,String}`: By default, the URL pattern
-    `https://github.com/QEDjl-project/<package name>.jl` is used for the clone and the dev branch
-    is checked out. The dict allows the use of custom URLs and branches for each QED project. The
-    key is the package name and the value must have the following form: `<git_url>#<branch_name>`.
-    The syntax is the same as for `Pkg.add()`.
-- `package_name::String`: Current package to clone
-- `origin::Vector{String}`: List of already visited packages
-
-# Returns
-
-Dict with the dependency graph. A leaf node has an empty dict. Duplications of dependencies are
-possible.
-"""
-function _build_qed_dependency_graph!(
-    repository_base_path::AbstractString,
-    compat_changes::Dict{String,String},
-    custom_urls::Dict{String,String},
-    package_name::String,
-    origin::Vector{String},
-)::Dict
-    qed_dependency_graph = Dict()
-    repository_path = joinpath(repository_base_path, package_name)
-    if !isdir(repository_path)
-        if haskey(custom_urls, package_name)
-            _git_clone(custom_urls[package_name], repository_path)
-        else
-            _git_clone(
-                "https://github.com/QEDjl-project/$(package_name).jl",
-                "dev",
-                repository_path,
-            )
-        end
-    end
-
-    # read dependencies from Project.toml and clone next packages until no 
-    # QED dependencies are left
-    project_toml = TOML.parsefile(joinpath(repository_path, "Project.toml"))
-
-    # add package version to compat entires, that they can be set correctly in the compat section of
-    # other packages
-    if !(project_toml["name"] in keys(compat_changes))
-        compat_changes[project_toml["name"]] = project_toml["version"]
-    end
-
-    if haskey(project_toml, "deps")
-        for dep_pkg in keys(project_toml["deps"])
-            # check for circular dependency
-            # actual there should be no circular dependency in graph
-            # if there is a circular dependency in the graph, find a good way to appease the CI 
-            # developer
-            if dep_pkg in origin
-                dep_chain = ""
-                for dep in origin
-                    dep_chain *= dep * " -> "
-                end
-                throw(
-                    ErrorException(
-                        "detect circular dependency in graph: $(dep_chain)$(dep_pkg)"
-                    ),
-                )
-            end
-            # handle only dependency starting with QED
-            if startswith(dep_pkg, "QED")
-                qed_dependency_graph[dep_pkg] = _build_qed_dependency_graph!(
-                    repository_base_path,
-                    compat_changes,
-                    custom_urls,
-                    dep_pkg,
-                    vcat(origin, [dep_pkg]),
-                )
-            end
-        end
-    end
-
-    return qed_dependency_graph
 end
 
 """
@@ -678,7 +439,7 @@ end
 
 if abspath(PROGRAM_FILE) == @__FILE__
     try
-        extract_env_vars_from_git_message!()
+        extract_env_vars_from_git_message!("CI_UNIT_PKG_URL_")
         check_environemnt_variables()
         active_project_project_toml = Pkg.project().path
 
@@ -717,6 +478,4 @@ if abspath(PROGRAM_FILE) == @__FILE__
 
     # print debug information if debug information is manually enabled
     @debug String(take!(debug_logger_io))
-end
-
 end

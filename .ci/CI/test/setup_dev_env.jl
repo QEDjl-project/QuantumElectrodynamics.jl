@@ -1,13 +1,10 @@
-using SetupDevEnv
-using Test
-
-@testset "SetupDevEnv.jl" begin
+@testset "CI.SetupDevEnv.jl" begin
     message_var_name = "TEST_CI_COMMIT_MESSAGE"
 
     @testset "test extraction from Git Message" begin
         @test !haskey(ENV, message_var_name)
         # should not throw an error if the environment CI_COMMIT_MESSAGE does not exist
-        SetupDevEnv.extract_env_vars_from_git_message!(message_var_name)
+        CI.extract_env_vars_from_git_message!("CI_UNIT_PKG_URL_", message_var_name)
 
         ENV[message_var_name] = """This is a normal feature.
 
@@ -15,7 +12,7 @@ using Test
 
         Be carful, when you use the feature.
         """
-        SetupDevEnv.extract_env_vars_from_git_message!(message_var_name)
+        CI.extract_env_vars_from_git_message!("CI_UNIT_PKG_URL_", message_var_name)
         @test isempty(
             filter((env_name) -> startswith(env_name, "CI_UNIT_PKG_URL_"), keys(ENV))
         )
@@ -27,7 +24,7 @@ using Test
         Be carful, when you use the feature.
         CI_UNIT_PKG_URL_QEDbase: https://foo.com
         """
-        SetupDevEnv.extract_env_vars_from_git_message!(message_var_name)
+        CI.extract_env_vars_from_git_message!("CI_UNIT_PKG_URL_", message_var_name)
         deps = (filter((env_name) -> startswith(env_name, "CI_UNIT_PKG_URL_"), keys(ENV)))
         @test length(deps) == 1
 
@@ -39,7 +36,7 @@ using Test
         CI_UNIT_PKG_URL_QEDbase: https://foo.com
         CI_UNIT_PKG_URL_QEDbase: https://bar.com
         """
-        SetupDevEnv.extract_env_vars_from_git_message!(message_var_name)
+        CI.extract_env_vars_from_git_message!("CI_UNIT_PKG_URL_", message_var_name)
         deps = (filter((env_name) -> startswith(env_name, "CI_UNIT_PKG_URL_"), keys(ENV)))
         @test length(deps) == 1
 
@@ -51,7 +48,7 @@ using Test
         CI_UNIT_PKG_URL_QEDbase: https://foo.com
         CI_UNIT_PKG_URL_QEDfields: https://bar.com
         """
-        SetupDevEnv.extract_env_vars_from_git_message!(message_var_name)
+        CI.extract_env_vars_from_git_message!("CI_UNIT_PKG_URL_", message_var_name)
         deps = (filter((env_name) -> startswith(env_name, "CI_UNIT_PKG_URL_"), keys(ENV)))
         @test length(deps) == 2
 
@@ -64,7 +61,7 @@ using Test
         CI_UNIT_PKG_URL_QEDfields: https://bar.com
         CI_UNIT_PKG_URL_QEDevents: https://foobar.com
         """
-        SetupDevEnv.extract_env_vars_from_git_message!(message_var_name)
+        CI.extract_env_vars_from_git_message!("CI_UNIT_PKG_URL_", message_var_name)
         deps = (filter((env_name) -> startswith(env_name, "CI_UNIT_PKG_URL_"), keys(ENV)))
         @test length(deps) == 3
     end
@@ -90,7 +87,7 @@ using Test
     #             )
     #         end
 
-    #         @test isempty(SetupDevEnv.get_dependencies(project_path))
+    #         @test isempty(CI.SetupDevEnv.get_dependencies(project_path))
     #     end
 
     #     @testset "test filter" begin
@@ -119,11 +116,11 @@ using Test
     #        """,
     #             )
     #         end
-    #         @test length(SetupDevEnv.get_dependencies(project_path)) == 8
-    #         @test length(SetupDevEnv.get_dependencies(project_path, r"^QED")) == 4
-    #         @test length(SetupDevEnv.get_dependencies(project_path, r"^Simple")) == 1
-    #         @test length(SetupDevEnv.get_dependencies(project_path, r"^S")) == 2
-    #         @test length(SetupDevEnv.get_dependencies(project_path, "SparseArrays")) == 1
+    #         @test length(CI.SetupDevEnv.get_dependencies(project_path)) == 8
+    #         @test length(CI.SetupDevEnv.get_dependencies(project_path, r"^QED")) == 4
+    #         @test length(CI.SetupDevEnv.get_dependencies(project_path, r"^Simple")) == 1
+    #         @test length(CI.SetupDevEnv.get_dependencies(project_path, r"^S")) == 2
+    #         @test length(CI.SetupDevEnv.get_dependencies(project_path, "SparseArrays")) == 1
     #     end
     # end
 end
@@ -143,38 +140,33 @@ end
     # This behavior is implementation depend and can change
     @test [a for a in Set(["QEDevents", "QEDfields", "QEDprocesses"])] == ["QEDevents", "QEDfields", "QEDprocesses"]
 
-    @test SetupDevEnv.calculate_linear_dependency_ordering(
-        pkg_dependecy_list, ["NotInclude"]
-    ) == []
+    @test CI.calculate_linear_dependency_ordering(pkg_dependecy_list, ["NotInclude"]) == []
 
-    @test SetupDevEnv.calculate_linear_dependency_ordering(
-        pkg_dependecy_list, ["QEDbase"]
-    ) == ["QEDbase"]
-    @test SetupDevEnv.calculate_linear_dependency_ordering(
+    @test CI.calculate_linear_dependency_ordering(pkg_dependecy_list, ["QEDbase"]) ==
+        ["QEDbase"]
+    @test CI.calculate_linear_dependency_ordering(
         pkg_dependecy_list, ["QEDbase", "QEDcore"]
     ) == ["QEDbase", "QEDcore"]
 
-    @test SetupDevEnv.calculate_linear_dependency_ordering(
-        pkg_dependecy_list, ["QEDcore"]
-    ) == ["QEDbase", "QEDcore"]
+    @test CI.calculate_linear_dependency_ordering(pkg_dependecy_list, ["QEDcore"]) ==
+        ["QEDbase", "QEDcore"]
 
-    @test SetupDevEnv.calculate_linear_dependency_ordering(
-        pkg_dependecy_list, ["QEDfields"]
-    ) == ["QEDbase", "QEDcore", "QEDfields"]
+    @test CI.calculate_linear_dependency_ordering(pkg_dependecy_list, ["QEDfields"]) ==
+        ["QEDbase", "QEDcore", "QEDfields"]
 
     expected_processes_fields = vcat(
         ["QEDbase", "QEDcore"], [a for a in Set(["QEDfields", "QEDprocesses"])]
     )
 
-    @test SetupDevEnv.calculate_linear_dependency_ordering(
+    @test CI.calculate_linear_dependency_ordering(
         pkg_dependecy_list, ["QEDprocesses", "QEDfields"]
     ) == expected_processes_fields
 
-    @test SetupDevEnv.calculate_linear_dependency_ordering(
+    @test CI.calculate_linear_dependency_ordering(
         pkg_dependecy_list, ["QEDfields", "QEDprocesses"]
     ) == expected_processes_fields
 
-    @test SetupDevEnv.calculate_linear_dependency_ordering(
+    @test CI.calculate_linear_dependency_ordering(
         pkg_dependecy_list, ["QEDcore", "QEDfields"]
     ) == ["QEDbase", "QEDcore", "QEDfields"]
 
@@ -186,7 +178,7 @@ end
         ["QuantumElectrodynamics"],
     )
 
-    @test SetupDevEnv.calculate_linear_dependency_ordering(
+    @test CI.calculate_linear_dependency_ordering(
         pkg_dependecy_list, ["QuantumElectrodynamics"]
     ) == expected_QuantumElectrodynamics
 end

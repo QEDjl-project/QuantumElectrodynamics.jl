@@ -3,12 +3,12 @@
         if haskey(ENV, "CI_COMMIT_REF_NAME")
             delete!(ENV, "CI_COMMIT_REF_NAME")
         end
-        @test_throws ErrorException integTestGen.is_pull_request()
+        @test_throws ErrorException CI.is_pull_request()
     end
 
     @testset "empty CI_COMMIT_REF_NAME" begin
         ENV["CI_COMMIT_REF_NAME"] = ""
-        @test integTestGen.is_pull_request() == false
+        @test CI.is_pull_request() == false
     end
 
     for (ref_name, expected_result) in (
@@ -19,7 +19,7 @@
     )
         @testset "CI_COMMIT_REF_NAME=$(ref_name)" begin
             ENV["CI_COMMIT_REF_NAME"] = ref_name
-            @test integTestGen.is_pull_request() == expected_result
+            @test CI.is_pull_request() == expected_result
         end
     end
 end
@@ -29,7 +29,7 @@ end
         if haskey(ENV, "CI_COMMIT_REF_NAME")
             delete!(ENV, "CI_COMMIT_REF_NAME")
         end
-        @test_throws ErrorException integTestGen.get_build_branch()
+        @test_throws ErrorException CI.get_build_branch()
     end
 
     for (ref_name, expected_result) in (
@@ -45,7 +45,7 @@ end
     )
         @testset "CI_COMMIT_REF_NAME=$(ref_name)" begin
             ENV["CI_COMMIT_REF_NAME"] = ref_name
-            @test integTestGen.get_build_branch() == expected_result
+            @test CI.get_build_branch() == expected_result
         end
     end
 end
@@ -55,6 +55,6 @@ end
         if haskey(ENV, "CI_COMMIT_REF_NAME")
             delete!(ENV, "CI_COMMIT_REF_NAME")
         end
-        @test_throws ErrorException integTestGen.get_target_branch_pull_request()
+        @test_throws ErrorException CI.get_target_branch_pull_request()
     end
 end

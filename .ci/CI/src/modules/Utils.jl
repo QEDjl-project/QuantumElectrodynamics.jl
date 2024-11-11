@@ -1,11 +1,42 @@
 
-# TODO(SimeonEhrig): copied from SetupDevEnv.jl -> unify code
 using TOML
 using Logging
 using LibGit2
 
 debug_logger_io = IOBuffer()
 debuglogger = ConsoleLogger(debug_logger_io, Logging.Debug)
+
+"""
+    struct TestPackage
+
+Contains information about the package to test.
+
+# Members
+- `name::String`: Name of the package.
+- `version::String`: Version of the package.
+- `path::String`: Path of the package root.
+
+"""
+struct TestPackage
+    name::String
+    version::String
+    path::String
+end
+
+"""
+    struct ToolsGitRepo
+
+Url and branch of the Git repository QuantumElectrodynamics.jl, which is to be used in the CI jobs.
+
+# Members
+- `url::String`: Git repository URL.
+- `branch::String`: Git branch.
+
+"""
+struct ToolsGitRepo
+    url::String
+    branch::String
+end
 
 """
     _git_clone(repo_url::AbstractString, directory::AbstractString)
@@ -61,6 +92,7 @@ end
 """
     build_qed_dependency_graph!(
         repository_base_path::AbstractString,
+        compat_changes::Dict{String,String},
         custom_urls::Dict{String,String}=Dict{String,String}(),
     )::Dict
 
@@ -117,6 +149,7 @@ end
 """
     _build_qed_dependency_graph!(
         repository_base_path::AbstractString,
+        compat_changes::Dict{String,String},
         custom_urls::Dict{String,String},
         package_name::String,
         origin::Vector{String},
@@ -132,7 +165,7 @@ end
     is checked out. The dict allows the use of custom URLs and branches for each QED project. The
     key is the package name and the value must have the following form: `<git_url>#<branch_name>`.
     The syntax is the same as for `Pkg.add()`.
-- `package_name::String`: Current package to clone
+- `package_name::AbstractString`: Current package to clone
 - `origin::Vector{String}`: List of already visited packages
 
 # Returns
@@ -144,7 +177,7 @@ function _build_qed_dependency_graph!(
     repository_base_path::AbstractString,
     compat_changes::Dict{String,String},
     custom_urls::Dict{String,String},
-    package_name::String,
+    package_name::AbstractString,
     origin::Vector{String},
 )::Dict
     qed_dependency_graph = Dict()
@@ -205,9 +238,12 @@ function _build_qed_dependency_graph!(
 end
 
 """
-    _render_qed_tree(graph)::String
+    _render_qed_tree(graph::Dict)::String
 
 Renders a given graph in ASCII art for debugging purposes.
+
+# Args
+- `graph::Dict`: The graph
 
 # Returns
 
@@ -219,10 +255,57 @@ function _render_qed_tree(graph::Dict)::String
     return String(take!(io))
 end
 
-function _render_qed_tree(io::IO, graph::Dict, level::Integer, input_string::String)
+function _render_qed_tree(io::IO, graph::Dict, level::Integer, input_string::AbstractString)
     for key in keys(graph)
         println(io, repeat(".", level) * key)
         _render_qed_tree(io, graph[key], level + 1, input_string)
     end
     return input_string
+end
+
+"""
+    get_project_version_name()::Tuple{String,String}
+
+# Return
+
+Returns project name and version number
+"""
+function get_project_version_name_path()::Tuple{String,String,String}
+    return (Pkg.project().name, string(Pkg.project().version), dirname(Pkg.project().path))
+end
+
+"""
+    extract_env_vars_from_git_message!(
+        env_prefix::AbstractString, var_name::AbstractString="CI_COMMIT_MESSAGE"
+    )
+
+Parse the commit message, if set via variable (usual `CI_COMMIT_MESSAGE`) and set custom URLs.
+A line is parsed if it has the shape of:
+
+<env_prefix>_rest_of_the_env_name: <value>
+
+Each parsed line is added to the environment variables:
+
+ENV[<env_prefix>_rest_of_the_env_name] = <value>
+
+# Args
+- `env_prefix::AbstractString`: Parse all lines starting with the env_prefix
+- `var_name::AbstractString``: Environemnt variable where git message is stored 
+    (default: "CI_COMMIT_MESSAGE").
+
+"""
+function extract_env_vars_from_git_message!(
+    env_prefix::AbstractString, var_name::AbstractString="CI_COMMIT_MESSAGE"
+)
+    if haskey(ENV, var_name)
+        @info "Found env variable $var_name"
+        for line in split(ENV[var_name], "\n")
+            line = strip(line)
+            if startswith(line, env_prefix)
+                (pkg_name, url) = split(line, ":"; limit=2)
+                @info "add " * pkg_name * "=" * strip(url)
+                ENV[pkg_name] = strip(url)
+            end
+        end
+    end
 end

@@ -1,5 +1,5 @@
-name = "integTestGen"
-uuid = "9d227159-adef-4c8b-a714-76f31b0c245d"
+name = "CI"
+uuid = "ca44ca9f-2365-4765-ab19-70235af776a7"
 authors = ["Simeon Ehrig <s.ehrig@hzdr.de>"]
 version = "0.1.0"
 
