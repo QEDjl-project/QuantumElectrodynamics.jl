@@ -1,3 +1,7 @@
+"""
+Specify target processor for the tests.
+"""
+@enum TestPlatform CPU CUDA AMDGPU ONEAPI METAL
 
 """
     add_unit_test_job_yaml!(
@@ -5,6 +9,7 @@
         test_package::TestPackage,
         julia_versions::Vector{String},
         target_branch::AbstractString,
+        test_platform::TestPlatform=CPU,
         tools_git_repo::ToolsGitRepo=ToolsGitRepo(
             "https://github.com/QEDjl-project/QuantumElectrodynamics.jl.git", "dev"
         ),
@@ -19,6 +24,7 @@ to be directly translated to GitLab CI yaml.
 - `test_package::TestPackage`: Properties of the package to be tested, such as name and version.
 - `julia_versions::Vector{String}`: Julia version used for the tests.
 - `target_branch::AbstractString`: A different job code is generated depending on the target branch.
+- `test_platform::TestPlatform`: Set target platform test, e.g. CPU, Nvidia GPU or AMD GPU.
 - `tools_git_repo::ToolsGitRepo`: URL and branch of the Git repository from which the CI tools are
     cloned in unit test job.
 - `nightly_base_image::AbstractString`: Name of the job base image if the Julia version is nightly.
@@ -28,11 +34,16 @@ function add_unit_test_job_yaml!(
     test_package::TestPackage,
     julia_versions::Vector{String},
     target_branch::AbstractString,
+    test_platform::TestPlatform=CPU,
     tools_git_repo::ToolsGitRepo=ToolsGitRepo(
         "https://github.com/QEDjl-project/QuantumElectrodynamics.jl.git", "dev"
     ),
     nightly_base_image::AbstractString="debian:bookworm-slim",
 )
+    if test_platform in [ONEAPI, METAL]
+        throw(ArgumentError("argument test_platform not implemented for $(test_platform)"))
+    end
+
     if !haskey(job_dict, "stages")
         job_dict["stages"] = []
     end
@@ -40,13 +51,18 @@ function add_unit_test_job_yaml!(
     push!(job_dict["stages"], "unit-test")
 
     for version in julia_versions
+        test_platform_name = lowercase(string(test_platform))
         if version != "nightly"
-            job_dict["unit_test_julia_$(replace(version, "." => "_"))"] = _get_normal_unit_test(
-                version, test_package, target_branch, tools_git_repo
+            job_dict["unit_test_julia_$(test_platform_name)_$(replace(version, "." => "_"))"] = _get_normal_unit_test(
+                version, test_package, target_branch, test_platform, tools_git_repo
             )
         else
-            job_dict["unit_test_julia_nightly"] = _get_nightly_unit_test(
-                test_package, target_branch, tools_git_repo, nightly_base_image
+            job_dict["unit_test_julia_$(test_platform_name)_nightly"] = _get_nightly_unit_test(
+                test_package,
+                target_branch,
+                test_platform,
+                tools_git_repo,
+                nightly_base_image,
             )
         end
     end
@@ -99,6 +115,7 @@ end
         version::AbstractString,
         test_package::TestPackage,
         target_branch::AbstractString,
+        test_platform::TestPlatform,
         tools_git_repo::ToolsGitRepo,
     )
 
@@ -108,6 +125,7 @@ Creates a normal unit test job for a specific Julia version.
 - `version::AbstractString`: Julia version used for the tests.
 - `test_package::TestPackage`: Properties of the package to be tested, such as name and version.
 - `target_branch::AbstractString`: A different job code is generated depending on the target branch.
+- `test_platform::TestPlatform`: Set target platform test, e.g. CPU, Nvidia GPU or AMD GPU.
 - `tools_git_repo::ToolsGitRepo`: URL and branch of the Git repository from which the CI tools are
     cloned in unit test job.
 
@@ -119,6 +137,7 @@ function _get_normal_unit_test(
     version::AbstractString,
     test_package::TestPackage,
     target_branch::AbstractString,
+    test_platform::TestPlatform,
     tools_git_repo::ToolsGitRepo,
 )::Dict
     job_yaml = Dict()
@@ -129,6 +148,14 @@ function _get_normal_unit_test(
         "CI_DEV_PKG_PATH" => test_package.path,
     )
     job_yaml["image"] = "julia:$(version)"
+
+    if !haskey(job_yaml, "variables")
+        job_yaml["variables"] = Dict()
+    end
+
+    for tp in instances(TestPlatform)
+        job_yaml["variables"]["TEST_$(tp)"] = (tp == test_platform) ? "1" : "0"
+    end
 
     script = [
         "apt update && apt install -y git",
@@ -157,7 +184,20 @@ function _get_normal_unit_test(
     job_yaml["script"] = script
 
     job_yaml["interruptible"] = true
-    job_yaml["tags"] = ["cpuonly"]
+
+    if test_platform == CPU
+        job_yaml["tags"] = ["cpuonly"]
+    elseif test_platform == CUDA
+        job_yaml["tags"] = ["cuda", "x86_64"]
+    elseif test_platform == AMDGPU
+        job_yaml["tags"] = ["rocm", "x86_64"]
+    else
+        throw(
+            ArgumentError(
+                "test_platform argument with value $(test_platform) not supported"
+            ),
+        )
+    end
 
     return job_yaml
 end
@@ -166,13 +206,16 @@ end
     _get_nightly_unit_test(
         test_package::TestPackage,
         target_branch::AbstractString,
+        test_platform::TestPlatform,
         tools_git_repo::ToolsGitRepo,
+        nightly_base_image::AbstractString,
     )
 
 Creates a unit test job which uses the Julia nightly version.
 
 # Args
 - `test_package::TestPackage`: Properties of the package to be tested, such as name and version.
+- `test_platform::TestPlatform`: Set target platform test, e.g. CPU, Nvidia GPU or AMD GPU.
 - `target_branch::AbstractString`: A different job code is generated depending on the target branch.
 - `tools_git_repo::ToolsGitRepo`: URL and branch of the Git repository from which the CI tools are
     cloned in unit test job.
@@ -185,10 +228,13 @@ Returns a dict containing the unit test, which can be output directly as GitLab 
 function _get_nightly_unit_test(
     test_package::TestPackage,
     target_branch::AbstractString,
+    test_platform::TestPlatform,
     tools_git_repo::ToolsGitRepo,
     nightly_base_image::AbstractString,
 )
-    job_yaml = _get_normal_unit_test("1", test_package, target_branch, tools_git_repo)
+    job_yaml = _get_normal_unit_test(
+        "1", test_package, target_branch, test_platform, tools_git_repo
+    )
     job_yaml["image"] = nightly_base_image
 
     if !haskey(job_yaml, "variables")
