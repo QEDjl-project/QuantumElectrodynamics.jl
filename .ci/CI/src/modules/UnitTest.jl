@@ -53,9 +53,15 @@ function add_unit_test_job_yaml!(
     for version in julia_versions
         test_platform_name = lowercase(string(test_platform))
         if version != "nightly"
-            job_dict["unit_test_julia_$(test_platform_name)_$(replace(version, "." => "_"))"] = _get_normal_unit_test(
-                version, test_package, target_branch, test_platform, tools_git_repo
-            )
+            if test_platform == AMDGPU
+                job_dict["unit_test_julia_$(test_platform_name)_$(replace(version, "." => "_"))"] = _get_amdgpu_unit_test(
+                    version, test_package, target_branch, tools_git_repo
+                )
+            else
+                job_dict["unit_test_julia_$(test_platform_name)_$(replace(version, "." => "_"))"] = _get_normal_unit_test(
+                    version, test_package, target_branch, test_platform, tools_git_repo
+                )
+            end
         else
             job_dict["unit_test_julia_$(test_platform_name)_nightly"] = _get_nightly_unit_test(
                 test_package,
@@ -267,5 +273,49 @@ fi",
     job_yaml["image"] = "debian:bookworm-slim"
 
     job_yaml["allow_failure"] = true
+    return job_yaml
+end
+
+"""
+    _get_amdgpu_unit_test(
+        version::AbstractString,
+        test_package::TestPackage,
+        target_branch::AbstractString,
+        tools_git_repo::ToolsGitRepo,
+    )
+
+Creates a amdgpu unit test job for a specific Julia version. Use a different base image and install 
+Julia in it.
+
+# Args
+- `version::AbstractString`: Julia version used for the tests.
+- `test_package::TestPackage`: Properties of the package to be tested, such as name and version.
+- `target_branch::AbstractString`: A different job code is generated depending on the target branch.
+- `tools_git_repo::ToolsGitRepo`: URL and branch of the Git repository from which the CI tools are
+    cloned in unit test job.
+
+Return
+
+Returns a dict containing the unit test, which can be output directly as GitLab CI yaml.
+"""
+function _get_amdgpu_unit_test(
+    version::AbstractString,
+    test_package::TestPackage,
+    target_branch::AbstractString,
+    tools_git_repo::ToolsGitRepo,
+)::Dict
+    job_yaml = _get_normal_unit_test(
+        version, test_package, target_branch, AMDGPU, tools_git_repo
+    )
+    job_yaml["image"] = "rocm/dev-ubuntu-24.04:6.2.4-complete"
+    job_yaml["before_script"] = [
+        "curl -fsSL https://install.julialang.org | sh -s -- -y -p /julia",
+        "export PATH=/julia/bin:\$PATH",
+        "echo \$PATH",
+        "juliaup add $(version)",
+        "juliaup default $(version)",
+    ]
+    job_yaml["tags"] = ["rocm", "x86_64"]
+
     return job_yaml
 end
