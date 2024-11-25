@@ -186,9 +186,44 @@ function main()
         test_package,
         unit_test_julia_versions,
         target_branch,
+        CPU,
         tools_git_repo,
         get_unit_test_nightly_baseimage(),
     )
+
+    if haskey(ENV, "CI_ENABLE_CUDA_TESTS") || haskey(ENV, "CI_ENABLE_AMDGPU_TESTS")
+        for version in ["rc", "nightly"]
+            if version in unit_test_julia_versions
+                @info "Remove unit test version $(version) for GPU tests"
+                filter!(v -> v != version, unit_test_julia_versions)
+            end
+        end
+    end
+
+    if haskey(ENV, "CI_ENABLE_CUDA_TESTS")
+        @info "Generate CUDA unit tests"
+        add_unit_test_job_yaml!(
+            job_yaml,
+            test_package,
+            unit_test_julia_versions,
+            target_branch,
+            CUDA,
+            tools_git_repo,
+        )
+    end
+
+    if haskey(ENV, "CI_ENABLE_AMDGPU_TESTS")
+        @info "Generate AMDGPU unit tests"
+
+        add_unit_test_job_yaml!(
+            job_yaml,
+            test_package,
+            unit_test_julia_versions,
+            target_branch,
+            AMDGPU,
+            tools_git_repo,
+        )
+    end
 
     add_integration_test_job_yaml!(job_yaml, test_package, target_branch, tools_git_repo)
 

@@ -1,22 +1,3 @@
-using YAML
-
-"""
-    yaml_diff(given, expected)::AbstractString
-
-Generates an error string that shows a given and an expected data structure in yaml 
-representation.
-
-# Returns
-- Human readable error message for the comparison of two job yaml's.
-"""
-function yaml_diff(given, expected)::AbstractString
-    output = "\ngiven:\n"
-    output *= String(YAML.yaml(given))
-    output *= "\nexpected:\n"
-    output *= String(YAML.yaml(expected))
-    return output
-end
-
 @testset "generate_job_yaml()" begin
     package_infos = CI.get_package_info()
 
