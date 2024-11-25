@@ -101,6 +101,9 @@ function add_unit_test_verify_job_yaml!(
 )
     # verification script that no custom URLs are used in unit tests
     if target_branch != "main"
+        if !haskey(job_dict, "stages")
+            job_dict["stages"] = []
+        end
         push!(job_dict["stages"], "verify-unit-test-deps")
         job_dict["verify-unit-test-deps"] = Dict(
             "image" => "julia:1.10",
@@ -269,8 +272,6 @@ fi",
         # mv is not possible, because it cannot merge folder
         "cp -r \$JULIA_EXTRACT_FOLDER/* /usr",
     ]
-
-    job_yaml["image"] = "debian:bookworm-slim"
 
     job_yaml["allow_failure"] = true
     return job_yaml
