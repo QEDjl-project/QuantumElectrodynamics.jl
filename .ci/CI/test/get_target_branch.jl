@@ -1,14 +1,6 @@
 @testset "test is_pull_request()" begin
-    @testset "no environemnt variable CI_COMMIT_REF_NAME set" begin
-        if haskey(ENV, "CI_COMMIT_REF_NAME")
-            delete!(ENV, "CI_COMMIT_REF_NAME")
-        end
-        @test_throws ErrorException CI.is_pull_request()
-    end
-
     @testset "empty CI_COMMIT_REF_NAME" begin
-        ENV["CI_COMMIT_REF_NAME"] = ""
-        @test CI.is_pull_request() == false
+        @test CI.is_pull_request("") == false
     end
 
     for (ref_name, expected_result) in (
@@ -18,20 +10,12 @@
         ("v0.1.0", false),
     )
         @testset "CI_COMMIT_REF_NAME=$(ref_name)" begin
-            ENV["CI_COMMIT_REF_NAME"] = ref_name
-            @test CI.is_pull_request() == expected_result
+            @test CI.is_pull_request(ref_name) == expected_result
         end
     end
 end
 
-@testset "test get_build_branch()" begin
-    @testset "no environemnt variable CI_COMMIT_REF_NAME set" begin
-        if haskey(ENV, "CI_COMMIT_REF_NAME")
-            delete!(ENV, "CI_COMMIT_REF_NAME")
-        end
-        @test_throws ErrorException CI.get_build_branch()
-    end
-
+@testset "test parse_non_pull_request()" begin
     for (ref_name, expected_result) in (
         (
             "pr-41/SimeonEhrig/QuantumElectrodynamics.jl/setDevDepDeps",
@@ -44,17 +28,7 @@ end
         ("feature3", "feature3"),
     )
         @testset "CI_COMMIT_REF_NAME=$(ref_name)" begin
-            ENV["CI_COMMIT_REF_NAME"] = ref_name
-            @test CI.get_build_branch() == expected_result
+            @test CI.parse_non_pull_request(ref_name) == expected_result
         end
-    end
-end
-
-@testset "test get_target_branch_pull_request()" begin
-    @testset "no environemnt variable CI_COMMIT_REF_NAME set" begin
-        if haskey(ENV, "CI_COMMIT_REF_NAME")
-            delete!(ENV, "CI_COMMIT_REF_NAME")
-        end
-        @test_throws ErrorException CI.get_target_branch_pull_request()
     end
 end
