@@ -256,9 +256,7 @@ function add_integration_test_job_yaml!(
     target_branch::AbstractString,
     tools_git_repo::ToolsGitRepo,
 )
-    if !haskey(job_dict, "stages")
-        job_dict["stages"] = []
-    end
+    _add_stage_once!(job_dict, "integ-test")
 
     package_infos = get_package_info()
     if target_branch != "main"
@@ -284,7 +282,6 @@ function add_integration_test_job_yaml!(
         return Nothing
     end
 
-    push!(job_dict["stages"], "integ-test")
     for p in depending_pkg
         # Handles the case of merging in the main branch. If we want to merge in the main branch, 
         # we do it because we want to publish the package. Therefore, we need to be sure that there 

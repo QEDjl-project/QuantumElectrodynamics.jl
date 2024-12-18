@@ -29,11 +29,20 @@ function parse_commandline()::Dict{String,Any}
         "--amdgpu"
         help = "Enable the generation of AMDGPU tests."
         action = :store_true
+        "--nointeg"
+        help = "Disable the generation of integration tests."
+        action = :store_true
         "--target-branch"
         help = "If target branch is set, does not read the target branch from a GitHub Pull Request which is set via environment variable `CI_COMMIT_REF_NAME`."
         arg_type = String
         "--project-path"
         help = "Set the path to the package folder of the package to be tested. Can also be set via the environment variable `CI_PROJECT_DIR`."
+        arg_type = String
+        "--output-cpu"
+        help = "Write CPU test job file to the given path. If not set, print job file content on stdout."
+        arg_type = String
+        "--output-gpu"
+        help = "Write GPU test job file to the given path. If not set, print job file content on stdout."
         arg_type = String
     end
 
@@ -128,63 +137,33 @@ function get_project_path(args::Dict{String,Any})::String
 end
 
 """
-    is_cpu_tests(args::Dict{String,Any})::Bool
-
-Returns true, if CPU unit tests should be generated. CPU tests are enabled by default. Set argument
-`--nocpu` to disable it or use the environment variable `CI_ENABLE_CPU_TESTS={"ON"|"OFF"}`.
-
-# Args
-- `args::Dict{String,Any}`: Parsed arguments
-
-# Return 
-
-True, if CPU unit tests should be generated.
-"""
-function is_cpu_tests(args::Dict{String,Any})::Bool
-    # if flag is set, disable CPU tests
-    # otherwise check environment variable
-    if args["nocpu"]
-        return false
-    end
-
-    if haskey(ENV, "CI_ENABLE_CPU_TESTS")
-        if ENV["CI_ENABLE_CPU_TESTS"] == "ON"
-            return true
-        end
-        if ENV["CI_ENABLE_CPU_TESTS"] == "OFF"
-            return false
-        end
-        @error "environment variable CI_ENABLE_CPU_TESTS contains unknown value: $(ENV["CI_ENABLE_CPU_TESTS"])\n" *
-            "Only `ON` or `OFF` is allowed."
-        exit(1)
-    end
-
-    # if no argument or environment variable is set, enable CPU tests
-    return true
-end
-
-"""
-    _is_gpu_tests(
-        arg_name::AbstractString, env_name::AbstractString, args::Dict{String,Any}
+    _is_test(
+        arg_name::AbstractString,
+        arg_state::Bool,
+        env_name::AbstractString,
+        args::Dict{String,Any},
     )::Bool
 
-Return if gpu unit tests should be generated depending on a commandline argument or environment 
-variable.
+Checks the command line argument and the environment variable whether test should be enabled or not.
 
 # Args
 - `arg_name::AbstractString`: Name of the argument.
+- `arg_state::Bool`: Specify if setting argument should enable (true) or disable (false) the tests.
 - `env_name::AbstractString`: Name of the environment variable.
 - `args::Dict{String,Any}`: Parsed arguments
 
 Return
 
-True if enabled or false if not. Default is false.
+True if enabled, false otherwise.
 """
-function _is_gpu_tests(
-    arg_name::AbstractString, env_name::AbstractString, args::Dict{String,Any}
+function _is_test(
+    arg_name::AbstractString,
+    arg_state::Bool,
+    env_name::AbstractString,
+    args::Dict{String,Any},
 )::Bool
     if args[arg_name]
-        return true
+        return arg_state
     end
 
     if haskey(ENV, env_name)
@@ -194,13 +173,29 @@ function _is_gpu_tests(
         if ENV[env_name] == "OFF"
             return false
         end
-        @error "environment variable env_name contains unknown value: $(ENV["env_name"])\n" *
+        @error "environment variable $env_name contains unknown value: $(ENV[env_name])\n" *
             "Only `ON` or `OFF` is allowed."
         exit(1)
     end
 
-    # if no argument or environment variable is set, disable GPU tests
-    return false
+    return !arg_state
+end
+
+"""
+    is_cpu_tests(args::Dict{String,Any})::Bool
+
+Return true if CPU unit tests should be generated. CPU tests are enabled by default. Set argument
+`--nocpu` to disable CPU unit tests or use the environment variable `CI_ENABLE_CPU_TESTS={"ON"|"OFF"}`.
+
+# Args
+- `args::Dict{String,Any}`: Parsed arguments
+
+# Return 
+
+True if CPU unit tests should be generated, false otherwise. 
+"""
+function is_cpu_tests(args::Dict{String,Any})::Bool
+    return _is_test("nocpu", false, "CI_ENABLE_CPU_TESTS", args)
 end
 
 """
@@ -216,7 +211,7 @@ Check if CUDA GPU unit tests should be generated.
 True, if CUDA GPU unit tests should be generated.
 """
 function is_cuda_tests(args::Dict{String,Any})::Bool
-    return _is_gpu_tests("cuda", "CI_ENABLE_CUDA_TESTS", args)
+    return _is_test("cuda", true, "CI_ENABLE_CUDA_TESTS", args)
 end
 
 """
@@ -232,7 +227,25 @@ Check if AMDGPU GPU unit tests should be generated.
 True, if AMDGPU GPU unit tests should be generated.
 """
 function is_amdgpu_tests(args::Dict{String,Any})::Bool
-    return _is_gpu_tests("amdgpu", "CI_ENABLE_AMDGPU_TESTS", args)
+    return _is_test("amdgpu", true, "CI_ENABLE_AMDGPU_TESTS", args)
+end
+
+"""
+    is_integ_tests(args::Dict{String,Any})::Bool
+
+Return true if integration tests should be generated. Integration tests are enabled by default. Set
+argument `--nointeg` to disable this or use the environment variable
+`CI_ENABLE_INTEG_TESTS={"ON"|"OFF"}`.
+
+# Args
+- `args::Dict{String,Any}`: Parsed arguments
+
+# Return 
+
+True if integration tests should be generated, false otherwise. 
+"""
+function is_integ_tests(args::Dict{String,Any})::Bool
+    return _is_test("nointeg", false, "CI_ENABLE_INTEG_TESTS", args)
 end
 
 """
@@ -345,7 +358,7 @@ function print_job_yaml(job_yaml::Dict, io::IO=stdout)
     # print all stages first
     if "stages" in keys(job_yaml_copy)
         YAML.write(io, "stages" => job_yaml["stages"])
-        println()
+        println(io, "")
         delete!(job_yaml_copy, "stages")
     end
 
@@ -353,7 +366,7 @@ function print_job_yaml(job_yaml::Dict, io::IO=stdout)
     for (top_level_object, top_level_object_value) in job_yaml_copy
         if startswith(top_level_object, "unit_test_julia_")
             YAML.write(io, top_level_object => top_level_object_value)
-            println()
+            println(io, "")
             delete!(job_yaml_copy, top_level_object)
         end
     end
@@ -362,7 +375,7 @@ function print_job_yaml(job_yaml::Dict, io::IO=stdout)
     for (top_level_object, top_level_object_value) in job_yaml_copy
         if startswith(top_level_object, "integration_test_")
             YAML.write(io, top_level_object => top_level_object_value)
-            println()
+            println(io, "")
             delete!(job_yaml_copy, top_level_object)
         end
     end
@@ -374,7 +387,7 @@ function print_job_yaml(job_yaml::Dict, io::IO=stdout)
 end
 
 """
-    _info_enabled_tests(test_name::AbstractString, state::Bool)
+    _info_enabled_unit_tests(test_name::AbstractString, state::Bool)
 
 Helper function to display of unit tests are generated.
 
@@ -382,7 +395,7 @@ Helper function to display of unit tests are generated.
 - `test_name::AbstractString`: Name of the unit test category
 - `state::Bool`: Is enabled or not
 """
-function _info_enabled_tests(test_name::AbstractString, state::Bool)
+function _info_enabled_unit_tests(test_name::AbstractString, state::Bool)
     @info "$(test_name) unit tests are $(state ? "enabled" : "disabled")"
 end
 
@@ -402,10 +415,11 @@ function main()
     is_cpu = is_cpu_tests(args)
     is_cuda = is_cuda_tests(args)
     is_amdgpu = is_amdgpu_tests(args)
+    is_integ = is_integ_tests(args)
 
-    _info_enabled_tests("CPU", is_cpu)
-    _info_enabled_tests("CUDA", is_cuda)
-    _info_enabled_tests("AMDGPU", is_amdgpu)
+    _info_enabled_unit_tests("CPU", is_cpu)
+    _info_enabled_unit_tests("CUDA", is_cuda)
+    _info_enabled_unit_tests("AMDGPU", is_amdgpu)
 
     is_unit_tests = is_cpu || is_cuda || is_amdgpu
     @info "unit tests are $(is_unit_tests ? "enabled" : "disabled")"
@@ -413,13 +427,36 @@ function main()
     unit_test_julia_versions = get_unit_test_julia_versions()
     @info "Julia versions for the unit tests: $(unit_test_julia_versions)"
 
-    job_yaml = Dict()
+    @info "integration tests are $(is_integ ? "enabled" : "disabled")"
+
+    # if no tests should be generated, exit early
+    if !(is_cpu || is_cpu || is_amdgpu || is_integ)
+        exit(0)
+    end
+
+    if !is_cpu && !is_integ && !isnothing(args["output-cpu"])
+        @warn "The output path for CPU tests is set, but CPU tests are not enabled"
+    end
+
+    if !is_cuda && !is_amdgpu && !isnothing(args["output-gpu"])
+        @warn "The output path for GPU tests is set, but GPU tests are not enabled"
+    end
+
+    cpu_job_yaml = Dict()
+
+    if isnothing(args["output-cpu"]) && isnothing(args["output-gpu"])
+        # if cpu and gpu pipeline will be printed in different outputs, use the same
+        # job dict to generated a single yaml file
+        gpu_job_yaml = cpu_job_yaml
+    else
+        gpu_job_yaml = Dict()
+    end
 
     tools_git_repo = get_git_ci_tools_url_branch()
 
     if is_cpu
         add_unit_test_job_yaml!(
-            job_yaml,
+            cpu_job_yaml,
             test_package,
             unit_test_julia_versions,
             target_branch,
@@ -441,7 +478,7 @@ function main()
     if is_cuda
         @info "Generate CUDA unit tests"
         add_unit_test_job_yaml!(
-            job_yaml,
+            gpu_job_yaml,
             test_package,
             unit_test_julia_versions,
             target_branch,
@@ -454,7 +491,7 @@ function main()
         @info "Generate AMDGPU unit tests"
 
         add_unit_test_job_yaml!(
-            job_yaml,
+            gpu_job_yaml,
             test_package,
             unit_test_julia_versions,
             target_branch,
@@ -463,13 +500,45 @@ function main()
         )
     end
 
-    add_integration_test_job_yaml!(job_yaml, test_package, target_branch, tools_git_repo)
-
-    if is_unit_tests
-        add_unit_test_verify_job_yaml!(job_yaml, target_branch, tools_git_repo)
+    if is_integ
+        add_integration_test_job_yaml!(
+            cpu_job_yaml, test_package, target_branch, tools_git_repo
+        )
     end
 
-    return print_job_yaml(job_yaml)
+    if is_unit_tests
+        add_unit_test_verify_job_yaml!(cpu_job_yaml, target_branch, tools_git_repo)
+    end
+
+    # if no output set, write everything to stdout
+    # if at least one pipeline output is defined, the configured pipelines are written to a file
+    # and the rest to stdout
+    if isnothing(args["output-cpu"]) && isnothing(args["output-gpu"])
+        print_job_yaml(cpu_job_yaml, stdout)
+    else
+        # don't write empty file if output was defined but no code generated
+        if !isempty(cpu_job_yaml)
+            if isnothing(args["output-cpu"])
+                print_job_yaml(cpu_job_yaml, stdout)
+            else
+                open(args["output-cpu"], "w") do cpu_out
+                    print_job_yaml(cpu_job_yaml, cpu_out)
+                end
+            end
+        end
+
+        if !isempty(gpu_job_yaml)
+            if isnothing(args["output-gpu"])
+                print_job_yaml(gpu_job_yaml, stdout)
+            else
+                open(args["output-gpu"], "w") do gpu_out
+                    print_job_yaml(gpu_job_yaml, gpu_out)
+                end
+            end
+        end
+    end
+
+    return nothing
 end
 
 # TODO: if Julia 1.11 is minimum, replace it it with: function (@main)(args)
