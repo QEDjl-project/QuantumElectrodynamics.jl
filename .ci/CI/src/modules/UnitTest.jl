@@ -44,11 +44,7 @@ function add_unit_test_job_yaml!(
         throw(ArgumentError("argument test_platform not implemented for $(test_platform)"))
     end
 
-    if !haskey(job_dict, "stages")
-        job_dict["stages"] = []
-    end
-
-    push!(job_dict["stages"], "unit-test")
+    _add_stage_once!(job_dict, "unit-test")
 
     for version in julia_versions
         test_platform_name = lowercase(string(test_platform))
@@ -101,10 +97,8 @@ function add_unit_test_verify_job_yaml!(
 )
     # verification script that no custom URLs are used in unit tests
     if target_branch != "main"
-        if !haskey(job_dict, "stages")
-            job_dict["stages"] = []
-        end
-        push!(job_dict["stages"], "verify-unit-test-deps")
+        _add_stage_once!(job_dict, "verify-unit-test-deps")
+
         job_dict["verify-unit-test-deps"] = Dict(
             "image" => "julia:1.10",
             "stage" => "verify-unit-test-deps",
