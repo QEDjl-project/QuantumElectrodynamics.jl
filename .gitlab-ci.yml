@@ -4,6 +4,8 @@ stages:
 
 .untit_test_template:
   stage: unit-test
+  variables:
+      CI_TEST_TYPE: "unit"
   script:
     # test CI scripts
     - cd ${CI_PROJECT_DIR}/.ci/CI/

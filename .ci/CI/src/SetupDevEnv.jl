@@ -27,23 +27,53 @@ if abspath(PROGRAM_FILE) == @__FILE__
 end
 
 """
-    check_environemnt_variables()
+    get_custom_url_env_var_name_prefix()
 
-Check if all reguired environement variables are set and print required and optional environement 
+Depending on the value of the environment variable CI_TEST_TYPE, the prefix name for the 
+environment variable is returned, which can be used to change the repository URL of the QED 
+dependencies.
+
+# Returns
+
+Name prefix
+"""
+function get_custom_url_env_var_name_prefix()::String
+    if !haskey(ENV, "CI_TEST_TYPE")
+        @error "environment variable CI_TEST_TYPE needs to be set to \"unit\" or \"integ\""
+        exit(1)
+    end
+    if ENV["CI_TEST_TYPE"] == "unit"
+        return "CI_UNIT_PKG_URL_"
+    end
+    if ENV["CI_TEST_TYPE"] == "integ"
+        return "CI_INTG_PKG_URL_"
+    end
+    @error "environment variable CI_TEST_TYPE needs to have the value \"unit\" or \"integ\""
+    exit(1)
+    # makes the formatter happy ;-)
+    return ""
+end
+
+"""
+    check_environment_variables()
+
+# Args
+
+Check if all required environment variables are set and print required and optional environment 
 variables.
 """
-function check_environemnt_variables()
-    # check required environement variables
+function check_environment_variables(custom_url_env_var_name_prefix::AbstractString)
+    # check required environment variables
     for var in ("CI_DEV_PKG_NAME", "CI_DEV_PKG_PATH")
         if !haskey(ENV, var)
-            @error "environemnt variable $(var) needs to be set"
+            @error "environment variable $(var) needs to be set"
             exit(1)
         end
     end
 
-    # display all used environement variables
+    # display all used environment variables
     io = IOBuffer()
-    println(io, "following environement variables are set:")
+    println(io, "following environment variables are set:")
     for e in ("CI_DEV_PKG_NAME", "CI_DEV_PKG_VERSION", "CI_DEV_PKG_PATH")
         if haskey(ENV, e)
             println(io, "$(e): $(ENV[e])")
@@ -51,7 +81,7 @@ function check_environemnt_variables()
     end
 
     for (var_name, var_value) in ENV
-        if startswith(var_name, "CI_UNIT_PKG_URL_")
+        if startswith(var_name, custom_url_env_var_name_prefix)
             println(io, "$(var_name): $(var_value)")
         end
     end
@@ -86,21 +116,24 @@ end
     get_repository_custom_urls()::Dict{String,String}
 
 Reads user-defined repository URLs from the environment variables. An environment variable must begin
-with `CI_UNIT_PKG_URL_`. This is followed by the package name, e.g. `CI_UNIT_PKG_URL_QEDbase`. If the
-variable is set, the user-defined URL is used instead of the standard URL for the Git clone.
+with `env_prefix`. This is followed by the package name, e.g. if the prefix is `CI_UNIT_PKG_URL`, a 
+package name variable can be `CI_UNIT_PKG_URL_QEDbase`. If the variable is set, the user-defined URL 
+is used instead of the standard URL for the Git clone.
 
 # Returns
 
+- `env_prefix::AbstractString`: Name prefix to be match
+
 Dict of custom URLs where the key is the package name and the value the custom URL.
 """
-function get_repository_custom_urls()::Dict{String,String}
-    @info "get custom repository URLs from environemnt variables"
+function get_repository_custom_urls(env_prefix::AbstractString)::Dict{String,String}
+    @info "get custom repository URLs from environment variables"
     custom_urls = Dict{String,String}()
     with_logger(debuglogger) do
         for (var_name, var_value) in ENV
-            if startswith(var_name, "CI_UNIT_PKG_URL_")
-                pkg_name = var_name[(length("CI_UNIT_PKG_URL_") + 1):end]
-                @debug "add $(pkg_name)=$(var_value) to custom_urls"
+            if startswith(var_name, env_prefix)
+                pkg_name = var_name[(length(env_prefix) + 1):end]
+                @info "add $(pkg_name)=$(var_value) to custom_urls"
                 custom_urls[pkg_name] = var_value
             end
         end
@@ -439,12 +472,15 @@ end
 
 if abspath(PROGRAM_FILE) == @__FILE__
     try
-        extract_env_vars_from_git_message!("CI_UNIT_PKG_URL_")
-        check_environemnt_variables()
+        custom_url_env_var_name_prefix = get_custom_url_env_var_name_prefix()
+        @info "Custom URL environment variable prefix: $(custom_url_env_var_name_prefix)"
+
+        extract_env_vars_from_git_message!(custom_url_env_var_name_prefix)
+        check_environment_variables(custom_url_env_var_name_prefix)
         active_project_project_toml = Pkg.project().path
 
         compat_changes = get_compat_changes()
-        custom_urls = get_repository_custom_urls()
+        custom_urls = get_repository_custom_urls(custom_url_env_var_name_prefix)
 
         qed_path = mktempdir(; cleanup=false)
 
