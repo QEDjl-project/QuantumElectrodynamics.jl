@@ -94,13 +94,13 @@ variable is set, the user-defined URL is used instead of the standard URL for th
 Dict of custom URLs where the key is the package name and the value the custom URL.
 """
 function get_repository_custom_urls()::Dict{String,String}
-    @info "get custom repository URLs from environemnt variables"
+    @info "get custom repository URLs from environment variables"
     custom_urls = Dict{String,String}()
     with_logger(debuglogger) do
         for (var_name, var_value) in ENV
             if startswith(var_name, "CI_UNIT_PKG_URL_")
                 pkg_name = var_name[(length("CI_UNIT_PKG_URL_") + 1):end]
-                @debug "add $(pkg_name)=$(var_value) to custom_urls"
+                @info "add $(pkg_name)=$(var_value) to custom_urls"
                 custom_urls[pkg_name] = var_value
             end
         end
