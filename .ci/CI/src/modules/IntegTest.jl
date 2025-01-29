@@ -166,6 +166,7 @@ function generate_job_yaml!(
             "CI_DEV_PKG_NAME" => test_package.name,
             "CI_DEV_PKG_VERSION" => test_package.version,
             "CI_DEV_PKG_PATH" => test_package.path,
+            "CI_TEST_TYPE" => "integ",
         ),
         "interruptible" => true,
         "tags" => ["cpuonly"],

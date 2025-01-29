@@ -149,6 +149,7 @@ function _get_normal_unit_test(
         "CI_DEV_PKG_NAME" => test_package.name,
         "CI_DEV_PKG_VERSION" => test_package.version,
         "CI_DEV_PKG_PATH" => test_package.path,
+        "CI_TEST_TYPE" => "unit",
     )
     job_yaml["image"] = "julia:$(version)"
 

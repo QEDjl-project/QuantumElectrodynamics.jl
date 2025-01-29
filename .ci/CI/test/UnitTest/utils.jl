@@ -41,6 +41,7 @@ function get_generic_unit_job(
         "CI_DEV_PKG_NAME" => test_package.name,
         "CI_DEV_PKG_PATH" => test_package.path,
         "CI_DEV_PKG_VERSION" => test_package.version,
+        "CI_TEST_TYPE" => "unit",
     )
 
     for tp in instances(CI.TestPlatform)
