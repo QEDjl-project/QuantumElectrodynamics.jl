@@ -321,7 +321,10 @@ function add_integration_test_job_yaml!(
             generate_job_yaml!(
                 p,
                 test_package,
-                target_branch,
+                # TODO: `dev` is the "default" branch
+                # a possible, different branch is stored in package_info
+                # simplify the interface
+                "dev",
                 job_dict,
                 package_infos,
                 tools_git_repo,
