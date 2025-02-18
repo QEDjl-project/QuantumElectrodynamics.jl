@@ -65,6 +65,16 @@ struct ToolsGitRepo
     branch::String
 end
 
+"""
+    struct CustomDependencyUrls
+
+Stores custom repository URLs for QED packages which are dependency of the project to be tested.
+
+# Members
+- `unit::Dict{String,String}`: Custom dependencies of the unit tests
+- `integ::Dict{String,String}`: Custom dependencies of the integration tests
+
+"""
 struct CustomDependencyUrls
     unit::Dict{String,String}
     integ::Dict{String,String}
@@ -442,42 +452,6 @@ function append_custom_dependency_urls_from_git_message!(
         end
     else
         @info "Git commit message variable CI_COMMIT_MESSAGE is not set."
-    end
-end
-
-"""
-    extract_env_vars_from_git_message!(
-        env_prefix::AbstractString, var_name::AbstractString="CI_COMMIT_MESSAGE"
-    )
-
-Parse the commit message, if set via variable (usual `CI_COMMIT_MESSAGE`) and set custom URLs.
-A line is parsed if it has the shape of:
-
-<env_prefix>_rest_of_the_env_name: <value>
-
-Each parsed line is added to the environment variables:
-
-ENV[<env_prefix>_rest_of_the_env_name] = <value>
-
-# Args
-- `env_prefix::AbstractString`: Parse all lines starting with the env_prefix
-- `var_name::AbstractString``: Environemnt variable where git message is stored 
-    (default: "CI_COMMIT_MESSAGE").
-
-"""
-function extract_env_vars_from_git_message!(
-    env_prefix::AbstractString, var_name::AbstractString="CI_COMMIT_MESSAGE"
-)
-    if haskey(ENV, var_name)
-        @info "Found env variable $var_name"
-        for line in split(ENV[var_name], "\n")
-            line = strip(line)
-            if startswith(line, env_prefix)
-                (pkg_name, url) = split(line, ":"; limit=2)
-                @info "add " * pkg_name * "=" * strip(url)
-                ENV[pkg_name] = strip(url)
-            end
-        end
     end
 end
 

@@ -4,85 +4,6 @@ using Logging
 using IntegrationTests
 
 """
-Contains all git-related information about a package.
-
-# Fields
-- `url`: Git url of the original project.
-- `modified_url`: Stores the Git url set by the environment variable.
-- `env_var`: Name of the environment variable to set the modified_url.
-"""
-mutable struct PackageInfo
-    url::String
-    modified_url::String
-    env_var::String
-    PackageInfo(url, env_var) = new(url, "", env_var)
-end
-
-"""
-    extract_env_vars_from_git_message!(package_infos::AbstractDict{String, PackageInfo}, var_name = "CI_COMMIT_MESSAGE")
-
-    Parse the commit message, if set via variable (usual `CI_COMMIT_MESSAGE`), and set custom URLs.
-"""
-function extract_env_vars_from_git_message!(
-    package_infos::AbstractDict{String,PackageInfo}, var_name="CI_COMMIT_MESSAGE"
-)
-    if haskey(ENV, var_name)
-        for line in split(ENV[var_name], "\n")
-            line = strip(line)
-            for pkg_info in values(package_infos)
-                if startswith(line, pkg_info.env_var * ": ")
-                    ENV[pkg_info.env_var] = SubString(
-                        line, length(pkg_info.env_var * ": ") + 1
-                    )
-                end
-            end
-        end
-    end
-end
-
-"""
-    modify_package_url!(package_infos::AbstractDict{String, PackageInfo})
-
-Iterate over all entries of package_info. If an environment variable exists with the same name as,
-the `env_var` entry, set the value of the environment variable to `modified_url`.
-"""
-function modify_package_url!(package_infos::AbstractDict{String,PackageInfo})
-    for package_info in values(package_infos)
-        if haskey(ENV, package_info.env_var)
-            package_info.modified_url = ENV[package_info.env_var]
-        end
-    end
-end
-
-"""
-    modified_package_name(package_infos::AbstractDict{String, PackageInfo})
-
-Read the name of the modified (project) package from the environment variable `CI_DEV_PKG_NAME`.
-
-# Returns
-- The name of the modified (project) package
-"""
-function modified_package_name(package_infos::AbstractDict{String,PackageInfo})
-    for env_var in ["CI_DEV_PKG_NAME", "CI_PROJECT_DIR"]
-        if !haskey(ENV, env_var)
-            error("Environment variable $env_var is not set.")
-        end
-    end
-
-    if !haskey(package_infos, ENV["CI_DEV_PKG_NAME"])
-        package_name = ENV["CI_DEV_PKG_NAME"]
-        error("Error unknown package name $package_name}")
-    else
-        return ENV["CI_DEV_PKG_NAME"]
-    end
-end
-
-function clean_pkg_name(pkg_name::AbstractString)
-    # remove color tags (?) from the package names
-    return replace(pkg_name, r"\{[^}]*\}" => "")
-end
-
-"""
     generate_job_yaml!(
         package_name::String,
         test_package::TestPackage,
@@ -114,17 +35,15 @@ function generate_job_yaml!(
     test_package::TestPackage,
     target_branch::AbstractString,
     job_yaml::Dict,
-    package_infos::AbstractDict{String,PackageInfo},
+    custom_urls::Dict{String,String},
     tools_git_repo::ToolsGitRepo,
     stage::AbstractString="",
     can_fail::Bool=false,
 )
-    package_info = package_infos[package_name]
-    # if modified_url is empty, use original url
-    if package_info.modified_url == ""
-        url = package_info.url
+    if haskey(custom_urls, package_name)
+        url = custom_urls[package_name]
     else
-        url = package_info.modified_url
+        url = "https://github.com/QEDjl-project/$(package_name).jl.git"
     end
 
     script = ["apt update", "apt install -y git", "cd /"]
@@ -202,38 +121,6 @@ function generate_dummy_job_yaml!(job_yaml::Dict)
 end
 
 """
-    get_package_info()::Dict{String,PackageInfo}
-
-Returns a list with QED project package information.
-"""
-function get_package_info()::Dict{String,PackageInfo}
-    return Dict(
-        "QuantumElectrodynamics" => PackageInfo(
-            "https://github.com/QEDjl-project/QuantumElectrodynamics.jl.git",
-            "CI_INTG_PKG_URL_QED",
-        ),
-        "QEDfields" => PackageInfo(
-            "https://github.com/QEDjl-project/QEDfields.jl.git",
-            "CI_INTG_PKG_URL_QEDfields",
-        ),
-        "QEDbase" => PackageInfo(
-            "https://github.com/QEDjl-project/QEDbase.jl.git", "CI_INTG_PKG_URL_QEDbase"
-        ),
-        "QEDevents" => PackageInfo(
-            "https://github.com/QEDjl-project/QEDevents.jl.git",
-            "CI_INTG_PKG_URL_QEDevents",
-        ),
-        "QEDprocesses" => PackageInfo(
-            "https://github.com/QEDjl-project/QEDprocesses.jl.git",
-            "CI_INTG_PKG_URL_QEDprocesses",
-        ),
-        "QEDcore" => PackageInfo(
-            "https://github.com/QEDjl-project/QEDcore.jl.git", "CI_INTG_PKG_URL_QEDcore"
-        ),
-    )
-end
-
-"""
     add_integration_test_job_yaml!(
         job_dict::Dict,
         test_package::TestPackage,
@@ -255,28 +142,21 @@ function add_integration_test_job_yaml!(
     job_dict::Dict,
     test_package::TestPackage,
     target_branch::AbstractString,
+    custom_urls::Dict{String,String},
     tools_git_repo::ToolsGitRepo,
 )
     _add_stage_once!(job_dict, "integ-test")
 
-    package_infos = get_package_info()
-    if target_branch != "main"
-        extract_env_vars_from_git_message!(package_infos)
+    if target_branch == "main"
+        empty!(custom_urls)
     end
-    modify_package_url!(package_infos)
 
-    custom_urls = Dict{String,String}()
-    for (name, info) in package_infos
-        if info.modified_url != ""
-            custom_urls[name] = info.modified_url
-        end
-    end
     qed_path = mktempdir(; cleanup=false)
     compat_changes = Dict{String,String}()
 
     pkg_tree = build_qed_dependency_graph!(qed_path, compat_changes, custom_urls)
     depending_pkg = IntegrationTests.depending_projects(
-        test_package.name, collect(keys(package_infos)), pkg_tree
+        test_package.name, r"^QED*|^QuantumElectrodynamics$", pkg_tree
     )
 
     if isempty(depending_pkg)
@@ -299,20 +179,14 @@ function add_integration_test_job_yaml!(
         #    because of their current compat entries.
         if target_branch == "main" && is_pull_request()
             generate_job_yaml!(
-                p,
-                test_package,
-                "dev",
-                job_dict,
-                package_infos,
-                tools_git_repo,
-                "integ-test",
+                p, test_package, "dev", job_dict, custom_urls, tools_git_repo, "integ-test"
             )
             generate_job_yaml!(
                 p,
                 test_package,
                 "main",
                 job_dict,
-                package_infos,
+                custom_urls,
                 tools_git_repo,
                 "integ-test",
                 true,
@@ -326,7 +200,7 @@ function add_integration_test_job_yaml!(
                 # simplify the interface
                 "dev",
                 job_dict,
-                package_infos,
+                custom_urls,
                 tools_git_repo,
                 "integ-test",
             )

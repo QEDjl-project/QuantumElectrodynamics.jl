@@ -156,48 +156,52 @@ end
     end
 
     @testset "wrong custom integration test dependency URL" begin
-        custom_dependency_urls = CI.CustomDependencyUrls()
-        @test_throws ErrorException CI.append_custom_dependency_urls_from_git_message!(
-            custom_dependency_urls,
-            Dict{String,String}(
-                "CI_COMMIT_MESSAGE" => """Git headline
+        disable_info_logger_output() do
+            custom_dependency_urls = CI.CustomDependencyUrls()
+            @test_throws ErrorException CI.append_custom_dependency_urls_from_git_message!(
+                custom_dependency_urls,
+                Dict{String,String}(
+                    "CI_COMMIT_MESSAGE" => """Git headline
 
-                                       This is a nice message.
-                                       And another line.
+                                           This is a nice message.
+                                           And another line.
 
-                                       CI_INTG_PKG_URL_QEDfields=https//github.com/integ/QEDfields
-                                       """,
-            ),
-        )
+                                           CI_INTG_PKG_URL_QEDfields=https//github.com/integ/QEDfields
+                                           """,
+                ),
+            )
 
-        @test_throws ErrorException CI.append_custom_dependency_urls_from_git_message!(
-            custom_dependency_urls,
-            Dict{String,String}(
-                "CI_COMMIT_MESSAGE" => """Git headline
+            @test_throws ErrorException CI.append_custom_dependency_urls_from_git_message!(
+                custom_dependency_urls,
+                Dict{String,String}(
+                    "CI_COMMIT_MESSAGE" => """Git headline
 
-                                       This is a nice message.
-                                       And another line.
+                                           This is a nice message.
+                                           And another line.
 
-                                       CI_INTG_PKG_URL_QEDfields=https://github.com/integ/QEDfields
-                                       """,
-            ),
-        )
+                                           CI_INTG_PKG_URL_QEDfields=https://github.com/integ/QEDfields
+                                           """,
+                ),
+            )
+        end
     end
 
     @testset "wrong custom unit test dependency URL" begin
-        custom_dependency_urls = CI.CustomDependencyUrls()
-        @test_throws ErrorException CI.append_custom_dependency_urls_from_git_message!(
-            custom_dependency_urls,
-            Dict{String,String}(
-                "CI_COMMIT_MESSAGE" => """Git headline
+        disable_info_logger_output() do
+            custom_dependency_urls = CI.CustomDependencyUrls()
+            @test_throws ErrorException CI.append_custom_dependency_urls_from_git_message!(
+                custom_dependency_urls,
+                Dict{String,String}(
+                    "CI_COMMIT_MESSAGE" => """Git headline
 
-                                       This is a nice message.
-                                       And another line.
+                                           This is a nice message.
+                                           And another line.
 
-                                       CI_UNIT_PKG_URL_QEDfields=https://github.com/integ/QEDfields
-                                       """,
-            ),
-        )
+                                           CI_UNIT_PKG_URL_QEDfields=https://github.com/integ/QEDfields
+                                           """,
+                ),
+            )
+        end
     end
 end
 
