@@ -379,7 +379,7 @@ end
 function _custom_url_error(test_name::AbstractString)
     return error(
         "custom $(test_name) test dependency URL has not the correct shape\n" *
-        "required shape: CI_UNIT_PKG_URL_QEDexample: https://github/$(test_name)/QEDexample",
+        "required shape: CI_UNIT_PKG_URL_QEDexample: https://github.com/User/QEDexample",
     )
 end
 
@@ -428,30 +428,31 @@ function append_custom_dependency_urls_from_git_message!(
             custom_dependency_urls.integ,
         ),
     ]
-    if haskey(env, "CI_COMMIT_MESSAGE")
-        @info "Git commit message is set."
-        for line in split(env["CI_COMMIT_MESSAGE"], "\n")
-            line = strip(line)
-            for (test_name, env_prefix, url_dict) in test_types
-                if startswith(line, env_prefix)
-                    if length(split(line, ":"; limit=2)) < 2
-                        _custom_url_error(test_name)
-                    end
-
-                    (pkg_name, url) = split(line, ":"; limit=2)
-                    url = strip(url)
-                    if !startswith(url, "http")
-                        _custom_url_error(test_name)
-                    end
-
-                    pkg_name = pkg_name[(length(env_prefix) + 1):end]
-                    @info "add $(pkg_name)=$(url) to $(test_name) test custom urls"
-                    url_dict[pkg_name] = url
-                end
-            end
-        end
-    else
+    if !haskey(env, "CI_COMMIT_MESSAGE")
         @info "Git commit message variable CI_COMMIT_MESSAGE is not set."
+        return nothing
+    end
+
+    @info "Git commit message is set."
+    for line in split(env["CI_COMMIT_MESSAGE"], "\n"),
+        (test_name, env_prefix, url_dict) in test_types
+
+        line = strip(line)
+        if startswith(line, env_prefix)
+            if length(split(line, ":"; limit=2)) < 2
+                _custom_url_error(test_name)
+            end
+
+            (pkg_name, url) = split(line, ":"; limit=2)
+            url = strip(url)
+            if !startswith(url, "http")
+                _custom_url_error(test_name)
+            end
+
+            pkg_name = pkg_name[(length(env_prefix) + 1):end]
+            @info "add $(pkg_name)=$(url) to $(test_name) test custom urls"
+            url_dict[pkg_name] = url
+        end
     end
 end
 

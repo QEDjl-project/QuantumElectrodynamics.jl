@@ -43,3 +43,23 @@ function compare_lists(expected_list::Vector, given_list::Vector)::String
 
     return text
 end
+
+"""
+    disable_info_logger_output(test_function::Function)
+
+Deactivate the info level logger output for the code running in the do block.
+
+```
+    disable_info_logger_output() do
+        @test my_code_with_info_logger_output()
+    end
+```
+"""
+function disable_info_logger_output(test_function::Function)
+    info_logger_io = IOBuffer()
+    info_logger = CI.Logging.ConsoleLogger(info_logger_io, CI.Logging.Info)
+
+    CI.Logging.with_logger(info_logger) do
+        test_function()
+    end
+end
