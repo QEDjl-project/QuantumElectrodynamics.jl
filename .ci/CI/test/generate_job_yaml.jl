@@ -1,6 +1,4 @@
 @testset "generate_job_yaml()" begin
-    package_infos = CI.get_package_info()
-
     @testset "target main branch, no PR" begin
         job_yaml = Dict()
         CI.generate_job_yaml!(
@@ -8,7 +6,7 @@
             CI.TestPackage("QEDtest", "1.0.0", "/path/to/QEDcore.jl"),
             "main",
             job_yaml,
-            package_infos,
+            Dict{String,String}(),
             CI.ToolsGitRepo("", ""),
         )
         @test length(job_yaml) == 1
@@ -28,7 +26,7 @@
                 "apt update",
                 "apt install -y git",
                 "cd /",
-                "git clone -b main $(package_infos["QEDcore"].url) integration_test",
+                "git clone -b main https://github.com/QEDjl-project/QEDcore.jl.git integration_test",
                 "cd integration_test",
                 "julia --project=. -e 'import Pkg; Pkg.develop(path=\"/path/to/QEDcore.jl\");'",
                 "julia --project=. -e 'import Pkg; Pkg.instantiate()'",
@@ -62,7 +60,7 @@
             CI.TestPackage("QEDtest", "1.0.0", "/path/to/QEDcore.jl"),
             "feature3",
             job_yaml,
-            package_infos,
+            Dict{String,String}(),
             CI.ToolsGitRepo(
                 "https://github.com/QEDjl-project/QuantumElectrodynamics.jl.git", "dev"
             ),
@@ -84,7 +82,7 @@
                 "apt update",
                 "apt install -y git",
                 "cd /",
-                "git clone -b feature3 $(package_infos["QEDcore"].url) integration_test",
+                "git clone -b feature3 https://github.com/QEDjl-project/QEDcore.jl.git integration_test",
                 "git clone -b dev https://github.com/QEDjl-project/QuantumElectrodynamics.jl.git /integration_test_tools",
                 "cd integration_test",
                 "julia --project=. /integration_test_tools/.ci/CI/src/SetupDevEnv.jl",
@@ -119,7 +117,7 @@
             CI.TestPackage("QEDtest", "1.0.0", "/path/to/QEDcore.jl"),
             "dev",
             job_yaml,
-            package_infos,
+            Dict{String,String}(),
             CI.ToolsGitRepo("https://github.com/fork/QEDTest.jl.git", "ciDev"),
             "integ-test",
         )
@@ -128,7 +126,7 @@
             CI.TestPackage("QEDtest", "1.0.0", "/path/to/QEDcore.jl"),
             "main",
             job_yaml,
-            package_infos,
+            Dict{String,String}(),
             CI.ToolsGitRepo("https://github.com/fork_other/QEDTest.jl.git", "ciDevOther"),
             "integ-test",
             true,
@@ -151,7 +149,7 @@
                 "apt update",
                 "apt install -y git",
                 "cd /",
-                "git clone -b dev $(package_infos["QEDcore"].url) integration_test",
+                "git clone -b dev https://github.com/QEDjl-project/QEDcore.jl.git integration_test",
                 "git clone -b ciDev https://github.com/fork/QEDTest.jl.git /integration_test_tools",
                 "cd integration_test",
                 "julia --project=. /integration_test_tools/.ci/CI/src/SetupDevEnv.jl",
@@ -194,7 +192,7 @@
                 "apt update",
                 "apt install -y git",
                 "cd /",
-                "git clone -b main $(package_infos["QEDcore"].url) integration_test",
+                "git clone -b main https://github.com/QEDjl-project/QEDcore.jl.git integration_test",
                 "cd integration_test",
                 "julia --project=. -e 'import Pkg; Pkg.develop(path=\"/path/to/QEDcore.jl\");'",
                 "julia --project=. -e 'import Pkg; Pkg.instantiate()'",

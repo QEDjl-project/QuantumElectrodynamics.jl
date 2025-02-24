@@ -79,7 +79,7 @@ verify-unit-test-deps:
         # does not check for custom package URLs on the main and dev branch
         echo "no custom package URL check necessary"
       else
-        julia ${CI_PROJECT_DIR}/.ci/verify_env.jl
+        julia ${CI_PROJECT_DIR}/.ci/CI/src/VerifyEnv.jl
       fi
   interruptible: true
   tags:

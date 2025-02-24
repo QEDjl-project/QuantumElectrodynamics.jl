@@ -501,8 +501,16 @@ function main()
     end
 
     if is_integ
+        custom_dependency_urls = CustomDependencyUrls()
+        append_custom_dependency_urls_from_git_message!(custom_dependency_urls)
+        append_custom_dependency_urls_from_env_var!(custom_dependency_urls)
+
         add_integration_test_job_yaml!(
-            cpu_job_yaml, test_package, target_branch, tools_git_repo
+            cpu_job_yaml,
+            test_package,
+            target_branch,
+            custom_dependency_urls.integ,
+            tools_git_repo,
         )
     end
 

@@ -27,42 +27,42 @@ if abspath(PROGRAM_FILE) == @__FILE__
 end
 
 """
-    get_custom_url_env_var_name_prefix()
+    get_test_type_from_env_var()::TestType
 
-Depending on the value of the environment variable CI_TEST_TYPE, the prefix name for the 
-environment variable is returned, which can be used to change the repository URL of the QED 
-dependencies.
+Depending on the value of the environment variable `CI_TEST_TYPE`, the test type to be tested is
+returned. Depending on the type, different user-defined dependency URLs are used.
 
 # Returns
 
-Name prefix
+test type to be tested 
 """
-function get_custom_url_env_var_name_prefix()::String
+function get_test_type_from_env_var()::TestType
     if !haskey(ENV, "CI_TEST_TYPE")
         @error "environment variable CI_TEST_TYPE needs to be set to \"unit\" or \"integ\""
         exit(1)
     end
+
     if ENV["CI_TEST_TYPE"] == "unit"
-        return "CI_UNIT_PKG_URL_"
+        return UnitTest()
+    elseif ENV["CI_TEST_TYPE"] == "integ"
+        return IntegrationTest()
+    else
+        @error "environment variable CI_TEST_TYPE needs to have the value \"unit\" or \"integ\""
+        exit(1)
     end
-    if ENV["CI_TEST_TYPE"] == "integ"
-        return "CI_INTG_PKG_URL_"
-    end
-    @error "environment variable CI_TEST_TYPE needs to have the value \"unit\" or \"integ\""
-    exit(1)
-    # makes the formatter happy ;-)
-    return ""
 end
 
 """
-    check_environment_variables()
-
-# Args
+    check_environment_variables(test_type::TestType)
 
 Check if all required environment variables are set and print required and optional environment 
 variables.
+
+# Args
+- `test_type::TestType` Depending on the type, different environment variables for custom
+repository URLs are checked.
 """
-function check_environment_variables(custom_url_env_var_name_prefix::AbstractString)
+function check_environment_variables(test_type::TestType)
     # check required environment variables
     for var in ("CI_DEV_PKG_NAME", "CI_DEV_PKG_PATH")
         if !haskey(ENV, var)
@@ -81,12 +81,31 @@ function check_environment_variables(custom_url_env_var_name_prefix::AbstractStr
     end
 
     for (var_name, var_value) in ENV
-        if startswith(var_name, custom_url_env_var_name_prefix)
+        if startswith(var_name, get_test_type_env_var_prefix(test_type))
             println(io, "$(var_name): $(var_value)")
         end
     end
     @info String(take!(io))
 end
+
+"""
+    get_test_specific_custom_urls(::UnitTest, urls::CustomDependencyUrls)::Dict{String, String}
+
+Returns reference to the dict containing the custom repository URLs for the given test type.
+
+# Returns
+
+The key is the name of the package and the value the custom URL.
+"""
+get_test_specific_custom_urls(::UnitTest, urls::CustomDependencyUrls)::Dict{String,String} =
+    urls.unit
+
+"""
+See `get_test_specific_custom_urls(::UnitTest, urls::CustomDependencyUrls)::Dict{String, String}`
+"""
+get_test_specific_custom_urls(
+    ::IntegrationTest, urls::CustomDependencyUrls
+)::Dict{String,String} = urls.integ
 
 """
     get_compat_changes()::Dict{String,String}
@@ -110,36 +129,6 @@ function get_compat_changes()::Dict{String,String}
         @debug "compat_changes: $(compat_changes)"
     end
     return compat_changes
-end
-
-"""
-    get_repository_custom_urls()::Dict{String,String}
-
-Reads user-defined repository URLs from the environment variables. An environment variable must begin
-with `env_prefix`. This is followed by the package name, e.g. if the prefix is `CI_UNIT_PKG_URL`, a 
-package name variable can be `CI_UNIT_PKG_URL_QEDbase`. If the variable is set, the user-defined URL 
-is used instead of the standard URL for the Git clone.
-
-# Returns
-
-- `env_prefix::AbstractString`: Name prefix to be match
-
-Dict of custom URLs where the key is the package name and the value the custom URL.
-"""
-function get_repository_custom_urls(env_prefix::AbstractString)::Dict{String,String}
-    @info "get custom repository URLs from environment variables"
-    custom_urls = Dict{String,String}()
-    with_logger(debuglogger) do
-        for (var_name, var_value) in ENV
-            if startswith(var_name, env_prefix)
-                pkg_name = var_name[(length(env_prefix) + 1):end]
-                @info "add $(pkg_name)=$(var_value) to custom_urls"
-                custom_urls[pkg_name] = var_value
-            end
-        end
-        @debug "custom_urls: $(custom_urls)"
-    end
-    return custom_urls
 end
 
 """
@@ -211,7 +200,7 @@ function _search_leaf!(graph::Dict, leaf_set::Set{String})
 end
 
 """
-    get_package_dependecy_list(
+    get_package_dependency_list(
         graph::Dict, stop_package::AbstractString=""
     )::Vector{Set{String}}
 
@@ -237,10 +226,10 @@ Returns a list of sets. The index position stands for the round in which the lea
 e.g. pkg_ordering[1] stands for the first round. The set contains all leaves that were found in the
 round. There is no order within a round.
 """
-function get_package_dependecy_list(
+function get_package_dependency_list(
     graph::Dict, stop_package::AbstractString=""
 )::Vector{Set{String}}
-    pkg_ordering = _get_package_dependecy_list!(graph, stop_package)
+    pkg_ordering = _get_package_dependency_list!(graph, stop_package)
 
     with_logger(debuglogger) do
         io = IOBuffer()
@@ -254,7 +243,7 @@ function get_package_dependecy_list(
     return pkg_ordering
 end
 
-function _get_package_dependecy_list!(
+function _get_package_dependency_list!(
     graph::Dict, stop_package::AbstractString
 )::Vector{Set{String}}
     @info "calculate the correct sequence for adding QED packages"
@@ -472,20 +461,31 @@ end
 
 if abspath(PROGRAM_FILE) == @__FILE__
     try
-        custom_url_env_var_name_prefix = get_custom_url_env_var_name_prefix()
-        @info "Custom URL environment variable prefix: $(custom_url_env_var_name_prefix)"
+        test_type::TestType = get_test_type_from_env_var()
+        @info "Use Custom dependency URLs for test type: $(test_type)"
+        @info "Custom URL environment variable prefix: $(get_test_type_env_var_prefix(test_type))"
 
-        extract_env_vars_from_git_message!(custom_url_env_var_name_prefix)
-        check_environment_variables(custom_url_env_var_name_prefix)
+        check_environment_variables(test_type)
+
+        custom_dependency_urls = CustomDependencyUrls()
+        append_custom_dependency_urls_from_git_message!(custom_dependency_urls)
+        append_custom_dependency_urls_from_env_var!(custom_dependency_urls)
+
+        test_specific_custom_urls = get_test_specific_custom_urls(
+            test_type, custom_dependency_urls
+        )
+        @info "Set custom URLs for dependencies: \n$(to_str_custom_urls(test_specific_custom_urls))"
+
         active_project_project_toml = Pkg.project().path
 
         compat_changes = get_compat_changes()
-        custom_urls = get_repository_custom_urls(custom_url_env_var_name_prefix)
 
         qed_path = mktempdir(; cleanup=false)
 
-        pkg_tree = build_qed_dependency_graph!(qed_path, compat_changes, custom_urls)
-        pkg_ordering = get_package_dependecy_list(pkg_tree)
+        pkg_tree = build_qed_dependency_graph!(
+            qed_path, compat_changes, test_specific_custom_urls
+        )
+        pkg_ordering = get_package_dependency_list(pkg_tree)
 
         required_deps = get_filtered_dependencies(
             r"^(QED*|QuantumElectrodynamics*)", active_project_project_toml
