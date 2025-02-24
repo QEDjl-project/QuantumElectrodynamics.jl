@@ -30,8 +30,22 @@ get_test_type_env_var_prefix(::TestType) = error("unknown test type")
 get_test_type_env_var_prefix(::UnitTest) = "CI_UNIT_PKG_URL_"
 get_test_type_env_var_prefix(::IntegrationTest) = "CI_INTG_PKG_URL_"
 
-Base.show(io::IO, obj::UnitTest) = print(io, "unit test")
-Base.show(io::IO, obj::IntegrationTest) = print(io, "integration test")
+"""
+    get_test_type_name(::TestType)
+
+Return human readable name of the test type.
+
+# Args
+`::TestType` The test type
+
+# Returns
+
+test name
+"""
+get_test_type_name(::UnitTest) = "unit test"
+get_test_type_name(::IntegrationTest) = "integration test"
+
+Base.show(io::IO, obj::TestType) = print(io, get_test_type_name(obj))
 
 """
     struct TestPackage
@@ -376,10 +390,14 @@ function append_custom_dependency_urls_from_env_var!(
 end
 
 """Error for append_custom_dependency_urls_from_git_message!"""
-function _custom_url_error(test_name::AbstractString)
+function _custom_url_error(test_type::TestType, line::AbstractString)
     return error(
-        "custom $(test_name) test dependency URL has not the correct shape\n" *
-        "required shape: CI_UNIT_PKG_URL_QEDexample: https://github.com/User/QEDexample",
+        "custom $(get_test_type_name(test_type)) dependency URL has not the correct shape\n" *
+        "given: $line\n" *
+        "required shape:\n" *
+        "  $(get_test_type_env_var_prefix(test_type))QEDexample: https://github.com/User/QEDexample\n",
+        "or\n" *
+        "  $(get_test_type_env_var_prefix(test_type))QEDexample: https://github.com/User/QEDexample#example_branch",
     )
 end
 
@@ -421,12 +439,8 @@ function append_custom_dependency_urls_from_git_message!(
     custom_dependency_urls::CustomDependencyUrls, env::AbstractDict{String,String}=ENV
 )
     test_types = [
-        ("unit", get_test_type_env_var_prefix(UnitTest()), custom_dependency_urls.unit),
-        (
-            "integration",
-            get_test_type_env_var_prefix(IntegrationTest()),
-            custom_dependency_urls.integ,
-        ),
+        (UnitTest(), custom_dependency_urls.unit),
+        (IntegrationTest(), custom_dependency_urls.integ),
     ]
     if !haskey(env, "CI_COMMIT_MESSAGE")
         @info "Git commit message variable CI_COMMIT_MESSAGE is not set."
@@ -434,23 +448,22 @@ function append_custom_dependency_urls_from_git_message!(
     end
 
     @info "Git commit message is set."
-    for line in split(env["CI_COMMIT_MESSAGE"], "\n"),
-        (test_name, env_prefix, url_dict) in test_types
-
+    for line in split(env["CI_COMMIT_MESSAGE"], "\n"), (test_type, url_dict) in test_types
         line = strip(line)
+        env_prefix = get_test_type_env_var_prefix(test_type)
         if startswith(line, env_prefix)
             if length(split(line, ":"; limit=2)) < 2
-                _custom_url_error(test_name)
+                _custom_url_error(test_type, line)
             end
 
             (pkg_name, url) = split(line, ":"; limit=2)
             url = strip(url)
             if !startswith(url, "http")
-                _custom_url_error(test_name)
+                _custom_url_error(test_type, line)
             end
 
             pkg_name = pkg_name[(length(env_prefix) + 1):end]
-            @info "add $(pkg_name)=$(url) to $(test_name) test custom urls"
+            @info "add $(pkg_name)=$(url) to $(get_test_type_name(test_type)) custom urls"
             url_dict[pkg_name] = url
         end
     end
