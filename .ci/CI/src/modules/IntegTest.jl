@@ -177,7 +177,11 @@ function add_integration_test_job_yaml!(
         #    must also be released later with an updated compat entry.
         #    In either case the release can proceed, as the released packages will continue to work
         #    because of their current compat entries.
-        if target_branch == "main" && is_pull_request()
+
+        # TODO: refactor and move me to the Bootloader.jl
+        ci_commit_ref_name = get(ENV, "CI_COMMIT_REF_NAME", "")
+
+        if target_branch == "main" && is_pull_request(ci_commit_ref_name)
             generate_job_yaml!(
                 p, test_package, "dev", job_dict, custom_urls, tools_git_repo, "integ-test"
             )
