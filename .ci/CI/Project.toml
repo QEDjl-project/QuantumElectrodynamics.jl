@@ -1,9 +1,10 @@
-name = "integTestGen"
-uuid = "9d227159-adef-4c8b-a714-76f31b0c245d"
+name = "CI"
+uuid = "ca44ca9f-2365-4765-ab19-70235af776a7"
 authors = ["Simeon Ehrig <s.ehrig@hzdr.de>"]
 version = "0.1.0"
 
 [deps]
+ArgParse = "c7e460c6-2fb9-53a9-8c5b-16f535851c63"
 HTTP = "cd3eb016-35fb-5094-929b-558a96fad6f3"
 IntegrationTests = "6be7cfa2-1838-408e-bc49-3a824ac3a1fb"
 JSON = "682c06a0-de6a-54ab-a142-c8b1cf79cde6"
@@ -14,6 +15,7 @@ TOML = "fa267f1f-6049-4f14-aa54-33bafae1ed76"
 YAML = "ddb6d928-2868-570f-bddf-ab3f9cf99eb6"
 
 [compat]
+ArgParse = "1.2.0"
 julia = "1"
 
 [extras]
