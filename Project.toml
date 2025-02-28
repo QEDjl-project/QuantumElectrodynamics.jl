@@ -13,7 +13,7 @@ Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
 
 [compat]
 QEDbase = "0.3"
-QEDcore = "0.2"
+QEDcore = "0.2, 0.3"
 QEDevents = "0.2"
 QEDfields = "0.2"
 QEDprocesses = "0.3"
