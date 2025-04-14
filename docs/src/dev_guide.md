@@ -35,6 +35,6 @@ The following is a description of our release process for a version `<version>`.
 
 ### Releasing Breaking Changes
 
-Just as with merging breaking changes into `dev`, when releasing breaking changes, extra care has to be taken. When a release contains breaking changes, some of the release-version integration tests will fail. In this case, the major version should be increased (or the minor version for versions `0.x.y`). This prevents the released downstream packages from failing since they have a `compat` entry, choosing the latest working version. 
+Just as with merging breaking changes into `dev`, when releasing breaking changes, extra care has to be taken. When a release contains breaking changes, some of the release-version integration tests will fail. In this case, the major version should be increased (or the minor version for versions `0.x.y`). This prevents the released downstream packages from failing since they have a `compat` entry, choosing the latest working version.
 
 The dev-integration tests assure that the latest `dev`s of all packages still work together. This means that the depending package can now be released, after changing the `compat` entry of the base package in the release branch accordingly.
