@@ -189,6 +189,10 @@ function _get_normal_unit_test(
 
     job_yaml["interruptible"] = true
 
+    if version == "rc"
+        job_yaml["allow_failure"] = true
+    end
+
     if test_platform == CPU
         job_yaml["tags"] = ["cpuonly"]
     elseif test_platform == CUDA
