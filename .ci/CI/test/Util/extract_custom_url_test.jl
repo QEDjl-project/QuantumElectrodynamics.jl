@@ -3,7 +3,7 @@
         disable_info_logger_output() do
             custom_dependency_urls = CI.CustomDependencyUrls()
             CI.append_custom_dependency_urls_from_env_var!(
-                custom_dependency_urls, Dict{String,String}()
+                custom_dependency_urls, Dict{String, String}()
             )
             @test isempty(custom_dependency_urls.unit)
             @test isempty(custom_dependency_urls.integ)
@@ -15,7 +15,7 @@
             custom_dependency_urls = CI.CustomDependencyUrls()
             CI.append_custom_dependency_urls_from_env_var!(
                 custom_dependency_urls,
-                Dict{String,String}(
+                Dict{String, String}(
                     "CI_UNIT_PKG_URL_QEDcore" => "https://github.com/unit/QEDcore#master"
                 ),
             )
@@ -30,7 +30,7 @@
             custom_dependency_urls = CI.CustomDependencyUrls()
             CI.append_custom_dependency_urls_from_env_var!(
                 custom_dependency_urls,
-                Dict{String,String}(
+                Dict{String, String}(
                     "CI_INTG_PKG_URL_QEDfields" => "https://github.com/integ/QEDfields",
                     "CI_UNIT_PKG_URL_QEDprocess" => "https://github.com/unit/QEDprocess",
                     "CI_UNIT_PKG_URL_QEDbase" => "https://github.com/unit/QEDbase#feature1",
@@ -53,7 +53,7 @@
             custom_dependency_urls = CI.CustomDependencyUrls()
             CI.append_custom_dependency_urls_from_env_var!(
                 custom_dependency_urls,
-                Dict{String,String}(
+                Dict{String, String}(
                     "CI_INTG_PKG_URL_QEDfields" => "https://github.com/integ/QEDfields",
                     "CI_INTG_PKG_URL_QEDbase" => "https://github.com/integ/QEDbase",
                 ),
@@ -72,7 +72,7 @@ end
         disable_info_logger_output() do
             custom_dependency_urls = CI.CustomDependencyUrls()
             CI.append_custom_dependency_urls_from_git_message!(
-                custom_dependency_urls, Dict{String,String}()
+                custom_dependency_urls, Dict{String, String}()
             )
             @test isempty(custom_dependency_urls.unit)
             @test isempty(custom_dependency_urls.integ)
@@ -84,15 +84,15 @@ end
             custom_dependency_urls = CI.CustomDependencyUrls()
             CI.append_custom_dependency_urls_from_git_message!(
                 custom_dependency_urls,
-                Dict{String,String}(
+                Dict{String, String}(
                     "CI_COMMIT_MESSAGE" => """Git headline
 
-                                           This is a nice message.
-                                           And another line.
+                        This is a nice message.
+                        And another line.
 
-                                           CI_UNIT_PKG_URL_QEDcore: https://github.com/unit/QEDcore
-                                           CI_UNIT_PKG_URL_QED: https://github.com/unit/QED#f456j3
-                                           """,
+                        CI_UNIT_PKG_URL_QEDcore: https://github.com/unit/QEDcore
+                        CI_UNIT_PKG_URL_QED: https://github.com/unit/QED#f456j3
+                        """,
                 ),
             )
             @test custom_dependency_urls.unit == Dict(
@@ -108,14 +108,14 @@ end
             custom_dependency_urls = CI.CustomDependencyUrls()
             CI.append_custom_dependency_urls_from_git_message!(
                 custom_dependency_urls,
-                Dict{String,String}(
+                Dict{String, String}(
                     "CI_COMMIT_MESSAGE" => """Git headline
 
-                                           This is a nice message.
-                                           And another line.
+                        This is a nice message.
+                        And another line.
 
-                                           CI_INTG_PKG_URL_QEDfields: https://github.com/integ/QEDfields
-                                           """,
+                        CI_INTG_PKG_URL_QEDfields: https://github.com/integ/QEDfields
+                        """,
                 ),
             )
             @test isempty(custom_dependency_urls.unit)
@@ -129,18 +129,18 @@ end
             custom_dependency_urls = CI.CustomDependencyUrls()
             CI.append_custom_dependency_urls_from_git_message!(
                 custom_dependency_urls,
-                Dict{String,String}(
+                Dict{String, String}(
                     "CI_COMMIT_MESSAGE" => """Git headline
 
-                                           This is a nice message.
-                                           And another line.
+                        This is a nice message.
+                        And another line.
 
-                                           CI_INTG_PKG_URL_QEDfields: https://github.com/integ/QEDfields#dev
-                                           CI_INTG_PKG_URL_QEDprocesses: https://github.com/integ/QEDprocesses
-                                           CI_INTG_PKG_URL_QEDbase: https://github.com/integ/QEDbase
-                                           CI_UNIT_PKG_URL_QEDbase: https://github.com/unit/QEDbase#f156134
-                                           CI_UNIT_PKG_URL_QEDcore: https://github.com/unit/QEDcore
-                                           """,
+                        CI_INTG_PKG_URL_QEDfields: https://github.com/integ/QEDfields#dev
+                        CI_INTG_PKG_URL_QEDprocesses: https://github.com/integ/QEDprocesses
+                        CI_INTG_PKG_URL_QEDbase: https://github.com/integ/QEDbase
+                        CI_UNIT_PKG_URL_QEDbase: https://github.com/unit/QEDbase#f156134
+                        CI_UNIT_PKG_URL_QEDcore: https://github.com/unit/QEDcore
+                        """,
                 ),
             )
             @test custom_dependency_urls.unit == Dict(
@@ -160,27 +160,27 @@ end
             custom_dependency_urls = CI.CustomDependencyUrls()
             @test_throws ErrorException CI.append_custom_dependency_urls_from_git_message!(
                 custom_dependency_urls,
-                Dict{String,String}(
+                Dict{String, String}(
                     "CI_COMMIT_MESSAGE" => """Git headline
 
-                                           This is a nice message.
-                                           And another line.
+                        This is a nice message.
+                        And another line.
 
-                                           CI_INTG_PKG_URL_QEDfields=https//github.com/integ/QEDfields
-                                           """,
+                        CI_INTG_PKG_URL_QEDfields=https//github.com/integ/QEDfields
+                        """,
                 ),
             )
 
             @test_throws ErrorException CI.append_custom_dependency_urls_from_git_message!(
                 custom_dependency_urls,
-                Dict{String,String}(
+                Dict{String, String}(
                     "CI_COMMIT_MESSAGE" => """Git headline
 
-                                           This is a nice message.
-                                           And another line.
+                        This is a nice message.
+                        And another line.
 
-                                           CI_INTG_PKG_URL_QEDfields=https://github.com/integ/QEDfields
-                                           """,
+                        CI_INTG_PKG_URL_QEDfields=https://github.com/integ/QEDfields
+                        """,
                 ),
             )
         end
@@ -191,14 +191,14 @@ end
             custom_dependency_urls = CI.CustomDependencyUrls()
             @test_throws ErrorException CI.append_custom_dependency_urls_from_git_message!(
                 custom_dependency_urls,
-                Dict{String,String}(
+                Dict{String, String}(
                     "CI_COMMIT_MESSAGE" => """Git headline
 
-                                           This is a nice message.
-                                           And another line.
+                        This is a nice message.
+                        And another line.
 
-                                           CI_UNIT_PKG_URL_QEDfields=https://github.com/integ/QEDfields
-                                           """,
+                        CI_UNIT_PKG_URL_QEDfields=https://github.com/integ/QEDfields
+                        """,
                 ),
             )
         end
@@ -210,7 +210,7 @@ end
         custom_dependency_urls = CI.CustomDependencyUrls()
         CI.append_custom_dependency_urls_from_env_var!(
             custom_dependency_urls,
-            Dict{String,String}(
+            Dict{String, String}(
                 "CI_INTG_PKG_URL_QEDfields" => "https://github.com/integ/QEDfieldsEnv",
                 "CI_UNIT_PKG_URL_QEDprocess" => "https://github.com/unit/QEDprocessEnv",
                 "CI_UNIT_PKG_URL_QEDbase" => "https://github.com/unit/QEDbaseEnv",
@@ -220,17 +220,17 @@ end
 
         CI.append_custom_dependency_urls_from_git_message!(
             custom_dependency_urls,
-            Dict{String,String}(
+            Dict{String, String}(
                 "CI_COMMIT_MESSAGE" => """Git headline
 
-                                       This is a nice message.
-                                       And another line.
+                    This is a nice message.
+                    And another line.
 
-                                       CI_INTG_PKG_URL_QEDfields: https://github.com/integ/QEDfieldsMsg
-                                       CI_INTG_PKG_URL_QEDprocesses: https://github.com/integ/QEDprocessesMsg
-                                       CI_UNIT_PKG_URL_QEDbase: https://github.com/unit/QEDbaseMsg
-                                       CI_UNIT_PKG_URL_QEDcore: https://github.com/unit/QEDcoreMsg
-                                       """,
+                    CI_INTG_PKG_URL_QEDfields: https://github.com/integ/QEDfieldsMsg
+                    CI_INTG_PKG_URL_QEDprocesses: https://github.com/integ/QEDprocessesMsg
+                    CI_UNIT_PKG_URL_QEDbase: https://github.com/unit/QEDbaseMsg
+                    CI_UNIT_PKG_URL_QEDcore: https://github.com/unit/QEDcoreMsg
+                    """,
             ),
         )
         @test custom_dependency_urls.unit == Dict(

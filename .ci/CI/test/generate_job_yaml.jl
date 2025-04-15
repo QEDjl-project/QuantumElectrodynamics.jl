@@ -6,7 +6,7 @@
             CI.TestPackage("QEDtest", "1.0.0", "/path/to/QEDcore.jl"),
             "main",
             job_yaml,
-            Dict{String,String}(),
+            Dict{String, String}(),
             CI.ToolsGitRepo("", ""),
         )
         @test length(job_yaml) == 1
@@ -60,7 +60,7 @@
             CI.TestPackage("QEDtest", "1.0.0", "/path/to/QEDcore.jl"),
             "feature3",
             job_yaml,
-            Dict{String,String}(),
+            Dict{String, String}(),
             CI.ToolsGitRepo(
                 "https://github.com/QEDjl-project/QuantumElectrodynamics.jl.git", "dev"
             ),
@@ -117,7 +117,7 @@
             CI.TestPackage("QEDtest", "1.0.0", "/path/to/QEDcore.jl"),
             "dev",
             job_yaml,
-            Dict{String,String}(),
+            Dict{String, String}(),
             CI.ToolsGitRepo("https://github.com/fork/QEDTest.jl.git", "ciDev"),
             "integ-test",
         )
@@ -126,7 +126,7 @@
             CI.TestPackage("QEDtest", "1.0.0", "/path/to/QEDcore.jl"),
             "main",
             job_yaml,
-            Dict{String,String}(),
+            Dict{String, String}(),
             CI.ToolsGitRepo("https://github.com/fork_other/QEDTest.jl.git", "ciDevOther"),
             "integ-test",
             true,

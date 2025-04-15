@@ -1,4 +1,3 @@
-
 using TOML
 using Logging
 using LibGit2
@@ -90,13 +89,13 @@ Stores custom repository URLs for QED packages which are dependency of the proje
 
 """
 struct CustomDependencyUrls
-    unit::Dict{String,String}
-    integ::Dict{String,String}
+    unit::Dict{String, String}
+    integ::Dict{String, String}
 
-    CustomDependencyUrls() = new(Dict{String,String}(), Dict{String,String}())
+    CustomDependencyUrls() = new(Dict{String, String}(), Dict{String, String}())
 end
 
-function to_str_custom_urls(urls::Dict{String,String})::String
+function to_str_custom_urls(urls::Dict{String, String})::String
     io = IOBuffer()
     for (index, (pkg_name, url)) in enumerate(urls)
         if index < length(urls)
@@ -121,7 +120,7 @@ Clones git repository
 """
 function _git_clone(repo_url::AbstractString, directory::AbstractString)
     splitted_url = split(repo_url, "#")
-    if length(splitted_url) < 2
+    return if length(splitted_url) < 2
         _git_clone(repo_url, "dev", directory)
     else
         _git_clone(splitted_url[1], splitted_url[2], directory)
@@ -139,22 +138,22 @@ Clones git repository
 - `directory::AbstractString`: Path where the cloned repository is stored.
 """
 function _git_clone(
-    repo_url::AbstractString, branch::AbstractString, directory::AbstractString
-)
+        repo_url::AbstractString, branch::AbstractString, directory::AbstractString
+    )
     @info "clone repository: $(repo_url)#$(branch) -> $(directory)"
-    with_logger(debuglogger) do
+    return with_logger(debuglogger) do
         try
             @debug "git clone --depth 1 -b $(branch) $(repo_url) $directory"
             run(
                 pipeline(
                     `git clone --depth 1 -b $(branch) $(repo_url) $directory`;
-                    stdout=devnull,
-                    stderr=devnull,
+                    stdout = devnull,
+                    stderr = devnull,
                 ),
             )
         catch
             @debug "LibGit2.clone($(repo_url), $(directory); branch=$(branch))"
-            LibGit2.clone(repo_url, directory; branch=branch)
+            LibGit2.clone(repo_url, directory; branch = branch)
         end
     end
 end
@@ -169,7 +168,7 @@ end
 Creates the dependency graph of the QED package ecosystem just by parsing Projects.toml. The
 function starts by cloning the QuantumElectrodynamics.jl GitHub repository. Depending on
 QuantumElectrodynamics.jl `Project.toml`, clones all directly and indirectly dependent QED.jl
-GitHub repositories and constructs the dependency graph. 
+GitHub repositories and constructs the dependency graph.
 
 Side effects of the function are:
     - the Git repositories remain in the path defined in the `repository_base_path` variable
@@ -192,10 +191,10 @@ Dict with the dependency graph. A leaf node has an empty dict. Duplications of d
 possible.
 """
 function build_qed_dependency_graph!(
-    repository_base_path::AbstractString,
-    compat_changes::Dict{String,String},
-    custom_urls::Dict{String,String}=Dict{String,String}(),
-)::Dict
+        repository_base_path::AbstractString,
+        compat_changes::Dict{String, String},
+        custom_urls::Dict{String, String} = Dict{String, String}(),
+    )::Dict
     @info "build QED dependency graph"
     io = IOBuffer()
     println(io, "input compat_changes: $(compat_changes)")
@@ -244,12 +243,12 @@ Dict with the dependency graph. A leaf node has an empty dict. Duplications of d
 possible.
 """
 function _build_qed_dependency_graph!(
-    repository_base_path::AbstractString,
-    compat_changes::Dict{String,String},
-    custom_urls::Dict{String,String},
-    package_name::AbstractString,
-    origin::Vector{String},
-)::Dict
+        repository_base_path::AbstractString,
+        compat_changes::Dict{String, String},
+        custom_urls::Dict{String, String},
+        package_name::AbstractString,
+        origin::Vector{String},
+    )::Dict
     qed_dependency_graph = Dict()
     repository_path = joinpath(repository_base_path, package_name)
     if !isdir(repository_path)
@@ -264,7 +263,7 @@ function _build_qed_dependency_graph!(
         end
     end
 
-    # read dependencies from Project.toml and clone next packages until no 
+    # read dependencies from Project.toml and clone next packages until no
     # QED dependencies are left
     project_toml = TOML.parsefile(joinpath(repository_path, "Project.toml"))
 
@@ -278,7 +277,7 @@ function _build_qed_dependency_graph!(
         for dep_pkg in keys(project_toml["deps"])
             # check for circular dependency
             # actual there should be no circular dependency in graph
-            # if there is a circular dependency in the graph, find a good way to appease the CI 
+            # if there is a circular dependency in the graph, find a good way to appease the CI
             # developer
             if dep_pkg in origin
                 dep_chain = ""
@@ -340,7 +339,7 @@ end
 
 Returns project name and version number
 """
-function get_project_version_name_path()::Tuple{String,String,String}
+function get_project_version_name_path()::Tuple{String, String, String}
     return (Pkg.project().name, string(Pkg.project().version), dirname(Pkg.project().path))
 end
 
@@ -349,12 +348,12 @@ end
         custom_dependency_urls::CustomDependencyUrls, env::AbstractDict{String,String}=ENV
     )
 
-Reads user-defined repository URLs from the environment variables. An environment variable must 
-either start with the prefix `CI_UNIT_PKG_URL` for custom URLs for unit tests or with the prefix 
+Reads user-defined repository URLs from the environment variables. An environment variable must
+either start with the prefix `CI_UNIT_PKG_URL` for custom URLs for unit tests or with the prefix
 `CI_INTG_PKG_URL_` for integration tests.
-The prefix is removed from the variable name and saved as the package name in 
-custom_dependency_urls with the variable value. For example, 
-`CI_UNIT_PKG_URL_QEDbase=https://github.com/integ/QEDbase` is saved as 
+The prefix is removed from the variable name and saved as the package name in
+custom_dependency_urls with the variable value. For example,
+`CI_UNIT_PKG_URL_QEDbase=https://github.com/integ/QEDbase` is saved as
 `QEDbase=https://github.com/integ/QEDbase`.
 If the variable is set, the user-defined URL is used instead of the standard URL for the Git clone.
 
@@ -364,8 +363,8 @@ If the variable is set, the user-defined URL is used instead of the standard URL
 
 """
 function append_custom_dependency_urls_from_env_var!(
-    custom_dependency_urls::CustomDependencyUrls, env::AbstractDict{String,String}=ENV
-)
+        custom_dependency_urls::CustomDependencyUrls, env::AbstractDict{String, String} = ENV
+    )
     @info "get custom repository URLs from environment variables"
     test_types = [
         ("unit", get_test_type_env_var_prefix(UnitTest()), custom_dependency_urls.unit),
@@ -375,7 +374,7 @@ function append_custom_dependency_urls_from_env_var!(
             custom_dependency_urls.integ,
         ),
     ]
-    with_logger(debuglogger) do
+    return with_logger(debuglogger) do
         for (var_name, var_value) in env
             for (test_name, env_prefix, url_dict) in test_types
                 if startswith(var_name, env_prefix)
@@ -393,11 +392,11 @@ end
 function _custom_url_error(test_type::TestType, line::AbstractString)
     return error(
         "custom $(get_test_type_name(test_type)) dependency URL has not the correct shape\n" *
-        "given: $line\n" *
-        "required shape:\n" *
-        "  $(get_test_type_env_var_prefix(test_type))QEDexample: https://github.com/User/QEDexample\n",
+            "given: $line\n" *
+            "required shape:\n" *
+            "  $(get_test_type_env_var_prefix(test_type))QEDexample: https://github.com/User/QEDexample\n",
         "or\n" *
-        "  $(get_test_type_env_var_prefix(test_type))QEDexample: https://github.com/User/QEDexample#example_branch",
+            "  $(get_test_type_env_var_prefix(test_type))QEDexample: https://github.com/User/QEDexample#example_branch",
     )
 end
 
@@ -424,9 +423,9 @@ CI_UNIT_PKG_URL_QEDbase: https://github.com/unit/QEDbase
 CI_UNIT_PKG_URL_QEDcore: https://github.com/unit/QEDcore
 ```
 
-The prefix is removed from the variable name and saved as the package name in 
-custom_dependency_urls with the variable value. For example, 
-`CI_UNIT_PKG_URL_QEDbase: https://github.com/integ/QEDbase` is saved as 
+The prefix is removed from the variable name and saved as the package name in
+custom_dependency_urls with the variable value. For example,
+`CI_UNIT_PKG_URL_QEDbase: https://github.com/integ/QEDbase` is saved as
 `QEDbase=https://github.com/integ/QEDbase`.
 If the variable is set, the user-defined URL is used instead of the standard URL for the Git clone.
 
@@ -436,8 +435,8 @@ If the variable is set, the user-defined URL is used instead of the standard URL
 
 """
 function append_custom_dependency_urls_from_git_message!(
-    custom_dependency_urls::CustomDependencyUrls, env::AbstractDict{String,String}=ENV
-)
+        custom_dependency_urls::CustomDependencyUrls, env::AbstractDict{String, String} = ENV
+    )
     test_types = [
         (UnitTest(), custom_dependency_urls.unit),
         (IntegrationTest(), custom_dependency_urls.integ),
@@ -452,11 +451,11 @@ function append_custom_dependency_urls_from_git_message!(
         line = strip(line)
         env_prefix = get_test_type_env_var_prefix(test_type)
         if startswith(line, env_prefix)
-            if length(split(line, ":"; limit=2)) < 2
+            if length(split(line, ":"; limit = 2)) < 2
                 _custom_url_error(test_type, line)
             end
 
-            (pkg_name, url) = split(line, ":"; limit=2)
+            (pkg_name, url) = split(line, ":"; limit = 2)
             url = strip(url)
             if !startswith(url, "http")
                 _custom_url_error(test_type, line)
@@ -467,6 +466,7 @@ function append_custom_dependency_urls_from_git_message!(
             url_dict[pkg_name] = url
         end
     end
+    return
 end
 
 """
@@ -484,7 +484,7 @@ function _add_stage_once!(job_dict::Dict, stage_name::AbstractString)
         job_dict["stages"] = []
     end
 
-    if !(stage_name in job_dict["stages"])
+    return if !(stage_name in job_dict["stages"])
         push!(job_dict["stages"], stage_name)
     end
 end

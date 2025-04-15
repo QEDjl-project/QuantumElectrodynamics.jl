@@ -9,7 +9,7 @@ Checks whether the GitLab CI mirror branch was created by a GitHub pull request.
 
 # Args
 - `ci_commit_ref_name::AbstractString`: The name of the GitLab CI branch of the mirror branch of a
-    GitHub branch. The name encodes various information, e.g. whether it is a mirror branch of a 
+    GitHub branch. The name encodes various information, e.g. whether it is a mirror branch of a
     pull request. See find_target_branch()
 
 # Return
@@ -28,7 +28,7 @@ the branch main is returned, otherwise the content of `ci_commit_ref_name`.
 
 # Args
 - `ci_commit_ref_name::AbstractString`: The name of the GitLab CI branch of the mirror branch of a
-    GitHub branch. The name encodes various information, e.g. whether it is a mirror branch of a 
+    GitHub branch. The name encodes various information, e.g. whether it is a mirror branch of a
     pull request. See find_target_branch()
 
 # Return
@@ -49,7 +49,7 @@ end
 
 # Args
 - `ci_commit_ref_name::AbstractString`: The name of the GitLab CI branch of the mirror branch of a
-    GitHub branch. The name encodes various information, e.g. whether it is a mirror branch of a 
+    GitHub branch. The name encodes various information, e.g. whether it is a mirror branch of a
     pull request. See find_target_branch()
 
 Returns the name of the target branch of the pull request. The function is required for our special
@@ -95,7 +95,7 @@ function get_target_branch_pull_request(ci_commit_ref_name::AbstractString)::Abs
             return "dev"
         else
             # Only the HTML code 404, page does not exist is handled. All other error will abort
-            # the script.  
+            # the script.
             throw(e)
         end
     end
@@ -110,11 +110,11 @@ Return the correct target branch name for our GitLab CI mirror setup.
 
 # Args
 - `ci_commit_ref_name::AbstractString`: The name of the GitLab CI branch of the mirror branch of a
-    GitHub branch. The name encodes various information, e.g. whether it is a mirror branch of a 
+    GitHub branch. The name encodes various information, e.g. whether it is a mirror branch of a
     pull request.
 
 The pattern of the branch name defined in ci_commit_ref_name is:
-pr-<PR number>/<repo owner of the source branch>/<project name>/<source branch name> 
+pr-<PR number>/<repo owner of the source branch>/<project name>/<source branch name>
 e.g. pr-41/SimeonEhrig/QuantumElectrodynamics.jl/setDevDepDeps
 
 # Return

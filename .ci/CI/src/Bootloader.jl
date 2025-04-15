@@ -16,7 +16,7 @@ using ArgParse
 
 Parsed script arguments.
 """
-function parse_commandline()::Dict{String,Any}
+function parse_commandline()::Dict{String, Any}
     s = ArgParseSettings()
 
     @add_arg_table s begin
@@ -58,8 +58,8 @@ end
     )::String
 
 Checks the script argument and the environment variable. If the script argument is set, the value
-is returned. If the argument is not set, the environment variable is checked and its value is 
-returned. If both are not set, an error message is displayed and the program is terminated with 
+is returned. If the argument is not set, the environment variable is checked and its value is
+returned. If both are not set, an error message is displayed and the program is terminated with
 error code 1.
 
 # Args
@@ -73,11 +73,11 @@ error code 1.
 Ether the value of the argument or the environment variable.
 """
 function _get_config_from_arg_or_env_variable(
-    arg_name::AbstractString,
-    env_name::AbstractString,
-    error_msg::AbstractString,
-    args::Dict{String,Any},
-)::String
+        arg_name::AbstractString,
+        env_name::AbstractString,
+        error_msg::AbstractString,
+        args::Dict{String, Any},
+    )::String
     if args[arg_name] !== nothing
         return args[arg_name]
     end
@@ -103,7 +103,7 @@ Get the target branch name. Can be set via argument `--target-branch` or environ
 
 Target branch name.
 """
-function get_target_branch(args::Dict{String,Any})::String
+function get_target_branch(args::Dict{String, Any})::String
     ci_commit_ref_name = _get_config_from_arg_or_env_variable(
         "target-branch",
         "CI_COMMIT_REF_NAME",
@@ -127,7 +127,7 @@ variable `CI_PROJECT_DIR`.
 
 The path of the project to be tested.
 """
-function get_project_path(args::Dict{String,Any})::String
+function get_project_path(args::Dict{String, Any})::String
     return _get_config_from_arg_or_env_variable(
         "project-path",
         "CI_PROJECT_DIR",
@@ -157,11 +157,11 @@ Return
 True if enabled, false otherwise.
 """
 function _is_test(
-    arg_name::AbstractString,
-    arg_state::Bool,
-    env_name::AbstractString,
-    args::Dict{String,Any},
-)::Bool
+        arg_name::AbstractString,
+        arg_state::Bool,
+        env_name::AbstractString,
+        args::Dict{String, Any},
+    )::Bool
     if args[arg_name]
         return arg_state
     end
@@ -190,11 +190,11 @@ Return true if CPU unit tests should be generated. CPU tests are enabled by defa
 # Args
 - `args::Dict{String,Any}`: Parsed arguments
 
-# Return 
+# Return
 
-True if CPU unit tests should be generated, false otherwise. 
+True if CPU unit tests should be generated, false otherwise.
 """
-function is_cpu_tests(args::Dict{String,Any})::Bool
+function is_cpu_tests(args::Dict{String, Any})::Bool
     return _is_test("nocpu", false, "CI_ENABLE_CPU_TESTS", args)
 end
 
@@ -206,11 +206,11 @@ Check if CUDA GPU unit tests should be generated.
 # Args
 - `args::Dict{String,Any}`: Parsed arguments
 
-# Return 
+# Return
 
 True, if CUDA GPU unit tests should be generated.
 """
-function is_cuda_tests(args::Dict{String,Any})::Bool
+function is_cuda_tests(args::Dict{String, Any})::Bool
     return _is_test("cuda", true, "CI_ENABLE_CUDA_TESTS", args)
 end
 
@@ -222,11 +222,11 @@ Check if AMDGPU GPU unit tests should be generated.
 # Args
 - `args::Dict{String,Any}`: Parsed arguments
 
-# Return 
+# Return
 
 True, if AMDGPU GPU unit tests should be generated.
 """
-function is_amdgpu_tests(args::Dict{String,Any})::Bool
+function is_amdgpu_tests(args::Dict{String, Any})::Bool
     return _is_test("amdgpu", true, "CI_ENABLE_AMDGPU_TESTS", args)
 end
 
@@ -240,11 +240,11 @@ argument `--nointeg` to disable this or use the environment variable
 # Args
 - `args::Dict{String,Any}`: Parsed arguments
 
-# Return 
+# Return
 
-True if integration tests should be generated, false otherwise. 
+True if integration tests should be generated, false otherwise.
 """
-function is_integ_tests(args::Dict{String,Any})::Bool
+function is_integ_tests(args::Dict{String, Any})::Bool
     return _is_test("nointeg", false, "CI_ENABLE_INTEG_TESTS", args)
 end
 
@@ -299,7 +299,7 @@ Returns container base image for nightly unit tests.
 
 # Returns
 
-`String`: Returns value of environment CI_UNIT_TEST_NIGHTLY_BASE_IMAGE if set. Otherwise default 
+`String`: Returns value of environment CI_UNIT_TEST_NIGHTLY_BASE_IMAGE if set. Otherwise default
 value.
 """
 function get_unit_test_nightly_baseimage()::String
@@ -315,8 +315,8 @@ end
 """
     get_git_ci_tools_url_branch()::ToolsGitRepo
 
-Returns the URL and the branch of the Git repository for the location where the CI tools are 
-located. The default is the dev branch at 
+Returns the URL and the branch of the Git repository for the location where the CI tools are
+located. The default is the dev branch at
 https://github.com/QEDjl-project/QuantumElectrodynamics.jl.git.
 User-defined URL and branch can be defined with the environment variables CI_GIT_CI_TOOLS_URL
 and CI_GIT_CI_TOOLS_BRANCH.
@@ -352,7 +352,7 @@ Prints to dict as human readable GitLab CI job yaml.
 - `job_yaml::Dict`: Contains job descriptions.
 - `io::IO=stdout`: Output for the rendered yaml.
 """
-function print_job_yaml(job_yaml::Dict, io::IO=stdout)
+function print_job_yaml(job_yaml::Dict, io::IO = stdout)
     job_yaml_copy = deepcopy(job_yaml)
 
     # print all stages first
@@ -381,7 +381,7 @@ function print_job_yaml(job_yaml::Dict, io::IO=stdout)
     end
 
     # print everything, which was not already printed
-    if !isempty(job_yaml_copy)
+    return if !isempty(job_yaml_copy)
         YAML.write(io, job_yaml_copy)
     end
 end
@@ -396,7 +396,7 @@ Helper function to display of unit tests are generated.
 - `state::Bool`: Is enabled or not
 """
 function _info_enabled_unit_tests(test_name::AbstractString, state::Bool)
-    @info "$(test_name) unit tests are $(state ? "enabled" : "disabled")"
+    return @info "$(test_name) unit tests are $(state ? "enabled" : "disabled")"
 end
 
 # use main function to avoid to define global variables

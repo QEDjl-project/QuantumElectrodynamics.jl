@@ -2,8 +2,8 @@
 Returns the script section of an unit job targeting the dev branch.
 """
 function get_dev_unit_job_script_section(
-    git_repo_url::AbstractString, git_repo_branch::AbstractString
-)
+        git_repo_url::AbstractString, git_repo_branch::AbstractString
+    )
     return [
         "apt update && apt install -y git",
         "git clone --depth 1 -b $(git_repo_branch) $(git_repo_url) /tmp/integration_test_tools/",
@@ -17,8 +17,8 @@ end
 Returns the script section of an unit job targeting the main branch.
 """
 function get_main_unit_job_script_section(
-    git_repo_url::AbstractString, git_repo_branch::AbstractString
-)
+        git_repo_url::AbstractString, git_repo_branch::AbstractString
+    )
     return [
         "apt update && apt install -y git",
         "git clone --depth 1 -b $(git_repo_branch) $(git_repo_url) /tmp/integration_test_tools/",
@@ -32,8 +32,8 @@ end
 Returns a job skeleton for a unit job.
 """
 function get_generic_unit_job(
-    julia_version::AbstractString, test_package::CI.TestPackage
-)::Dict
+        julia_version::AbstractString, test_package::CI.TestPackage
+    )::Dict
     job_yaml = Dict()
     job_yaml["stage"] = "unit-test"
     job_yaml["image"] = "julia:$(julia_version)"

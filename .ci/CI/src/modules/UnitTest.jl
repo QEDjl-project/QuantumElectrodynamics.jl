@@ -30,16 +30,16 @@ to be directly translated to GitLab CI yaml.
 - `nightly_base_image::AbstractString`: Name of the job base image if the Julia version is nightly.
 """
 function add_unit_test_job_yaml!(
-    job_dict::Dict,
-    test_package::TestPackage,
-    julia_versions::Vector{String},
-    target_branch::AbstractString,
-    test_platform::TestPlatform=CPU,
-    tools_git_repo::ToolsGitRepo=ToolsGitRepo(
-        "https://github.com/QEDjl-project/QuantumElectrodynamics.jl.git", "dev"
-    ),
-    nightly_base_image::AbstractString="debian:bookworm-slim",
-)
+        job_dict::Dict,
+        test_package::TestPackage,
+        julia_versions::Vector{String},
+        target_branch::AbstractString,
+        test_platform::TestPlatform = CPU,
+        tools_git_repo::ToolsGitRepo = ToolsGitRepo(
+            "https://github.com/QEDjl-project/QuantumElectrodynamics.jl.git", "dev"
+        ),
+        nightly_base_image::AbstractString = "debian:bookworm-slim",
+    )
     if test_platform in [ONEAPI, METAL]
         throw(ArgumentError("argument test_platform not implemented for $(test_platform)"))
     end
@@ -68,6 +68,7 @@ function add_unit_test_job_yaml!(
             )
         end
     end
+    return
 end
 
 """
@@ -89,14 +90,14 @@ in the Git commit message.
     cloned in unit test job.
 """
 function add_unit_test_verify_job_yaml!(
-    job_dict::Dict,
-    target_branch::AbstractString,
-    tools_git_repo::ToolsGitRepo=ToolsGitRepo(
-        "https://github.com/QEDjl-project/QuantumElectrodynamics.jl.git", "dev"
-    ),
-)
+        job_dict::Dict,
+        target_branch::AbstractString,
+        tools_git_repo::ToolsGitRepo = ToolsGitRepo(
+            "https://github.com/QEDjl-project/QuantumElectrodynamics.jl.git", "dev"
+        ),
+    )
     # verification script that no custom URLs are used in unit tests
-    if target_branch != "main"
+    return if target_branch != "main"
         _add_stage_once!(job_dict, "verify-unit-test-deps")
 
         job_dict["verify-unit-test-deps"] = Dict(
@@ -137,12 +138,12 @@ Return
 Returns a dict containing the unit test, which can be output directly as GitLab CI yaml.
 """
 function _get_normal_unit_test(
-    version::AbstractString,
-    test_package::TestPackage,
-    target_branch::AbstractString,
-    test_platform::TestPlatform,
-    tools_git_repo::ToolsGitRepo,
-)::Dict
+        version::AbstractString,
+        test_package::TestPackage,
+        target_branch::AbstractString,
+        test_platform::TestPlatform,
+        tools_git_repo::ToolsGitRepo,
+    )::Dict
     job_yaml = Dict()
     job_yaml["stage"] = "unit-test"
     job_yaml["variables"] = Dict(
@@ -234,12 +235,12 @@ Return
 Returns a dict containing the unit test, which can be output directly as GitLab CI yaml.
 """
 function _get_nightly_unit_test(
-    test_package::TestPackage,
-    target_branch::AbstractString,
-    test_platform::TestPlatform,
-    tools_git_repo::ToolsGitRepo,
-    nightly_base_image::AbstractString,
-)
+        test_package::TestPackage,
+        target_branch::AbstractString,
+        test_platform::TestPlatform,
+        tools_git_repo::ToolsGitRepo,
+        nightly_base_image::AbstractString,
+    )
     job_yaml = _get_normal_unit_test(
         "1", test_package, target_branch, test_platform, tools_git_repo
     )
@@ -284,7 +285,7 @@ end
         tools_git_repo::ToolsGitRepo,
     )
 
-Creates a amdgpu unit test job for a specific Julia version. Use a different base image and install 
+Creates a amdgpu unit test job for a specific Julia version. Use a different base image and install
 Julia in it.
 
 # Args
@@ -299,11 +300,11 @@ Return
 Returns a dict containing the unit test, which can be output directly as GitLab CI yaml.
 """
 function _get_amdgpu_unit_test(
-    version::AbstractString,
-    test_package::TestPackage,
-    target_branch::AbstractString,
-    tools_git_repo::ToolsGitRepo,
-)::Dict
+        version::AbstractString,
+        test_package::TestPackage,
+        target_branch::AbstractString,
+        tools_git_repo::ToolsGitRepo,
+    )::Dict
     job_yaml = _get_normal_unit_test(
         version, test_package, target_branch, AMDGPU, tools_git_repo
     )

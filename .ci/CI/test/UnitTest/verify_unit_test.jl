@@ -1,8 +1,8 @@
 @testset "test add_unit_test_verify_job_yaml!() target branch dev" begin
     for git_repo in [
-        CI.ToolsGitRepo("https://github.com/name/repo", "dev"),
-        CI.ToolsGitRepo("foo", "bar"),
-    ]
+            CI.ToolsGitRepo("https://github.com/name/repo", "dev"),
+            CI.ToolsGitRepo("foo", "bar"),
+        ]
         expected_job = Dict(
             "image" => "julia:1.10",
             "stage" => "verify-unit-test-deps",
