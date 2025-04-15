@@ -48,8 +48,10 @@ fi",
             )
         end
 
-        @test (@assert job_yaml == expected_job yaml_diff(job_yaml, expected_job);
-        true)
+        @test (
+            @assert job_yaml == expected_job yaml_diff(job_yaml, expected_job);
+            true
+        )
 
         @testset "test public interface" begin
             julia_versions = Vector{String}(["nightly"])

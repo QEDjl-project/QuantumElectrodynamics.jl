@@ -71,8 +71,10 @@
             )
         end
 
-        @test (@assert job_yaml == expected_job yaml_diff(job_yaml, expected_job);
-        true)
+        @test (
+            @assert job_yaml == expected_job yaml_diff(job_yaml, expected_job);
+            true
+        )
     end
 
     @testset "test whole unit test job targeting main branch" begin
@@ -107,8 +109,10 @@
             )
         end
 
-        @test (@assert job_yaml == expected_job yaml_diff(job_yaml, expected_job);
-        true)
+        @test (
+            @assert job_yaml == expected_job yaml_diff(job_yaml, expected_job);
+            true
+        )
 
         @testset "test public interface" begin
             julia_versions = Vector{String}(["1.9", "1.10", "1.11"])
@@ -137,7 +141,7 @@
                     @test (
                         @assert unit_test_job[k] == expected_job[k] (
                             "\nkey: \"$(k)\"\n:" *
-                            yaml_diff(unit_test_job[k], expected_job[k])
+                                yaml_diff(unit_test_job[k], expected_job[k])
                         );
                         true
                     )

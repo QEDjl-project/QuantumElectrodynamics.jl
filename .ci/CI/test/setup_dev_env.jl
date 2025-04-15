@@ -16,7 +16,7 @@
     #        version = "0.1.0"
 
     #        [compat]
-    #        julia = "1.9"    
+    #        julia = "1.9"
     #        """,
     #             )
     #         end
@@ -46,7 +46,7 @@
     #        SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 
     #        [compat]
-    #        julia = "1.9"    
+    #        julia = "1.9"
     #        """,
     #             )
     #         end

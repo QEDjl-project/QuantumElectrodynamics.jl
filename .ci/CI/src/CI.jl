@@ -1,4 +1,3 @@
-
 module CI
 include("./modules/Utils.jl")
 include("./modules/UnitTest.jl")

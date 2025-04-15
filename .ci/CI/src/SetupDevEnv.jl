@@ -34,7 +34,7 @@ returned. Depending on the type, different user-defined dependency URLs are used
 
 # Returns
 
-test type to be tested 
+test type to be tested
 """
 function get_test_type_from_env_var()::TestType
     if !haskey(ENV, "CI_TEST_TYPE")
@@ -55,7 +55,7 @@ end
 """
     check_environment_variables(test_type::TestType)
 
-Check if all required environment variables are set and print required and optional environment 
+Check if all required environment variables are set and print required and optional environment
 variables.
 
 # Args
@@ -85,7 +85,7 @@ function check_environment_variables(test_type::TestType)
             println(io, "$(var_name): $(var_value)")
         end
     end
-    @info String(take!(io))
+    return @info String(take!(io))
 end
 
 """
@@ -97,7 +97,7 @@ Returns reference to the dict containing the custom repository URLs for the give
 
 The key is the name of the package and the value the custom URL.
 """
-get_test_specific_custom_urls(::UnitTest, urls::CustomDependencyUrls)::Dict{String,String} =
+get_test_specific_custom_urls(::UnitTest, urls::CustomDependencyUrls)::Dict{String, String} =
     urls.unit
 
 """
@@ -105,7 +105,7 @@ See `get_test_specific_custom_urls(::UnitTest, urls::CustomDependencyUrls)::Dict
 """
 get_test_specific_custom_urls(
     ::IntegrationTest, urls::CustomDependencyUrls
-)::Dict{String,String} = urls.integ
+)::Dict{String, String} = urls.integ
 
 """
     get_compat_changes()::Dict{String,String}
@@ -115,11 +115,11 @@ Generates a list of new compatibility versions for dependency packages.
 # Returns
 
 Returns a dictionary, where the key is the name and the value is the version to be changed.
-    
+
 """
-function get_compat_changes()::Dict{String,String}
+function get_compat_changes()::Dict{String, String}
     @info "check for comapt changes"
-    compat_changes = Dict{String,String}()
+    compat_changes = Dict{String, String}()
     with_logger(debuglogger) do
         if haskey(ENV, "CI_DEV_PKG_VERSION")
             compat_changes[string(ENV["CI_DEV_PKG_NAME"])] = string(
@@ -148,8 +148,8 @@ of a package.
 List of package dependencies
 """
 function get_filtered_dependencies(
-    name_filter::Regex, project_toml_path::AbstractString
-)::AbstractVector{String}
+        name_filter::Regex, project_toml_path::AbstractString
+    )::AbstractVector{String}
     @info "get required QED dependencies for $(project_toml_path)"
     io = IOBuffer()
     println(io, "found dependencies:")
@@ -206,7 +206,7 @@ end
 
 Executes a search and reduction algorithm. In each round, all leaves in the graph are searched for
 and added to a set. If a leaf is found, it is removed from the graph. At the end of a round, the
-set is added to a list. The algorithm loops until the graph is reduced to an empty graph or the 
+set is added to a list. The algorithm loops until the graph is reduced to an empty graph or the
 stop package is found.
 
 The inversion of the list specifies the order in which the nodes must be added to the graph to
@@ -227,8 +227,8 @@ e.g. pkg_ordering[1] stands for the first round. The set contains all leaves tha
 round. There is no order within a round.
 """
 function get_package_dependency_list(
-    graph::Dict, stop_package::AbstractString=""
-)::Vector{Set{String}}
+        graph::Dict, stop_package::AbstractString = ""
+    )::Vector{Set{String}}
     pkg_ordering = _get_package_dependency_list!(graph, stop_package)
 
     with_logger(debuglogger) do
@@ -244,8 +244,8 @@ function get_package_dependency_list(
 end
 
 function _get_package_dependency_list!(
-    graph::Dict, stop_package::AbstractString
-)::Vector{Set{String}}
+        graph::Dict, stop_package::AbstractString
+    )::Vector{Set{String}}
     @info "calculate the correct sequence for adding QED packages"
     graph_copy = deepcopy(graph)
     pkg_ordering = Vector{Set{String}}()
@@ -269,7 +269,7 @@ end
 
 """
     calculate_linear_dependency_ordering(
-        package_dependecy_list::Vector{Set{String}}, 
+        package_dependecy_list::Vector{Set{String}},
         required_dependencies::AbstractVector{String}
     )::Vector{String}
 
@@ -290,9 +290,9 @@ adding a package from the list as an implicit dependency of another package from
 given package.
 """
 function calculate_linear_dependency_ordering(
-    package_dependecy_list::Vector{Set{String}},
-    required_dependencies::AbstractVector{String},
-)::Vector{String}
+        package_dependecy_list::Vector{Set{String}},
+        required_dependencies::AbstractVector{String},
+    )::Vector{String}
     @info "calculate linare ordering to add QED packages"
     linear_pkg_ordering = Vector{String}()
 
@@ -361,6 +361,7 @@ function remove_packages(dependencies::Vector{String})
             @warn "tried to remove uninstalled package $(pkg)"
         end
     end
+    return
 end
 
 """
@@ -388,12 +389,12 @@ changed so that it is compatible with the project to be tested.
 
 """
 function install_qed_dev_packages(
-    pkg_to_install::Vector{String},
-    qed_path,
-    dev_package_name::AbstractString,
-    dev_package_path::AbstractString,
-    compat_changes::Dict{String,String},
-)
+        pkg_to_install::Vector{String},
+        qed_path,
+        dev_package_name::AbstractString,
+        dev_package_path::AbstractString,
+        compat_changes::Dict{String, String},
+    )
     @info "install QED packages"
 
     project_pkg_name = Pkg.project().name
@@ -407,7 +408,7 @@ function install_qed_dev_packages(
 
         if pkg == dev_package_name
             @info "install dev package: $(dev_package_path)"
-            Pkg.develop(; path=dev_package_path)
+            Pkg.develop(; path = dev_package_path)
         else
             project_path = joinpath(qed_path, pkg)
 
@@ -416,9 +417,10 @@ function install_qed_dev_packages(
             end
 
             @info "install dependency package: $(project_path)"
-            Pkg.develop(; path=project_path)
+            Pkg.develop(; path = project_path)
         end
     end
+    return
 end
 
 """
@@ -436,8 +438,8 @@ Change the version of an existing compat enties of a dependency.
 
 """
 function set_compat_helper(
-    name::AbstractString, version::AbstractString, project_path::AbstractString
-)
+        name::AbstractString, version::AbstractString, project_path::AbstractString
+    )
     project_toml_path = joinpath(project_path, "Project.toml")
 
     f = open(project_toml_path, "r")
@@ -480,7 +482,7 @@ if abspath(PROGRAM_FILE) == @__FILE__
 
         compat_changes = get_compat_changes()
 
-        qed_path = mktempdir(; cleanup=false)
+        qed_path = mktempdir(; cleanup = false)
 
         pkg_tree = build_qed_dependency_graph!(
             qed_path, compat_changes, test_specific_custom_urls

@@ -141,16 +141,16 @@ If the `dev` branch of `user` does not work, it is also possible to define a cus
 
 !!! note
 
-    The commit message is defined in the environment variable `CI_COMMIT_MESSAGE` by GitLab CI. 
+    The commit message is defined in the environment variable `CI_COMMIT_MESSAGE` by GitLab CI.
     If the variable is not defined, the script ignores the commit message. If you want to disable
-    reading the commit message, you can set the name of the commit message variable to an 
-    undefined variable via the first argument of the `integTestGen.jl` script. We use this when 
-    executing the CI on the `main` or `dev` branch. On these branches, it should not be possible 
-    to use custom URLs for unit or integration tests. Therefore we disable it, which also allows 
+    reading the commit message, you can set the name of the commit message variable to an
+    undefined variable via the first argument of the `integTestGen.jl` script. We use this when
+    executing the CI on the `main` or `dev` branch. On these branches, it should not be possible
+    to use custom URLs for unit or integration tests. Therefore we disable it, which also allows
     the use of `CI_INTG_PKG_URL_` variables as regular part of the merge commit message.
 
 
-## Stage: Run Integration Tests 
+## Stage: Run Integration Tests
 
 This stage uses the generated job yaml to create and run new test jobs. It uses the [GitLab CI child pipeline](https://about.gitlab.com/blog/2020/04/24/parent-child-pipelines/#dynamically-generating-pipelines) mechanism.
 

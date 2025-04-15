@@ -31,15 +31,15 @@ Creating a single job for integration tests of a specific package. Yaml is GitLa
 - `can_fail::Bool=false`: If true add `allow_failure=true` to the job yaml
 """
 function generate_job_yaml!(
-    package_name::String,
-    test_package::TestPackage,
-    target_branch::AbstractString,
-    job_yaml::Dict,
-    custom_urls::Dict{String,String},
-    tools_git_repo::ToolsGitRepo,
-    stage::AbstractString="",
-    can_fail::Bool=false,
-)
+        package_name::String,
+        test_package::TestPackage,
+        target_branch::AbstractString,
+        job_yaml::Dict,
+        custom_urls::Dict{String, String},
+        tools_git_repo::ToolsGitRepo,
+        stage::AbstractString = "",
+        can_fail::Bool = false,
+    )
     if haskey(custom_urls, package_name)
         url = custom_urls[package_name]
     else
@@ -139,20 +139,20 @@ are added to job_dict.
     the integration test tools are to be cloned.
 """
 function add_integration_test_job_yaml!(
-    job_dict::Dict,
-    test_package::TestPackage,
-    target_branch::AbstractString,
-    custom_urls::Dict{String,String},
-    tools_git_repo::ToolsGitRepo,
-)
+        job_dict::Dict,
+        test_package::TestPackage,
+        target_branch::AbstractString,
+        custom_urls::Dict{String, String},
+        tools_git_repo::ToolsGitRepo,
+    )
     _add_stage_once!(job_dict, "integ-test")
 
     if target_branch == "main"
         empty!(custom_urls)
     end
 
-    qed_path = mktempdir(; cleanup=false)
-    compat_changes = Dict{String,String}()
+    qed_path = mktempdir(; cleanup = false)
+    compat_changes = Dict{String, String}()
 
     pkg_tree = build_qed_dependency_graph!(qed_path, compat_changes, custom_urls)
     depending_pkg = IntegrationTests.depending_projects(
@@ -164,16 +164,16 @@ function add_integration_test_job_yaml!(
     end
 
     for p in depending_pkg
-        # Handles the case of merging in the main branch. If we want to merge in the main branch, 
-        # we do it because we want to publish the package. Therefore, we need to be sure that there 
-        # is an existing version of the dependent QED packages that works with the new version of 
-        # the package we want to release. The integration tests are tested against the development 
+        # Handles the case of merging in the main branch. If we want to merge in the main branch,
+        # we do it because we want to publish the package. Therefore, we need to be sure that there
+        # is an existing version of the dependent QED packages that works with the new version of
+        # the package we want to release. The integration tests are tested against the development
         # branch and the release version.
-        #  - The dev branch version must pass, as this means that the latest version of the other 
+        #  - The dev branch version must pass, as this means that the latest version of the other
         #    QED packages is compatible with our release version.
-        #  - The release version integration tests may or may not pass. 
-        #    1. If all of these pass, we will not need to increase the minor version of this package. 
-        #    2. If they do not all pass, the minor version must be increased and the failing packages 
+        #  - The release version integration tests may or may not pass.
+        #    1. If all of these pass, we will not need to increase the minor version of this package.
+        #    2. If they do not all pass, the minor version must be increased and the failing packages
         #    must also be released later with an updated compat entry.
         #    In either case the release can proceed, as the released packages will continue to work
         #    because of their current compat entries.
