@@ -11,6 +11,7 @@ This is the documentation for [`QuantumElectrodynamics.jl`](https://github.com/Q
 - [`QEDcore.jl`](https://github.com/QEDjl-project/QEDcore.jl): Implementation of core functionality that is needed across all or most content packages. [Docs](https://qedjl-project.github.io/QEDcore.jl/stable/)
 
 **The content packages**:
+- [`QEDFeynmanDiagrams.jl`](https://github.com/QEDjl-project/QEDFeynmanDiagrams.jl): Generate functions for matrix element computation for arbitrary QED scattering processes. [Docs](https://qedjl-project.github.io/QEDFeynmanDiagrams.jl/stable/)
 - [`QEDprocesses.jl`](https://github.com/QEDjl-project/QEDprocesses.jl): Scattering process definitions, models, and calculation of cross-sections and probabilities. [Docs](https://qedjl-project.github.io/QEDprocesses.jl/stable/)
 - [`QEDevents.jl`](https://github.com/QEDjl-project/QEDevents.jl): Monte-Carlo event generation for scattering processes. [Docs](https://qedjl-project.github.io/QEDevents.jl/stable/)
 - [`QEDfields.jl`](https://github.com/QEDjl-project/QEDfields.jl): Description of classical electromagnetic fields used in background-field approximations. [Docs](https://qedjl-project.github.io/QEDfields.jl/stable/)
