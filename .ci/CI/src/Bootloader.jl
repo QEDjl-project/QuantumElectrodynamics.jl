@@ -10,6 +10,23 @@ using YAML
 using ArgParse
 
 """
+    output_paths()::Dict{String,String}
+
+# Return
+
+Returns a dictation of the possible output paths for different types of CI jobs. A command line
+argument can be used to specify that the jobs should be written to a file instead of to stdout.
+The key is the name of the option and the value is the help text for argparse.
+"""
+function output_paths()::Dict{String, String}
+    return Dict(
+        "output-cpu" => "Write CPU test job file to the given path. If not set, print job file content on stdout.",
+        "output-gpu" => "Write GPU test job file to the given path. If not set, print job file content on stdout.",
+        "output-unit-test-verify" => "Write the unit test verification job file to the given path. If not set, print job file content on stdout.",
+    )
+end
+
+"""
     parse_commandline()::Dict{String, Any}
 
 # Return
@@ -38,12 +55,11 @@ function parse_commandline()::Dict{String, Any}
         "--project-path"
         help = "Set the path to the package folder of the package to be tested. Can also be set via the environment variable `CI_PROJECT_DIR`."
         arg_type = String
-        "--output-cpu"
-        help = "Write CPU test job file to the given path. If not set, print job file content on stdout."
-        arg_type = String
-        "--output-gpu"
-        help = "Write GPU test job file to the given path. If not set, print job file content on stdout."
-        arg_type = String
+    end
+
+    # set options for optional output to file for the different test kinds
+    for (arg_name, help_text) in output_paths()
+        add_arg_table!(s, "--" * arg_name, Dict(:help => help_text, :arg_type => String))
     end
 
     return parse_args(s)
@@ -442,21 +458,22 @@ function main()
         @warn "The output path for GPU tests is set, but GPU tests are not enabled"
     end
 
-    cpu_job_yaml = Dict()
-
-    if isnothing(args["output-cpu"]) && isnothing(args["output-gpu"])
-        # if cpu and gpu pipeline will be printed in different outputs, use the same
-        # job dict to generated a single yaml file
-        gpu_job_yaml = cpu_job_yaml
-    else
-        gpu_job_yaml = Dict()
+    # the "stdout" entry is required, otherwise
+    # `get(job_yamls, "<name>", job_yamls["stdout"])` is not working
+    # for unknown reason, job_yamls["stdout"] is accessed also in the case,
+    # if the key exist
+    job_yamls::Dict{String, Dict} = Dict("stdout" => Dict())
+    for output_name in keys(output_paths())
+        if !isnothing(args[output_name])
+            job_yamls[output_name] = Dict()
+        end
     end
 
     tools_git_repo = get_git_ci_tools_url_branch()
 
     if is_cpu
         add_unit_test_job_yaml!(
-            cpu_job_yaml,
+            get(job_yamls, "output-cpu", job_yamls["stdout"]),
             test_package,
             unit_test_julia_versions,
             target_branch,
@@ -478,7 +495,7 @@ function main()
     if is_cuda
         @info "Generate CUDA unit tests"
         add_unit_test_job_yaml!(
-            gpu_job_yaml,
+            get(job_yamls, "output-gpu", job_yamls["stdout"]),
             test_package,
             unit_test_julia_versions,
             target_branch,
@@ -491,7 +508,7 @@ function main()
         @info "Generate AMDGPU unit tests"
 
         add_unit_test_job_yaml!(
-            gpu_job_yaml,
+            get(job_yamls, "output-gpu", job_yamls["stdout"]),
             test_package,
             unit_test_julia_versions,
             target_branch,
@@ -506,7 +523,7 @@ function main()
         append_custom_dependency_urls_from_env_var!(custom_dependency_urls)
 
         add_integration_test_job_yaml!(
-            cpu_job_yaml,
+            get(job_yamls, "output-cpu", job_yamls["stdout"]),
             test_package,
             target_branch,
             custom_dependency_urls.integ,
@@ -515,33 +532,22 @@ function main()
     end
 
     if is_unit_tests
-        add_unit_test_verify_job_yaml!(cpu_job_yaml, target_branch, tools_git_repo)
+        add_unit_test_verify_job_yaml!(
+            get(job_yamls, "output-unit-test-verify", job_yamls["stdout"]),
+            target_branch,
+            tools_git_repo,
+        )
     end
 
-    # if no output set, write everything to stdout
-    # if at least one pipeline output is defined, the configured pipelines are written to a file
-    # and the rest to stdout
-    if isnothing(args["output-cpu"]) && isnothing(args["output-gpu"])
-        print_job_yaml(cpu_job_yaml, stdout)
-    else
-        # don't write empty file if output was defined but no code generated
-        if !isempty(cpu_job_yaml)
-            if isnothing(args["output-cpu"])
-                print_job_yaml(cpu_job_yaml, stdout)
-            else
-                open(args["output-cpu"], "w") do cpu_out
-                    print_job_yaml(cpu_job_yaml, cpu_out)
-                end
-            end
-        end
+    if !isempty(job_yamls["stdout"])
+        print_job_yaml(job_yamls["stdout"], stdout)
+    end
 
-        if !isempty(gpu_job_yaml)
-            if isnothing(args["output-gpu"])
-                print_job_yaml(gpu_job_yaml, stdout)
-            else
-                open(args["output-gpu"], "w") do gpu_out
-                    print_job_yaml(gpu_job_yaml, gpu_out)
-                end
+    # if defined, write the different job yamls to the different output files
+    for output_name in keys(output_paths())
+        if haskey(job_yamls, output_name)
+            open(args[output_name], "w") do out
+                print_job_yaml(job_yamls[output_name], out)
             end
         end
     end
