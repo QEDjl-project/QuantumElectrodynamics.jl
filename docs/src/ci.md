@@ -87,13 +87,14 @@ It is also possible to set a custom URL for more than one package, which depends
 
 The following table shows the names of the environment variables to use custom URLs for the unit and integration tests.
 
-Package Name    | Unit Test                      | Integration Test
-----------------|--------------------------------|-------------------------------
-QEDbase.jl      | `CI_UNIT_PKG_URL_QEDbase`      | `CI_INTG_PKG_URL_QEDbase`
-QEDcore.jl      | `CI_UNIT_PKG_URL_QEDcore`      | `CI_INTG_PKG_URL_QEDcore`
-QEDevents.jl    | `CI_UNIT_PKG_URL_QEDevents`    | `CI_INTG_PKG_URL_QEDevents`
-QEDfields.jl    | `CI_UNIT_PKG_URL_QEDfields`    | `CI_INTG_PKG_URL_QEDfields`
-QEDprocesses.jl | `CI_UNIT_PKG_URL_QEDprocesses` | `CI_INTG_PKG_URL_QEDprocesses`
+Package Name          | Unit Test                            | Integration Test
+----------------------|--------------------------------------|-------------------------------------
+QEDbase.jl            | `CI_UNIT_PKG_URL_QEDbase`            | `CI_INTG_PKG_URL_QEDbase`
+QEDcore.jl            | `CI_UNIT_PKG_URL_QEDcore`            | `CI_INTG_PKG_URL_QEDcore`
+QEDevents.jl          | `CI_UNIT_PKG_URL_QEDevents`          | `CI_INTG_PKG_URL_QEDevents`
+QEDfields.jl          | `CI_UNIT_PKG_URL_QEDfields`          | `CI_INTG_PKG_URL_QEDfields`
+QEDprocesses.jl       | `CI_UNIT_PKG_URL_QEDprocesses`       | `CI_INTG_PKG_URL_QEDprocesses`
+QEDFeynmanDiagrams.jl | `CI_UNIT_PKG_URL_QEDFeynmanDiagrams` | `CI_INTG_PKG_URL_QEDFeynmanDiagrams`
 
 # Unit Tests for CI Develops
 

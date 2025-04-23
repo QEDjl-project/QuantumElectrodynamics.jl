@@ -4,6 +4,7 @@ authors = ["Uwe Hernandez Acosta <u.hernandez@hzdr.de>", "Simeon Ehrig", "Klaus 
 version = "0.3.0"
 
 [deps]
+QEDFeynmanDiagrams = "3232ad24-8ec1-4588-843e-e2ed2eae1ff3"
 QEDbase = "10e22c08-3ccb-4172-bfcf-7d7aa3d04d93"
 QEDcore = "35dc0263-cb5f-4c33-a114-1d7f54ab753e"
 QEDevents = "fc3ce04a-5be5-4f3a-acff-eceaab723759"
@@ -12,6 +13,7 @@ QEDprocesses = "46de9c38-1bb3-4547-a1ec-da24d767fdad"
 Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
 
 [compat]
+QEDFeynmanDiagrams = "0.1.0"
 QEDbase = "0.4"
 QEDcore = "0.3"
 QEDevents = "0.3"
