@@ -13,7 +13,7 @@
     expected_job["tags"] = ["rocm", "x86_64"]
 
     job_yaml = CI._get_amdgpu_unit_test(
-        "1.11", test_package, "main", CI.ToolsGitRepo(git_url, git_branch)
+        "1.11", test_package, false, CI.ToolsGitRepo(git_url, git_branch)
     )
 
     @test keys(expected_job) == keys(job_yaml)
@@ -40,7 +40,7 @@
             job_dict,
             test_package,
             julia_versions,
-            "main",
+            false,
             CI.AMDGPU,
             CI.ToolsGitRepo(git_url, git_branch),
         )

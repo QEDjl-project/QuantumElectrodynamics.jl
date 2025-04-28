@@ -34,7 +34,7 @@ fi",
         expected_job["allow_failure"] = true
 
         job_yaml = CI._get_nightly_unit_test(
-            test_package, "dev", CI.CPU, CI.ToolsGitRepo(git_url, git_branch), nightly_image
+            test_package, true, CI.CPU, CI.ToolsGitRepo(git_url, git_branch), nightly_image
         )
 
         @test keys(expected_job) == keys(job_yaml)
@@ -61,7 +61,7 @@ fi",
                 job_dict,
                 test_package,
                 julia_versions,
-                "dev",
+                true,
                 CI.CPU,
                 CI.ToolsGitRepo(git_url, git_branch),
             )

@@ -16,7 +16,7 @@
         )
 
         job_dict = Dict()
-        CI.add_unit_test_verify_job_yaml!(job_dict, "dev", git_repo)
+        CI.add_unit_test_verify_job_yaml!(job_dict, true, git_repo)
 
         @test job_dict["stages"] == ["verify-unit-test-deps"]
         @test (
@@ -31,7 +31,8 @@ end
 @testset "test add_unit_test_verify_job_yaml!() target branch main" begin
     job_dict = Dict()
     CI.add_unit_test_verify_job_yaml!(
-        job_dict, "main", CI.ToolsGitRepo("https://github.com/name/repo", "dev")
+        job_dict, false, CI.ToolsGitRepo("https://github.com/name/repo", "dev")
     )
+    # TODO: needs to be a dummy job
     @test isempty(job_dict)
 end

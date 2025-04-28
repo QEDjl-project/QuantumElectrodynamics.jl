@@ -12,7 +12,7 @@
     expected_job["tags"] = ["cuda", "x86_64"]
 
     job_yaml = CI._get_normal_unit_test(
-        julia_version, test_package, "main", CI.CUDA, CI.ToolsGitRepo(git_url, git_branch)
+        julia_version, test_package, false, CI.CUDA, CI.ToolsGitRepo(git_url, git_branch)
     )
 
     @test keys(expected_job) == keys(job_yaml)
@@ -39,7 +39,7 @@
             job_dict,
             test_package,
             julia_versions,
-            "main",
+            false,
             CI.CUDA,
             CI.ToolsGitRepo(git_url, git_branch),
         )

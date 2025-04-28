@@ -8,7 +8,7 @@
         job_yaml = CI._get_normal_unit_test(
             "0",
             CI.TestPackage("", "", ""),
-            "dev",
+            true,
             CI.CPU,
             CI.ToolsGitRepo(git_url, git_branch),
         )
@@ -30,7 +30,7 @@
         job_yaml = CI._get_normal_unit_test(
             "0",
             CI.TestPackage("", "", ""),
-            "main",
+            false,
             CI.CPU,
             CI.ToolsGitRepo(git_url, git_branch),
         )
@@ -57,7 +57,7 @@
         expected_job["tags"] = ["cpuonly"]
 
         job_yaml = CI._get_normal_unit_test(
-            julia_version, test_package, "dev", CI.CPU, CI.ToolsGitRepo(git_url, git_branch)
+            julia_version, test_package, true, CI.CPU, CI.ToolsGitRepo(git_url, git_branch)
         )
 
         @test keys(expected_job) == keys(job_yaml)
@@ -93,7 +93,7 @@
         job_yaml = CI._get_normal_unit_test(
             julia_version,
             test_package,
-            "main",
+            false,
             CI.CPU,
             CI.ToolsGitRepo(git_url, git_branch),
         )
@@ -122,7 +122,7 @@
                 job_dict,
                 test_package,
                 julia_versions,
-                "main",
+                false,
                 CI.CPU,
                 CI.ToolsGitRepo(git_url, git_branch),
             )

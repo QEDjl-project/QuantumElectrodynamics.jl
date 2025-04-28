@@ -420,6 +420,7 @@ function main()
     args = parse_commandline()
 
     target_branch = get_target_branch(args)
+    setup_dev_env::Bool = target_branch != "main"
     package_path = get_project_path(args)
     test_package = get_package_name_version(package_path)
 
@@ -427,6 +428,7 @@ function main()
     @info "Test package version: $(test_package.version)"
     @info "Test package path: $(test_package.path)"
     @info "PR target branch: $(target_branch)"
+    @info "Setup dev environment: $(setup_dev_env)"
 
     is_cpu = is_cpu_tests(args)
     is_cuda = is_cuda_tests(args)
@@ -476,7 +478,7 @@ function main()
             get(job_yamls, "output-cpu", job_yamls["stdout"]),
             test_package,
             unit_test_julia_versions,
-            target_branch,
+            setup_dev_env,
             CPU,
             tools_git_repo,
             get_unit_test_nightly_baseimage(),
@@ -498,7 +500,7 @@ function main()
             get(job_yamls, "output-gpu", job_yamls["stdout"]),
             test_package,
             unit_test_julia_versions,
-            target_branch,
+            setup_dev_env,
             CUDA,
             tools_git_repo,
         )
@@ -511,7 +513,7 @@ function main()
             get(job_yamls, "output-gpu", job_yamls["stdout"]),
             test_package,
             unit_test_julia_versions,
-            target_branch,
+            setup_dev_env,
             AMDGPU,
             tools_git_repo,
         )
@@ -534,7 +536,7 @@ function main()
     if is_unit_tests
         add_unit_test_verify_job_yaml!(
             get(job_yamls, "output-unit-test-verify", job_yamls["stdout"]),
-            target_branch,
+            setup_dev_env,
             tools_git_repo,
         )
     end

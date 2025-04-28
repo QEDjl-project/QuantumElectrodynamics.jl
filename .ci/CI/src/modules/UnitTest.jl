@@ -23,7 +23,8 @@ to be directly translated to GitLab CI yaml.
 - `job_dict::Dict`: Dict in which the new job is added.
 - `test_package::TestPackage`: Properties of the package to be tested, such as name and version.
 - `julia_versions::Vector{String}`: Julia version used for the tests.
-- `target_branch::AbstractString`: A different job code is generated depending on the target branch.
+- `setup_dev_env::Bool`: If the value is true, additional job code is generated that allows the dev
+    or feature branch versions of the QED dependencies to be used.
 - `test_platform::TestPlatform`: Set target platform test, e.g. CPU, Nvidia GPU or AMD GPU.
 - `tools_git_repo::ToolsGitRepo`: URL and branch of the Git repository from which the CI tools are
     cloned in unit test job.
@@ -33,7 +34,7 @@ function add_unit_test_job_yaml!(
         job_dict::Dict,
         test_package::TestPackage,
         julia_versions::Vector{String},
-        target_branch::AbstractString,
+        setup_dev_env::Bool,
         test_platform::TestPlatform = CPU,
         tools_git_repo::ToolsGitRepo = ToolsGitRepo(
             "https://github.com/QEDjl-project/QuantumElectrodynamics.jl.git", "dev"
@@ -51,17 +52,17 @@ function add_unit_test_job_yaml!(
         if version != "nightly"
             if test_platform == AMDGPU
                 job_dict["unit_test_julia_$(test_platform_name)_$(replace(version, "." => "_"))"] = _get_amdgpu_unit_test(
-                    version, test_package, target_branch, tools_git_repo
+                    version, test_package, setup_dev_env, tools_git_repo
                 )
             else
                 job_dict["unit_test_julia_$(test_platform_name)_$(replace(version, "." => "_"))"] = _get_normal_unit_test(
-                    version, test_package, target_branch, test_platform, tools_git_repo
+                    version, test_package, setup_dev_env, test_platform, tools_git_repo
                 )
             end
         else
             job_dict["unit_test_julia_$(test_platform_name)_nightly"] = _get_nightly_unit_test(
                 test_package,
-                target_branch,
+                setup_dev_env,
                 test_platform,
                 tools_git_repo,
                 nightly_base_image,
@@ -85,19 +86,22 @@ in the Git commit message.
 
 # Args
 - `job_dict::Dict`: Dict in which the new job is added.
-- `target_branch::AbstractString`: A different job code is generated depending on the target branch.
+- `setup_dev_env::Bool`: If the value is true, additional job code is generated that allows the dev
+    or feature branch versions of the QED dependencies to be used.
 - `tools_git_repo::ToolsGitRepo`: URL and branch of the Git repository from which the CI tools are
     cloned in unit test job.
 """
 function add_unit_test_verify_job_yaml!(
         job_dict::Dict,
-        target_branch::AbstractString,
+        setup_dev_env::Bool,
         tools_git_repo::ToolsGitRepo = ToolsGitRepo(
             "https://github.com/QEDjl-project/QuantumElectrodynamics.jl.git", "dev"
         ),
     )
     # verification script that no custom URLs are used in unit tests
-    return if target_branch != "main"
+    # TODO: Bug: if setup_dev_env is false, no job for CI is generated -> produces
+    # an error if a child pipeline tries to run an empty job.yml
+    return if setup_dev_env
         _add_stage_once!(job_dict, "verify-unit-test-deps")
 
         job_dict["verify-unit-test-deps"] = Dict(
@@ -128,7 +132,8 @@ Creates a normal unit test job for a specific Julia version.
 # Args
 - `version::AbstractString`: Julia version used for the tests.
 - `test_package::TestPackage`: Properties of the package to be tested, such as name and version.
-- `target_branch::AbstractString`: A different job code is generated depending on the target branch.
+- `setup_dev_env::Bool`: If the value is true, additional job code is generated that allows the dev
+    or feature branch versions of the QED dependencies to be used.
 - `test_platform::TestPlatform`: Set target platform test, e.g. CPU, Nvidia GPU or AMD GPU.
 - `tools_git_repo::ToolsGitRepo`: URL and branch of the Git repository from which the CI tools are
     cloned in unit test job.
@@ -140,7 +145,7 @@ Returns a dict containing the unit test, which can be output directly as GitLab 
 function _get_normal_unit_test(
         version::AbstractString,
         test_package::TestPackage,
-        target_branch::AbstractString,
+        setup_dev_env::Bool,
         test_platform::TestPlatform,
         tools_git_repo::ToolsGitRepo,
     )::Dict
@@ -167,15 +172,15 @@ function _get_normal_unit_test(
         "git clone --depth 1 -b $(tools_git_repo.branch) $(tools_git_repo.url) /tmp/integration_test_tools/",
     ]
 
-    if target_branch == "main"
+    if setup_dev_env
         push!(
             script,
-            "julia --project=. /tmp/integration_test_tools/.ci/CI/src/SetupDevEnv.jl \${CI_PROJECT_DIR}/Project.toml NO_MESSAGE",
+            "julia --project=. /tmp/integration_test_tools/.ci/CI/src/SetupDevEnv.jl \${CI_PROJECT_DIR}/Project.toml",
         )
     else
         push!(
             script,
-            "julia --project=. /tmp/integration_test_tools/.ci/CI/src/SetupDevEnv.jl \${CI_PROJECT_DIR}/Project.toml",
+            "julia --project=. /tmp/integration_test_tools/.ci/CI/src/SetupDevEnv.jl \${CI_PROJECT_DIR}/Project.toml NO_MESSAGE",
         )
     end
 
@@ -225,7 +230,8 @@ Creates a unit test job which uses the Julia nightly version.
 # Args
 - `test_package::TestPackage`: Properties of the package to be tested, such as name and version.
 - `test_platform::TestPlatform`: Set target platform test, e.g. CPU, Nvidia GPU or AMD GPU.
-- `target_branch::AbstractString`: A different job code is generated depending on the target branch.
+- `setup_dev_env::Bool`: If the value is true, additional job code is generated that allows the dev
+    or feature branch versions of the QED dependencies to be used.
 - `tools_git_repo::ToolsGitRepo`: URL and branch of the Git repository from which the CI tools are
     cloned in unit test job.
 - `nightly_base_image::AbstractString`: Name of the job base image if the Julia version is nightly.
@@ -236,13 +242,13 @@ Returns a dict containing the unit test, which can be output directly as GitLab 
 """
 function _get_nightly_unit_test(
         test_package::TestPackage,
-        target_branch::AbstractString,
+        setup_dev_env::Bool,
         test_platform::TestPlatform,
         tools_git_repo::ToolsGitRepo,
         nightly_base_image::AbstractString,
     )
     job_yaml = _get_normal_unit_test(
-        "1", test_package, target_branch, test_platform, tools_git_repo
+        "1", test_package, setup_dev_env, test_platform, tools_git_repo
     )
     job_yaml["image"] = nightly_base_image
 
@@ -291,7 +297,8 @@ Julia in it.
 # Args
 - `version::AbstractString`: Julia version used for the tests.
 - `test_package::TestPackage`: Properties of the package to be tested, such as name and version.
-- `target_branch::AbstractString`: A different job code is generated depending on the target branch.
+- `setup_dev_env::Bool`: If the value is true, additional job code is generated that allows the dev
+    or feature branch versions of the QED dependencies to be used.
 - `tools_git_repo::ToolsGitRepo`: URL and branch of the Git repository from which the CI tools are
     cloned in unit test job.
 
@@ -302,11 +309,11 @@ Returns a dict containing the unit test, which can be output directly as GitLab 
 function _get_amdgpu_unit_test(
         version::AbstractString,
         test_package::TestPackage,
-        target_branch::AbstractString,
+        setup_dev_env::Bool,
         tools_git_repo::ToolsGitRepo,
     )::Dict
     job_yaml = _get_normal_unit_test(
-        version, test_package, target_branch, AMDGPU, tools_git_repo
+        version, test_package, setup_dev_env, AMDGPU, tools_git_repo
     )
     job_yaml["image"] = "rocm/dev-ubuntu-24.04:6.2.4-complete"
     job_yaml["before_script"] = [
