@@ -105,22 +105,6 @@ function generate_job_yaml!(
 end
 
 """
-    generate_dummy_job_yaml!(job_yaml::Dict)
-
-Generates a GitLab CI dummy job, if required.
-
-# Args
-- `job_yaml::Dict`: Add generated job to this dict.
-"""
-function generate_dummy_job_yaml!(job_yaml::Dict)
-    return job_yaml["DummyJob"] = Dict(
-        "image" => "alpine:latest",
-        "interruptible" => true,
-        "script" => ["echo \"This is a dummy job so that the CI does not fail.\""],
-    )
-end
-
-"""
     add_integration_test_job_yaml!(
         job_dict::Dict,
         test_package::TestPackage,

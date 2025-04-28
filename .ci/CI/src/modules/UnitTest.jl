@@ -99,11 +99,8 @@ function add_unit_test_verify_job_yaml!(
         ),
     )
     # verification script that no custom URLs are used in unit tests
-    # TODO: Bug: if setup_dev_env is false, no job for CI is generated -> produces
-    # an error if a child pipeline tries to run an empty job.yml
-    return if setup_dev_env
-        _add_stage_once!(job_dict, "verify-unit-test-deps")
-
+    _add_stage_once!(job_dict, "verify-unit-test-deps")
+    if setup_dev_env
         job_dict["verify-unit-test-deps"] = Dict(
             "image" => "julia:1.10",
             "stage" => "verify-unit-test-deps",
@@ -115,7 +112,14 @@ function add_unit_test_verify_job_yaml!(
             "interruptible" => true,
             "tags" => ["cpuonly"],
         )
+    else
+        generate_dummy_job_yaml!(
+            job_dict,
+            "No check necessary if SetupDevEnv.jl is not used.",
+            "verify-unit-test-deps"
+        )
     end
+    return nothing
 end
 
 """

@@ -29,10 +29,24 @@
 end
 
 @testset "test add_unit_test_verify_job_yaml!() target branch main" begin
+    expected_job = Dict(
+        "stages" => ["verify-unit-test-deps"],
+        "DummyJob" => Dict(
+            "image" => "alpine:latest",
+            "stage" => "verify-unit-test-deps",
+            "interruptible" => true,
+            "script" => ["echo \"No check necessary if SetupDevEnv.jl is not used.\""]
+        )
+    )
+
     job_dict = Dict()
     CI.add_unit_test_verify_job_yaml!(
         job_dict, false, CI.ToolsGitRepo("https://github.com/name/repo", "dev")
     )
-    # TODO: needs to be a dummy job
-    @test isempty(job_dict)
+    @test (
+        @assert job_dict == expected_job yaml_diff(
+            job_dict, expected_job
+        );
+        true
+    )
 end
