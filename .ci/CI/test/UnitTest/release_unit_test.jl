@@ -1,28 +1,30 @@
-@testset "unit test: cpu release" begin
+@testset "unit test: cpu release candidate" begin
     julia_versions = ["1.9", "1.13"]
     test_package = CI.TestPackage("QEDfoo", "/path/to/project", "7.0")
     git_url = "http://github.com/name/repo"
     git_branch = "branch"
     tools_git_repo = CI.ToolsGitRepo(git_url, git_branch)
 
-    for version in julia_versions, setup_dev_env in [true, false]
-        expected_job = get_generic_unit_job(version, test_package)
+    for setup_dev_env in [true, false]
+        expected_job = get_generic_unit_job("rc", test_package)
         expected_job["script"] = get_main_unit_job_script_section(setup_dev_env, tools_git_repo)
 
         expected_job["variables"]["TEST_CPU"] = "1"
         expected_job["tags"] = ["cpuonly"]
+        expected_job["allow_failure"] = true
+
 
         job_dict = Dict()
         CI.add_unit_test_job_yaml!(
             job_dict,
             test_package,
             setup_dev_env,
-            CI.ReleaseVersion(version),
+            CI.ReleaseCandidate(),
             CI.CPU,
             tools_git_repo
         )
 
-        job_name = "unit_test_julia_cpu_$(replace(version, "." => "_"))"
+        job_name = "unit_test_julia_cpu_release_candidate"
         @test haskey(job_dict, job_name)
         @test job_dict["stages"] == ["unit-test"]
 

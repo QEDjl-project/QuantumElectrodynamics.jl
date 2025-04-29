@@ -360,6 +360,89 @@ function get_git_ci_tools_url_branch()::ToolsGitRepo
 end
 
 """
+Returns all unit tests configurations configured by script arguments and environment variables.
+"""
+function get_unit_test_configs(args::Dict{String, Any})::Vector{Tuple{UnitTestType, TestPlatform}}
+    unit_test_types = Vector{Tuple{UnitTestType, TestPlatform}}()
+    for julia_version in get_unit_test_julia_versions()
+        if julia_version == "nightly" && is_cpu_tests(args)
+            push!(
+                unit_test_types,
+                (
+                    Nightly(get_unit_test_nightly_baseimage()),
+                    CPU,
+                )
+            )
+
+        elseif julia_version == "rc" && is_cpu_tests(args)
+            push!(
+                unit_test_types,
+                (
+                    ReleaseCandidate(),
+                    CPU,
+                )
+            )
+            continue
+        else
+            # normal, release Julia versions
+            if is_cpu_tests(args)
+                push!(
+                    unit_test_types,
+                    (
+                        ReleaseVersion(julia_version),
+                        CPU,
+                    )
+                )
+            end
+
+            if is_cuda_tests(args)
+                push!(
+                    unit_test_types,
+                    (
+                        ReleaseVersion(julia_version),
+                        CUDA,
+                    )
+                )
+            end
+
+            if is_amdgpu_tests(args)
+                push!(
+                    unit_test_types,
+                    (
+                        ReleaseVersion(julia_version),
+                        AMDGPU,
+                    )
+                )
+            end
+        end
+    end
+    return unit_test_types
+end
+
+"""
+Print all test configurations via logger.
+
+# Args
+
+- `test_type_name::AbstractString`: Name of the test type
+- `test_configs::Vector{Tuple{UnitTestType, TestPlatform}}`: Test configurations
+"""
+function _info_test_configs(
+        test_type_name::AbstractString,
+        test_configs::Vector{Tuple{UnitTestType, TestPlatform}}
+    )
+    output = test_type_name * ":\n"
+    if isempty(test_configs)
+        output *= "  no configurations"
+    else
+        for (test_type_name, platform) in test_configs
+            output *= "  " * string(test_type_name) * " + " * string(platform) * "\n"
+        end
+    end
+    return @info output
+end
+
+"""
     print_job_yaml(job_yaml::Dict, io::IO=stdout)
 
 Prints to dict as human readable GitLab CI job yaml.
@@ -402,19 +485,6 @@ function print_job_yaml(job_yaml::Dict, io::IO = stdout)
     end
 end
 
-"""
-    _info_enabled_unit_tests(test_name::AbstractString, state::Bool)
-
-Helper function to display of unit tests are generated.
-
-# Args
-- `test_name::AbstractString`: Name of the unit test category
-- `state::Bool`: Is enabled or not
-"""
-function _info_enabled_unit_tests(test_name::AbstractString, state::Bool)
-    return @info "$(test_name) unit tests are $(state ? "enabled" : "disabled")"
-end
-
 # use main function to avoid to define global variables
 function main()
     args = parse_commandline()
@@ -430,33 +500,25 @@ function main()
     @info "PR target branch: $(target_branch)"
     @info "Setup dev environment: $(setup_dev_env)"
 
-    is_cpu = is_cpu_tests(args)
-    is_cuda = is_cuda_tests(args)
-    is_amdgpu = is_amdgpu_tests(args)
+    tests_configurations = Dict()
+    tests_configurations["unit"] = get_unit_test_configs(args)
+
+    _info_test_configs("Unit tests", tests_configurations["unit"])
+
     is_integ = is_integ_tests(args)
-
-    _info_enabled_unit_tests("CPU", is_cpu)
-    _info_enabled_unit_tests("CUDA", is_cuda)
-    _info_enabled_unit_tests("AMDGPU", is_amdgpu)
-
-    is_unit_tests = is_cpu || is_cuda || is_amdgpu
-    @info "unit tests are $(is_unit_tests ? "enabled" : "disabled")"
-
-    unit_test_julia_versions = get_unit_test_julia_versions()
-    @info "Julia versions for the unit tests: $(unit_test_julia_versions)"
 
     @info "integration tests are $(is_integ ? "enabled" : "disabled")"
 
     # if no tests should be generated, exit early
-    if !(is_cpu || is_cpu || is_amdgpu || is_integ)
+    if isempty(tests_configurations["unit"]) && !is_integ
         exit(0)
     end
 
-    if !is_cpu && !is_integ && !isnothing(args["output-cpu"])
+    if !is_cpu_tests(args) && !is_integ && !isnothing(args["output-cpu"])
         @warn "The output path for CPU tests is set, but CPU tests are not enabled"
     end
 
-    if !is_cuda && !is_amdgpu && !isnothing(args["output-gpu"])
+    if !is_cuda_tests(args) && !is_amdgpu_tests(args) && !isnothing(args["output-gpu"])
         @warn "The output path for GPU tests is set, but GPU tests are not enabled"
     end
 
@@ -473,49 +535,20 @@ function main()
 
     tools_git_repo = get_git_ci_tools_url_branch()
 
-    if is_cpu
-        add_unit_test_job_yaml!(
-            get(job_yamls, "output-cpu", job_yamls["stdout"]),
-            test_package,
-            unit_test_julia_versions,
-            setup_dev_env,
-            CPU,
-            tools_git_repo,
-            get_unit_test_nightly_baseimage(),
-        )
-    end
-
-    if is_cuda || is_amdgpu
-        for version in ["rc", "nightly"]
-            if version in unit_test_julia_versions
-                @info "Remove unit test version $(version) for GPU tests"
-                filter!(v -> v != version, unit_test_julia_versions)
-            end
+    for (test_type_name, platform) in tests_configurations["unit"]
+        if platform == CPU
+            output_yaml = get(job_yamls, "output-cpu", job_yamls["stdout"])
+        else
+            output_yaml = get(job_yamls, "output-gpu", job_yamls["stdout"])
         end
-    end
-
-    if is_cuda
-        @info "Generate CUDA unit tests"
-        add_unit_test_job_yaml!(
-            get(job_yamls, "output-gpu", job_yamls["stdout"]),
-            test_package,
-            unit_test_julia_versions,
-            setup_dev_env,
-            CUDA,
-            tools_git_repo,
-        )
-    end
-
-    if is_amdgpu
-        @info "Generate AMDGPU unit tests"
 
         add_unit_test_job_yaml!(
-            get(job_yamls, "output-gpu", job_yamls["stdout"]),
+            output_yaml,
             test_package,
-            unit_test_julia_versions,
             setup_dev_env,
-            AMDGPU,
-            tools_git_repo,
+            test_type_name,
+            platform,
+            tools_git_repo
         )
     end
 
@@ -533,7 +566,9 @@ function main()
         )
     end
 
-    if is_unit_tests
+    # TODO: Bug if no unit tests are enabled but `output-unit-test-verify` is set, an
+    # dummy job is required. Fix it later in the print_job_yaml function.
+    if !isempty(tests_configurations["unit"])
         add_unit_test_verify_job_yaml!(
             get(job_yamls, "output-unit-test-verify", job_yamls["stdout"]),
             setup_dev_env,
