@@ -515,11 +515,13 @@ function main()
     end
 
     if !is_cpu_tests(args) && !is_integ && !isnothing(args["output-cpu"])
-        @warn "The output path for CPU tests is set, but CPU tests are not enabled"
+        @error "The output path for CPU tests is set, but CPU tests are not enabled"
+        exit(1)
     end
 
     if !is_cuda_tests(args) && !is_amdgpu_tests(args) && !isnothing(args["output-gpu"])
-        @warn "The output path for GPU tests is set, but GPU tests are not enabled"
+        @error "The output path for GPU tests is set, but GPU tests are not enabled"
+        exit(1)
     end
 
     # the "stdout" entry is required, otherwise
@@ -566,8 +568,6 @@ function main()
         )
     end
 
-    # TODO: Bug if no unit tests are enabled but `output-unit-test-verify` is set, an
-    # dummy job is required. Fix it later in the print_job_yaml function.
     if !isempty(tests_configurations["unit"])
         add_unit_test_verify_job_yaml!(
             get(job_yamls, "output-unit-test-verify", job_yamls["stdout"]),
