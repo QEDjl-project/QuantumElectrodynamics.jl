@@ -58,18 +58,7 @@ contains all properties to be directly translated to GitLab CI yaml.
 - `tools_git_repo::ToolsGitRepo`: URL and branch of the Git repository from which the CI tools are
     cloned in unit test job.
 """
-function add_unit_test_job_yaml!(
-        job_dict::Dict,
-        test_package::TestPackage,
-        setup_dev_env::Bool,
-        unit_test_type::UnitTestType,
-        test_platform::TestPlatform = CPU,
-        tools_git_repo::ToolsGitRepo = ToolsGitRepo(
-            "https://github.com/QEDjl-project/QuantumElectrodynamics.jl.git", "dev"
-        )
-    )
-    error("No special implementation for the given UnitTestType: $(unit_test_type).")
-end
+function add_unit_test_job_yaml! end
 
 function add_unit_test_job_yaml!(
         job_dict::Dict,
