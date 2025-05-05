@@ -65,8 +65,10 @@ function main()
     for (julia_version_type_name, platform) in tests_configurations[UnitTest]
         if platform == CPU
             output_yaml = get(job_yamls, "output-cpu", job_yamls["stdout"])
-        else
+        elseif (platform == CUDA || platform == AMDGPU)
             output_yaml = get(job_yamls, "output-gpu", job_yamls["stdout"])
+        else
+            throw(ErrorException("Unknown platform: $(platform)"))
         end
 
         add_unit_test_job_yaml!(
