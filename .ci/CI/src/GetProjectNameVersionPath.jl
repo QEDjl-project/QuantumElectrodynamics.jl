@@ -1,6 +1,7 @@
 using Pkg
 
-include("./modules/Utils.jl")
+include("modules/GenericTest.jl")
+include("modules/Utils.jl")
 
 # the script be directly executed in bash to set the environment variables
 # $(julia --project=/path/to/the/actual/project get_project_version_name)

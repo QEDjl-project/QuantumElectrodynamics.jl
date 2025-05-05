@@ -1,5 +1,3 @@
-include("../GenericTest/DummyJob.jl")
-
 """
     add_unit_test_verify_job_yaml!(
         job_dict::Dict,

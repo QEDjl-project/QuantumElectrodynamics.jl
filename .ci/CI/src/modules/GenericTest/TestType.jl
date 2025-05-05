@@ -72,3 +72,35 @@ Creates a test job which uses the Julia nightly version.
 struct Nightly <: JuliaVersionType
     container_image::AbstractString
 end
+
+"""
+    struct TestPackage
+
+Contains information about the package to test.
+
+# Members
+- `name::String`: Name of the package.
+- `version::String`: Version of the package.
+- `path::String`: Path of the package root.
+
+"""
+struct TestPackage
+    name::String
+    version::String
+    path::String
+end
+
+"""
+    struct ToolsGitRepo
+
+Url and branch of the Git repository QuantumElectrodynamics.jl, which is to be used in the CI jobs.
+
+# Members
+- `url::String`: Git repository URL.
+- `branch::String`: Git branch.
+
+"""
+struct ToolsGitRepo
+    url::String
+    branch::String
+end

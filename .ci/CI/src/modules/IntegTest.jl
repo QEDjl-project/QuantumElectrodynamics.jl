@@ -1,1 +1,1 @@
-include("./IntegTest/TestJob.jl")
+include("IntegTest/TestJob.jl")

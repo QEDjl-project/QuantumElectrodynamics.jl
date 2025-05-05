@@ -1,8 +1,5 @@
 using Logging
 
-include("../GenericTest/TestType.jl")
-include("../GenericTest/TestType.jl")
-
 """
 Returns all unit tests configurations configured by script arguments and environment variables.
 """

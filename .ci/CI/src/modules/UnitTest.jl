@@ -1,2 +1,2 @@
-include("./UnitTest/TestJob.jl")
-include("./UnitTest/VerifyJob.jl")
+include("UnitTest/TestJob.jl")
+include("UnitTest/VerifyJob.jl")

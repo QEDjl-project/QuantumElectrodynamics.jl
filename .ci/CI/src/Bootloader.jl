@@ -1,10 +1,11 @@
-include("./modules/Utils.jl")
-include("./modules/Bootloader/Arguments.jl")
-include("./modules/Bootloader/JobConfig.jl")
-include("./modules/Bootloader/JobPrinter.jl")
-include("./modules/GitLabTargetBranch.jl")
-include("./modules/UnitTest.jl")
-include("./modules/IntegTest.jl")
+include("modules/GitLabTargetBranch.jl")
+include("modules/GenericTest.jl")
+include("modules/UnitTest.jl")
+include("modules/IntegTest.jl")
+include("modules/Utils.jl")
+include("modules/Bootloader/Arguments.jl")
+include("modules/Bootloader/JobConfig.jl")
+include("modules/Bootloader/JobPrinter.jl")
 
 using IntegrationTests
 using Logging
