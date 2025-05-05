@@ -1,6 +1,7 @@
 include("./utils.jl")
 include("./normal_unit_test.jl")
 include("./nightly_unit_test.jl")
+include("./release_unit_test.jl")
 include("./cuda_unit_test.jl")
 include("./amdgpu_unit_test.jl")
 include("./verify_unit_test.jl")

@@ -23,7 +23,8 @@ using LibGit2
 
 # workaround if it is included in CI.jl for testing purpose
 if abspath(PROGRAM_FILE) == @__FILE__
-    include("./modules/Utils.jl")
+    include("modules/GenericTest.jl")
+    include("modules/Utils.jl")
 end
 
 """
