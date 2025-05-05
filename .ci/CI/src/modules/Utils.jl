@@ -2,49 +2,11 @@ using TOML
 using Logging
 using LibGit2
 
+include("GenericTest/TestType.jl")
+
 debug_logger_io = IOBuffer()
 debuglogger = ConsoleLogger(debug_logger_io, Logging.Debug)
 
-"""
-Represent type of tests to be tested
-"""
-abstract type TestType end
-struct UnitTest <: TestType end
-struct IntegrationTest <: TestType end
-
-"""
-    get_test_type_env_var_prefix(::TestType)
-
-Depending on the test type, a different prefix for a environment variable name is returned.
-Environment starting with the prefix contains custom dependency URLs.
-
-# Args
-`::TestType` The test type
-
-# Returns
-
-Prefix of variable names that are read in order to obtain user-defined URLs.
-"""
-get_test_type_env_var_prefix(::TestType) = error("unknown test type")
-get_test_type_env_var_prefix(::UnitTest) = "CI_UNIT_PKG_URL_"
-get_test_type_env_var_prefix(::IntegrationTest) = "CI_INTG_PKG_URL_"
-
-"""
-    get_test_type_name(::TestType)
-
-Return human readable name of the test type.
-
-# Args
-`::TestType` The test type
-
-# Returns
-
-test name
-"""
-get_test_type_name(::UnitTest) = "unit test"
-get_test_type_name(::IntegrationTest) = "integration test"
-
-Base.show(io::IO, obj::TestType) = print(io, get_test_type_name(obj))
 
 """
     struct TestPackage
@@ -487,32 +449,4 @@ function _add_stage_once!(job_dict::Dict, stage_name::AbstractString)
     return if !(stage_name in job_dict["stages"])
         push!(job_dict["stages"], stage_name)
     end
-end
-
-"""
-    generate_dummy_job_yaml!(job_yaml::Dict)
-
-Generates a GitLab CI dummy job, if required.
-
-# Args
-- `job_yaml::Dict`: Add generated job to this dict.
-- `message::AbstractString`: Message to be displayed in the CI job.
-- `stage_name::AbstractString`: Set stage name if is not a empty string.
-"""
-function generate_dummy_job_yaml!(
-        job_yaml::Dict,
-        message::AbstractString = "This is a dummy job so that the CI does not fail.",
-        stage_name::AbstractString = ""
-    )
-    job_yaml["DummyJob"] = Dict(
-        "image" => "alpine:latest",
-        "interruptible" => true,
-        "script" => ["echo \"$(message)\""],
-    )
-
-    if stage_name != ""
-        job_yaml["DummyJob"]["stage"] = stage_name
-    end
-
-    return nothing
 end

@@ -25,16 +25,16 @@ function main()
     @info "Setup dev environment: $(setup_dev_env)"
 
     tests_configurations = Dict()
-    tests_configurations["unit"] = get_unit_test_configs(args)
+    tests_configurations[UnitTest] = get_unit_test_configs(args)
 
-    info_test_configs("Unit tests", tests_configurations["unit"])
+    info_test_configs(UnitTest, tests_configurations)
 
     is_integ = is_integ_tests(args)
 
     @info "integration tests are $(is_integ ? "enabled" : "disabled")"
 
     # if no tests should be generated, exit early
-    if isempty(tests_configurations["unit"]) && !is_integ
+    if isempty(tests_configurations[UnitTest]) && !is_integ
         exit(0)
     end
 
@@ -61,7 +61,7 @@ function main()
 
     tools_git_repo = get_git_ci_tools_url_branch()
 
-    for (test_type_name, platform) in tests_configurations["unit"]
+    for (julia_version_type_name, platform) in tests_configurations[UnitTest]
         if platform == CPU
             output_yaml = get(job_yamls, "output-cpu", job_yamls["stdout"])
         else
@@ -72,7 +72,7 @@ function main()
             output_yaml,
             test_package,
             setup_dev_env,
-            test_type_name,
+            julia_version_type_name,
             platform,
             tools_git_repo
         )
@@ -92,7 +92,7 @@ function main()
         )
     end
 
-    if !isempty(tests_configurations["unit"])
+    if !isempty(tests_configurations[UnitTest])
         add_unit_test_verify_job_yaml!(
             get(job_yamls, "output-unit-test-verify", job_yamls["stdout"]),
             setup_dev_env,

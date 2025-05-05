@@ -1,6 +1,7 @@
 using Logging
 
 include("../GenericTest/TestType.jl")
+include("../GenericTest/TestType.jl")
 
 """
 Returns all unit tests configurations configured by script arguments and environment variables.
@@ -71,15 +72,17 @@ Print all test configurations via logger.
 - `test_configs::Vector{Tuple{UnitTestType, TestPlatform}}`: Test configurations
 """
 function info_test_configs(
-        test_type_name::AbstractString,
-        test_configs::Vector{Tuple{JuliaVersionType, TestPlatform}}
-    )
-    output = test_type_name * ":\n"
+        test_type::Type{T},
+        test_configs::Dict
+    ) where {T <: TestType}
+    job_configurations::Vector{Tuple{JuliaVersionType, TestPlatform}} = test_configs[test_type]
+
+    output = string(test_type) * ":\n"
     if isempty(test_configs)
         output *= "  no configurations"
     else
-        for (test_type_name, platform) in test_configs
-            output *= "  " * string(test_type_name) * " + " * string(platform) * "\n"
+        for (julia_version_type, platform) in job_configurations
+            output *= "  " * string(julia_version_type) * " + " * string(platform) * "\n"
         end
     end
     return @info output
