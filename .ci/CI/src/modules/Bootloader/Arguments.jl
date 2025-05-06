@@ -300,7 +300,7 @@ function get_unit_test_nightly_baseimage()::String
 end
 
 """
-    get_git_ci_tools_url_branch()::ToolsGitRepo
+    get_git_ci_tools_url_branch()::GitRepoAddress
 
 Returns the URL and the branch of the Git repository for the location where the CI tools are
 located. The default is the dev branch at
@@ -310,10 +310,10 @@ and CI_GIT_CI_TOOLS_BRANCH.
 
 # Return
 
-`ToolsGitRepo`: Contains git url and branch
+`GitRepoAddress`: Contains git url and branch
 
 """
-function get_git_ci_tools_url_branch()::ToolsGitRepo
+function get_git_ci_tools_url_branch()::GitRepoAddress
     url = "https://github.com/QEDjl-project/QuantumElectrodynamics.jl.git"
     branch = "dev"
 
@@ -327,7 +327,7 @@ function get_git_ci_tools_url_branch()::ToolsGitRepo
         @warn "use custom git branch for CI tools: $(branch)"
     end
 
-    return ToolsGitRepo(url, branch)
+    return GitRepoAddress(url, branch)
 end
 
 """

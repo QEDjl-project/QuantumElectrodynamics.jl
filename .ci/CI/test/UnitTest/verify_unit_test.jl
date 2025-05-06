@@ -1,7 +1,7 @@
 @testset "test add_unit_test_verify_job_yaml!() target branch dev" begin
     for git_repo in [
-            CI.ToolsGitRepo("https://github.com/name/repo", "dev"),
-            CI.ToolsGitRepo("foo", "bar"),
+            CI.GitRepoAddress("https://github.com/name/repo", "dev"),
+            CI.GitRepoAddress("foo", "bar"),
         ]
         expected_job = Dict(
             "image" => "julia:1.10",
@@ -41,7 +41,7 @@ end
 
     job_dict = Dict()
     CI.add_unit_test_verify_job_yaml!(
-        job_dict, false, CI.ToolsGitRepo("https://github.com/name/repo", "dev")
+        job_dict, false, CI.GitRepoAddress("https://github.com/name/repo", "dev")
     )
     @test (
         @assert job_dict == expected_job yaml_diff(

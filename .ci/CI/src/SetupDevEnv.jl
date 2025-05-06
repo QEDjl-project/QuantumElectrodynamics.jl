@@ -462,6 +462,18 @@ function set_compat_helper(
     return close(f)
 end
 
+function to_str_custom_urls(urls::Dict{String, String})::String
+    io = IOBuffer()
+    for (index, (pkg_name, url)) in enumerate(urls)
+        if index < length(urls)
+            println(io, "$(pkg_name): $(url)")
+        else
+            print(io, "$(pkg_name): $(url)")
+        end
+    end
+    return String(take!(io))
+end
+
 if abspath(PROGRAM_FILE) == @__FILE__
     try
         test_type::TestType = get_test_type_from_env_var()

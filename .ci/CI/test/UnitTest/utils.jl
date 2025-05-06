@@ -18,11 +18,11 @@ Returns the script section of an unit job.
 
 # Args
 - `setup_dev_env::Bool`: Add SetupDevEnv.jl specific code, if true.
-- `tools_git_repo::CI.ToolsGitRepo`: Contains Git repository URL and branch of the dev tools.
+- `tools_git_repo::CI.GitRepoAddress`: Contains Git repository URL and branch of the dev tools.
 """
 function get_main_unit_job_script_section(
         setup_dev_env::Bool,
-        tools_git_repo::CI.ToolsGitRepo
+        tools_git_repo::CI.GitRepoAddress
     )
     return [
         "apt update && apt install -y git",

@@ -3,7 +3,7 @@
     test_package = CI.TestPackage("QEDfoo", "/path/to/project", "7.0")
     git_url = "http://github.com/name/repo"
     git_branch = "branch"
-    tools_git_repo = CI.ToolsGitRepo(git_url, git_branch)
+    tools_git_repo = CI.GitRepoAddress(git_url, git_branch)
 
     for setup_dev_env in [true, false]
         expected_job = get_generic_unit_job("rc", test_package)
