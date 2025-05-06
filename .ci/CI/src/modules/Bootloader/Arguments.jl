@@ -278,6 +278,29 @@ function get_unit_test_julia_versions()::Vector{String}
         return ["1.10", "1.11", "rc", "nightly"]
     end
 end
+"""
+    get_integration_test_julia_versions()::Vector{String}
+
+Returns the test versions for the integration tests. If the environment variable
+CI_INTEG_TEST_VERSIONS is not set, standard versions are returned. The value of the environment
+variable is a string with the versions separated by commas. The versions are not tested for
+plausibility.
+
+CI_INTEG_TEST_VERSIONS="1.10"
+
+# Returns
+
+- `Vector{String}`: Test versions for the integration tests
+
+"""
+function get_integration_test_julia_versions()::Vector{String}
+    # CI_UNIT_TEST_VERSIONS
+    if haskey(ENV, "CI_INTEG_TEST_VERSIONS")
+        return strip.(split(ENV["CI_INTEG_TEST_VERSIONS"], ","))
+    else
+        return ["1.10"]
+    end
+end
 
 """
     get_unit_test_nightly_baseimage()::String
