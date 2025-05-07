@@ -3,7 +3,7 @@
     test_package = CI.TestPackage("QEDfoo", "/path/to/project", "42.0")
     git_url = "http://github.com/name/repo"
     git_branch = "branch"
-    tools_git_repo = CI.ToolsGitRepo(git_url, git_branch)
+    tools_git_repo = CI.GitRepoAddress(git_url, git_branch)
 
     for version in julia_versions, setup_dev_env in [true, false]
         expected_job = get_generic_unit_job(version, test_package)

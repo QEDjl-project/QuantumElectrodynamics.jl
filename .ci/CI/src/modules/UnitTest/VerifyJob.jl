@@ -2,7 +2,7 @@
     add_unit_test_verify_job_yaml!(
         job_dict::Dict,
         target_branch::AbstractString,
-        tools_git_repo::ToolsGitRepo=ToolsGitRepo(
+        tools_git_repo::GitRepoAddress=GitRepoAddress(
             "https://github.com/QEDjl-project/QuantumElectrodynamics.jl.git", "dev"
         ),
     )
@@ -14,13 +14,13 @@ in the Git commit message.
 - `job_dict::Dict`: Dict in which the new job is added.
 - `setup_dev_env::Bool`: If the value is true, additional job code is generated that allows the dev
     or feature branch versions of the QED dependencies to be used.
-- `tools_git_repo::ToolsGitRepo`: URL and branch of the Git repository from which the CI tools are
+- `tools_git_repo::GitRepoAddress`: URL and branch of the Git repository from which the CI tools are
     cloned in unit test job.
 """
 function add_unit_test_verify_job_yaml!(
         job_dict::Dict,
         setup_dev_env::Bool,
-        tools_git_repo::ToolsGitRepo = ToolsGitRepo(
+        tools_git_repo::GitRepoAddress = GitRepoAddress(
             "https://github.com/QEDjl-project/QuantumElectrodynamics.jl.git", "dev"
         ),
     )

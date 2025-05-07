@@ -19,6 +19,36 @@ function output_paths()::Dict{String, String}
 end
 
 """
+    get_output_job_yaml(job_yamls::Dict, platform::TestPlatform)
+
+The output sink is returned depending on the platform type. For CPU it is “output-cpu” and for CUDA
+or AMDGPU it is “output-gpu”. If a key in `job_yaml` is not set because the generated code is not
+to be written to a file, the sink `stdout` is returned.
+
+# Args
+
+- `job_yaml::Dict`: The job dict with with the different output sinks.
+- `platform::TestPlatform`: Depending on the platform, select the output sink.
+
+# Returns
+
+Output sink (::Dict)
+"""
+function get_output_job_yaml(job_yaml::Dict, platform::TestPlatform)::Dict
+    if !haskey(job_yaml, "stdout")
+        throw(ErrorException("job_yamls has no key stdout"))
+    end
+
+    if platform == CPU
+        return get(job_yaml, "output-cpu", job_yaml["stdout"])
+    elseif (platform == CUDA || platform == AMDGPU)
+        return get(job_yaml, "output-gpu", job_yaml["stdout"])
+    else
+        throw(ErrorException("Unknown platform: $(platform)"))
+    end
+end
+
+"""
     parse_commandline()::Dict{String, Any}
 
 # Return
@@ -278,6 +308,29 @@ function get_unit_test_julia_versions()::Vector{String}
         return ["1.10", "1.11", "rc", "nightly"]
     end
 end
+"""
+    get_integration_test_julia_versions()::Vector{String}
+
+Returns the test versions for the integration tests. If the environment variable
+CI_INTEG_TEST_VERSIONS is not set, standard versions are returned. The value of the environment
+variable is a string with the versions separated by commas. The versions are not tested for
+plausibility.
+
+CI_INTEG_TEST_VERSIONS="1.10"
+
+# Returns
+
+- `Vector{String}`: Test versions for the integration tests
+
+"""
+function get_integration_test_julia_versions()::Vector{String}
+    # CI_UNIT_TEST_VERSIONS
+    if haskey(ENV, "CI_INTEG_TEST_VERSIONS")
+        return strip.(split(ENV["CI_INTEG_TEST_VERSIONS"], ","))
+    else
+        return ["1.10"]
+    end
+end
 
 """
     get_unit_test_nightly_baseimage()::String
@@ -300,7 +353,7 @@ function get_unit_test_nightly_baseimage()::String
 end
 
 """
-    get_git_ci_tools_url_branch()::ToolsGitRepo
+    get_git_ci_tools_url_branch()::GitRepoAddress
 
 Returns the URL and the branch of the Git repository for the location where the CI tools are
 located. The default is the dev branch at
@@ -310,10 +363,10 @@ and CI_GIT_CI_TOOLS_BRANCH.
 
 # Return
 
-`ToolsGitRepo`: Contains git url and branch
+`GitRepoAddress`: Contains git url and branch
 
 """
-function get_git_ci_tools_url_branch()::ToolsGitRepo
+function get_git_ci_tools_url_branch()::GitRepoAddress
     url = "https://github.com/QEDjl-project/QuantumElectrodynamics.jl.git"
     branch = "dev"
 
@@ -327,7 +380,7 @@ function get_git_ci_tools_url_branch()::ToolsGitRepo
         @warn "use custom git branch for CI tools: $(branch)"
     end
 
-    return ToolsGitRepo(url, branch)
+    return GitRepoAddress(url, branch)
 end
 
 """

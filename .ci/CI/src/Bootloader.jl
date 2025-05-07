@@ -18,28 +18,28 @@ function main()
     setup_dev_env::Bool = target_branch != "main"
     package_path = get_project_path(args)
     test_package = get_package_name_version(package_path)
+    pull_request = is_pull_request(get(ENV, "CI_COMMIT_REF_NAME", ""))
 
     @info "Test package name: $(test_package.name)"
     @info "Test package version: $(test_package.version)"
     @info "Test package path: $(test_package.path)"
-    @info "PR target branch: $(target_branch)"
-    @info "Setup dev environment: $(setup_dev_env)"
+    @info "Target branch: $(target_branch)"
+    @info "Is pull request: $(pull_request)"
+    @info "Unit test: setup dev environment: $(setup_dev_env)"
 
     tests_configurations = Dict()
     tests_configurations[UnitTest] = get_unit_test_configs(args)
+    tests_configurations[IntegrationTest] = get_integration_test_configs(args)
 
     info_test_configs(UnitTest, tests_configurations)
-
-    is_integ = is_integ_tests(args)
-
-    @info "integration tests are $(is_integ ? "enabled" : "disabled")"
+    info_test_configs(IntegrationTest, tests_configurations)
 
     # if no tests should be generated, exit early
-    if isempty(tests_configurations[UnitTest]) && !is_integ
+    if isempty(tests_configurations[UnitTest]) && isempty(tests_configurations[IntegrationTest])
         exit(0)
     end
 
-    if !is_cpu_tests(args) && !is_integ && !isnothing(args["output-cpu"])
+    if !is_cpu_tests(args) && !isnothing(args["output-cpu"])
         @error "The output path for CPU tests is set, but CPU tests are not enabled"
         exit(1)
     end
@@ -63,14 +63,7 @@ function main()
     tools_git_repo = get_git_ci_tools_url_branch()
 
     for (julia_version_type_name, platform) in tests_configurations[UnitTest]
-        if platform == CPU
-            output_yaml = get(job_yamls, "output-cpu", job_yamls["stdout"])
-        elseif (platform == CUDA || platform == AMDGPU)
-            output_yaml = get(job_yamls, "output-gpu", job_yamls["stdout"])
-        else
-            throw(ErrorException("Unknown platform: $(platform)"))
-        end
-
+        output_yaml = get_output_job_yaml(job_yamls, platform)
         add_unit_test_job_yaml!(
             output_yaml,
             test_package,
@@ -81,18 +74,77 @@ function main()
         )
     end
 
-    if is_integ
+    if !isempty(tests_configurations[IntegrationTest])
         custom_dependency_urls = CustomDependencyUrls()
-        append_custom_dependency_urls_from_git_message!(custom_dependency_urls)
-        append_custom_dependency_urls_from_env_var!(custom_dependency_urls)
+        if target_branch != "main"
+            append_custom_dependency_urls_from_git_message!(custom_dependency_urls)
+            append_custom_dependency_urls_from_env_var!(custom_dependency_urls)
+        end
 
-        add_integration_test_job_yaml!(
-            get(job_yamls, "output-cpu", job_yamls["stdout"]),
-            test_package,
-            target_branch,
-            custom_dependency_urls.integ,
-            tools_git_repo,
+        integration_test_package_names = get_qed_integration_test_package_names(
+            test_package, custom_dependency_urls.integ
         )
+
+        for (julia_version_type_name, platform) in tests_configurations[IntegrationTest]
+            output_yaml = get_output_job_yaml(job_yamls, platform)
+
+            julia_version_prefix = "_" * replace(julia_version_type_name.version, "." => "_")
+
+
+            for integration_package_name in integration_test_package_names
+                integration_test_repo = GitRepoAddress(
+                    get(
+                        custom_dependency_urls.integ,
+                        integration_package_name,
+                        "https://github.com/QEDjl-project/$(integration_package_name).jl.git"
+                    )
+                )
+
+                add_integration_test_job_yaml!(
+                    output_yaml,
+                    test_package,
+                    true, # setup dev env
+                    false, # can fail
+                    integration_package_name * julia_version_prefix,
+                    integration_test_repo,
+                    julia_version_type_name,
+                    platform,
+                    tools_git_repo
+                )
+
+                # Handles the case of merging in the main branch. If we want to merge in the main branch,
+                # we do it because we want to publish the package. Therefore, we need to be sure that there
+                # is an existing version of the dependent QED packages that works with the new version of
+                # the package we want to release. The integration tests are tested against the development
+                # branch and the release version.
+                #  - The dev branch version must pass, as this means that the latest version of the other
+                #    QED packages is compatible with our release version.
+                #  - The release version integration tests may or may not pass.
+                #    1. If all of these pass, we will not need to increase the minor version of this package.
+                #    2. If they do not all pass, the minor version must be increased and the failing packages
+                #    must also be released later with an updated compat entry.
+                #    In either case the release can proceed, as the released packages will continue to work
+                #    because of their current compat entries.
+                if target_branch == "main" && pull_request
+                    integration_test_release_repo = GitRepoAddress(
+                        "https://github.com/QEDjl-project/$(integration_package_name).jl.git",
+                        "main"
+                    )
+
+                    add_integration_test_job_yaml!(
+                        output_yaml,
+                        test_package,
+                        false, # setup dev env
+                        true, # can fail
+                        integration_package_name * julia_version_prefix * "_release_test",
+                        integration_test_release_repo,
+                        julia_version_type_name,
+                        platform,
+                        tools_git_repo
+                    )
+                end
+            end
+        end
     end
 
     if !isempty(tests_configurations[UnitTest])

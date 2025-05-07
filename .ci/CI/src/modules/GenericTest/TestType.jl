@@ -91,16 +91,63 @@ struct TestPackage
 end
 
 """
-    struct ToolsGitRepo
+    struct GitRepoAddress
 
-Url and branch of the Git repository QuantumElectrodynamics.jl, which is to be used in the CI jobs.
+Url and branch of the Git repository.
 
 # Members
 - `url::String`: Git repository URL.
 - `branch::String`: Git branch.
 
 """
-struct ToolsGitRepo
+struct GitRepoAddress
     url::String
     branch::String
+
+    GitRepoAddress(url::AbstractString, branch::AbstractString) = new(url, branch)
+
+    """
+        GitRepoAddress(julia_repo_address::AbstractString)
+
+    # Args
+    - `julia_repo_address::AbstractString`: The repository address is parsed. Two different
+        patterns are permitted.
+
+    1. Pure Git repository URL, e.g. www.github.com/user/repo. In this case, the member `url` is
+        set to the specified URL and the member `branch` is set to `dev`.
+    2. URL of the Git repository and name of the branch. The branch name is appended to the URL
+        with a `#branchname`, e.g. www.github.com/user/repo#featurebranch.
+    """
+    function GitRepoAddress(julia_repo_address::AbstractString)
+        split_url = split(julia_repo_address, "#")
+
+        if length(split_url) > 2
+            error("ill-formed url: $(url)")
+        end
+
+        url = split_url[1]
+        branch = "dev"
+        if length(split_url) > 1
+            branch = split_url[2]
+        end
+
+        return new(url, branch)
+    end
+end
+
+"""
+    struct CustomDependencyUrls
+
+Stores custom repository URLs for QED packages which are dependency of the project to be tested.
+
+# Members
+- `unit::Dict{String,String}`: Custom dependencies of the unit tests
+- `integ::Dict{String,String}`: Custom dependencies of the integration tests
+
+"""
+struct CustomDependencyUrls
+    unit::Dict{String, String}
+    integ::Dict{String, String}
+
+    CustomDependencyUrls() = new(Dict{String, String}(), Dict{String, String}())
 end

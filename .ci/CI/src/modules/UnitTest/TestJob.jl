@@ -5,7 +5,7 @@
         setup_dev_env::Bool,
         unit_test_type::TestType,
         test_platform::TestPlatform = CPU,
-        tools_git_repo::ToolsGitRepo = ToolsGitRepo(
+        tools_git_repo::GitRepoAddress = GitRepoAddress(
             "https://github.com/QEDjl-project/QuantumElectrodynamics.jl.git", "dev"
         )
     )
@@ -21,7 +21,7 @@ contains all properties to be directly translated to GitLab CI yaml.
 - `unit_test_type::TestType`: Depending on the type, slightly different unit tests are generated.
     Read the documentation of the concrete type to get more information.
 - `test_platform::TestPlatform`: Set target platform test, e.g. CPU, Nvidia GPU or AMD GPU.
-- `tools_git_repo::ToolsGitRepo`: URL and branch of the Git repository from which the CI tools are
+- `tools_git_repo::GitRepoAddress`: URL and branch of the Git repository from which the CI tools are
     cloned in unit test job.
 """
 function add_unit_test_job_yaml! end
@@ -32,7 +32,7 @@ function add_unit_test_job_yaml!(
         setup_dev_env::Bool,
         unit_test_type::ReleaseVersion,
         test_platform::TestPlatform = CPU,
-        tools_git_repo::ToolsGitRepo = ToolsGitRepo(
+        tools_git_repo::GitRepoAddress = GitRepoAddress(
             "https://github.com/QEDjl-project/QuantumElectrodynamics.jl.git", "dev"
         )
     )
@@ -68,7 +68,7 @@ function add_unit_test_job_yaml!(
         setup_dev_env::Bool,
         unit_test_type::ReleaseCandidate,
         test_platform::TestPlatform = CPU,
-        tools_git_repo::ToolsGitRepo = ToolsGitRepo(
+        tools_git_repo::GitRepoAddress = GitRepoAddress(
             "https://github.com/QEDjl-project/QuantumElectrodynamics.jl.git", "dev"
         )
     )
@@ -94,7 +94,7 @@ function add_unit_test_job_yaml!(
         setup_dev_env::Bool,
         unit_test_type::Nightly,
         test_platform::TestPlatform = CPU,
-        tools_git_repo::ToolsGitRepo = ToolsGitRepo(
+        tools_git_repo::GitRepoAddress = GitRepoAddress(
             "https://github.com/QEDjl-project/QuantumElectrodynamics.jl.git", "dev"
         )
     )
@@ -148,7 +148,7 @@ end
         test_package::TestPackage,
         setup_dev_env::Bool,
         test_platform::TestPlatform,
-        tools_git_repo::ToolsGitRepo,
+        tools_git_repo::GitRepoAddress,
     )
 
 Creates a normal unit test job for a specific Julia version.
@@ -159,7 +159,7 @@ Creates a normal unit test job for a specific Julia version.
 - `setup_dev_env::Bool`: If the value is true, additional job code is generated that allows the dev
     or feature branch versions of the QED dependencies to be used.
 - `test_platform::TestPlatform`: Set target platform test, e.g. CPU, Nvidia GPU or AMD GPU.
-- `tools_git_repo::ToolsGitRepo`: URL and branch of the Git repository from which the CI tools are
+- `tools_git_repo::GitRepoAddress`: URL and branch of the Git repository from which the CI tools are
     cloned in unit test job.
 
 Return
@@ -171,7 +171,7 @@ function _get_normal_unit_test(
         test_package::TestPackage,
         setup_dev_env::Bool,
         test_platform::TestPlatform,
-        tools_git_repo::ToolsGitRepo,
+        tools_git_repo::GitRepoAddress,
     )::Dict
     job_yaml = Dict()
     job_yaml["stage"] = "unit-test"

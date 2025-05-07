@@ -61,6 +61,54 @@ function get_unit_test_configs(args::Dict{String, Any})::Vector{Tuple{JuliaVersi
 end
 
 """
+Returns all integration tests configurations configured by script arguments and environment variables.
+"""
+function get_integration_test_configs(args::Dict{String, Any})::Vector{Tuple{JuliaVersionType, TestPlatform}}
+    integ_test_types = Vector{Tuple{JuliaVersionType, TestPlatform}}()
+
+    if !is_integ_tests(args)
+        return integ_test_types
+    end
+
+    for julia_version in get_integration_test_julia_versions()
+        if julia_version == "nightly" || julia_version == "rc"
+            continue
+        end
+        # normal, release Julia versions
+        if is_cpu_tests(args)
+            push!(
+                integ_test_types,
+                (
+                    ReleaseVersion(julia_version),
+                    CPU,
+                )
+            )
+        end
+        # TODO: comming soon ;-)
+        # if is_cuda_tests(args)
+        #     push!(
+        #         integ_test_types,
+        #         (
+        #             ReleaseVersion(julia_version),
+        #             CUDA,
+        #         )
+        #     )
+        # end
+
+        # if is_amdgpu_tests(args)
+        #     push!(
+        #         integ_test_types,
+        #         (
+        #             ReleaseVersion(julia_version),
+        #             AMDGPU,
+        #         )
+        #     )
+        # end
+    end
+    return integ_test_types
+end
+
+"""
 Print all test configurations via logger.
 
 # Args
@@ -75,7 +123,7 @@ function info_test_configs(
     job_configurations::Vector{Tuple{JuliaVersionType, TestPlatform}} = test_configs[test_type]
 
     output = string(test_type) * ":\n"
-    if isempty(test_configs)
+    if isempty(job_configurations)
         output *= "  no configurations"
     else
         for (julia_version_type, platform) in job_configurations

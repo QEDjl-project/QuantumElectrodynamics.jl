@@ -23,8 +23,9 @@ using LibGit2
 
 # workaround if it is included in CI.jl for testing purpose
 if abspath(PROGRAM_FILE) == @__FILE__
-    include("modules/GenericTest.jl")
+    include("modules/GenericTest/TestType.jl")
     include("modules/Utils.jl")
+    include("modules/IntegTest/Graph.jl")
 end
 
 """
@@ -460,6 +461,18 @@ function set_compat_helper(
 
     TOML.print(f, project_toml)
     return close(f)
+end
+
+function to_str_custom_urls(urls::Dict{String, String})::String
+    io = IOBuffer()
+    for (index, (pkg_name, url)) in enumerate(urls)
+        if index < length(urls)
+            println(io, "$(pkg_name): $(url)")
+        else
+            print(io, "$(pkg_name): $(url)")
+        end
+    end
+    return String(take!(io))
 end
 
 if abspath(PROGRAM_FILE) == @__FILE__
