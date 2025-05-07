@@ -122,7 +122,7 @@ struct GitRepoAddress
         split_url = split(julia_repo_address, "#")
 
         if length(split_url) > 2
-            error("Ill formed url: $(url)")
+            error("ill-formed url: $(url)")
         end
 
         url = split_url[1]

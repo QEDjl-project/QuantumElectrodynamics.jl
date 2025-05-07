@@ -88,6 +88,9 @@ function main()
         for (julia_version_type_name, platform) in tests_configurations[IntegrationTest]
             output_yaml = get_output_job_yaml(job_yamls, platform)
 
+            julia_version_prefix = "_" * replace(julia_version_type_name.version, "." => "_")
+
+
             for integration_package_name in integration_test_package_names
                 integration_test_repo = GitRepoAddress(
                     get(
@@ -102,7 +105,7 @@ function main()
                     test_package,
                     true, # setup dev env
                     false, # can fail
-                    integration_package_name,
+                    integration_package_name * julia_version_prefix,
                     integration_test_repo,
                     julia_version_type_name,
                     platform,
@@ -133,7 +136,7 @@ function main()
                         test_package,
                         false, # setup dev env
                         true, # can fail
-                        integration_package_name * "_release_test",
+                        integration_package_name * julia_version_prefix * "_release_test",
                         integration_test_release_repo,
                         julia_version_type_name,
                         platform,

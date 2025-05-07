@@ -73,38 +73,37 @@ function get_integration_test_configs(args::Dict{String, Any})::Vector{Tuple{Jul
     for julia_version in get_integration_test_julia_versions()
         if julia_version == "nightly" || julia_version == "rc"
             continue
-        else
-            # normal, release Julia versions
-            if is_cpu_tests(args)
-                push!(
-                    integ_test_types,
-                    (
-                        ReleaseVersion(julia_version),
-                        CPU,
-                    )
-                )
-            end
-            # TODO: comming soon ;-)
-            # if is_cuda_tests(args)
-            #     push!(
-            #         integ_test_types,
-            #         (
-            #             ReleaseVersion(julia_version),
-            #             CUDA,
-            #         )
-            #     )
-            # end
-
-            # if is_amdgpu_tests(args)
-            #     push!(
-            #         integ_test_types,
-            #         (
-            #             ReleaseVersion(julia_version),
-            #             AMDGPU,
-            #         )
-            #     )
-            # end
         end
+        # normal, release Julia versions
+        if is_cpu_tests(args)
+            push!(
+                integ_test_types,
+                (
+                    ReleaseVersion(julia_version),
+                    CPU,
+                )
+            )
+        end
+        # TODO: comming soon ;-)
+        # if is_cuda_tests(args)
+        #     push!(
+        #         integ_test_types,
+        #         (
+        #             ReleaseVersion(julia_version),
+        #             CUDA,
+        #         )
+        #     )
+        # end
+
+        # if is_amdgpu_tests(args)
+        #     push!(
+        #         integ_test_types,
+        #         (
+        #             ReleaseVersion(julia_version),
+        #             AMDGPU,
+        #         )
+        #     )
+        # end
     end
     return integ_test_types
 end

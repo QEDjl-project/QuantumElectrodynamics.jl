@@ -33,7 +33,9 @@ function _git_clone(
     )
     @info "clone repository: $(repo_url)#$(branch) -> $(directory)"
     return with_logger(debuglogger) do
-        try
+        # if available use `git` executable because it allows to set the clone depth
+        # it's a performance optimization
+        if !isnothing(Sys.which("git"))
             @debug "git clone --depth 1 -b $(branch) $(repo_url) $directory"
             run(
                 pipeline(
@@ -42,7 +44,7 @@ function _git_clone(
                     stderr = devnull,
                 ),
             )
-        catch
+        else
             @debug "LibGit2.clone($(repo_url), $(directory); branch=$(branch))"
             LibGit2.clone(repo_url, directory; branch = branch)
         end
