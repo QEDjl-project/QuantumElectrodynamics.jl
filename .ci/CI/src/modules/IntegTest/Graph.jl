@@ -77,7 +77,7 @@ end
 
 
 """
-    _build_qed_dependency_graph!(
+    build_qed_dependency_graph!(
         repository_base_path::AbstractString,
         compat_changes::Dict{String,String},
         custom_urls::Dict{String,String}=Dict{String,String}(),
@@ -108,7 +108,7 @@ Side effects of the function are:
 Dict with the dependency graph. A leaf node has an empty dict. Duplications of dependencies are
 possible.
 """
-function _build_qed_dependency_graph!(
+function build_qed_dependency_graph!(
         repository_base_path::AbstractString,
         compat_changes::Dict{String, String},
         custom_urls::Dict{String, String} = Dict{String, String}(),
@@ -231,7 +231,7 @@ function get_qed_integration_test_package_names(
     qed_path = mktempdir(; cleanup = false)
     compat_changes = Dict{String, String}()
 
-    pkg_tree = _build_qed_dependency_graph!(qed_path, compat_changes, custom_urls)
+    pkg_tree = build_qed_dependency_graph!(qed_path, compat_changes, custom_urls)
     return IntegrationTests.depending_projects(
         test_package.name, r"^QED*|^QuantumElectrodynamics$", pkg_tree
     )

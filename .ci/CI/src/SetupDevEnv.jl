@@ -23,9 +23,9 @@ using LibGit2
 
 # workaround if it is included in CI.jl for testing purpose
 if abspath(PROGRAM_FILE) == @__FILE__
-    include("modules/GenericTest.jl")
+    include("modules/GenericTest/TestType.jl")
     include("modules/Utils.jl")
-    include("modules/IntegTest.jl")
+    include("modules/IntegTest/Graph.jl")
 end
 
 """
