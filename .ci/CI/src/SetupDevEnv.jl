@@ -25,6 +25,7 @@ using LibGit2
 if abspath(PROGRAM_FILE) == @__FILE__
     include("modules/GenericTest.jl")
     include("modules/Utils.jl")
+    include("modules/IntegTest.jl")
 end
 
 """
