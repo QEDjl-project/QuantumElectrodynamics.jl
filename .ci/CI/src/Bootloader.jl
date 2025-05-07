@@ -63,14 +63,7 @@ function main()
     tools_git_repo = get_git_ci_tools_url_branch()
 
     for (julia_version_type_name, platform) in tests_configurations[UnitTest]
-        if platform == CPU
-            output_yaml = get(job_yamls, "output-cpu", job_yamls["stdout"])
-        elseif (platform == CUDA || platform == AMDGPU)
-            output_yaml = get(job_yamls, "output-gpu", job_yamls["stdout"])
-        else
-            throw(ErrorException("Unknown platform: $(platform)"))
-        end
-
+        output_yaml = get_output_job_yaml(job_yamls, platform)
         add_unit_test_job_yaml!(
             output_yaml,
             test_package,
@@ -93,13 +86,7 @@ function main()
         )
 
         for (julia_version_type_name, platform) in tests_configurations[IntegrationTest]
-            if platform == CPU
-                output_yaml = get(job_yamls, "output-cpu", job_yamls["stdout"])
-            elseif (platform == CUDA || platform == AMDGPU)
-                output_yaml = get(job_yamls, "output-gpu", job_yamls["stdout"])
-            else
-                throw(ErrorException("Unknown platform: $(platform)"))
-            end
+            output_yaml = get_output_job_yaml(job_yamls, platform)
 
             for integration_package_name in integration_test_package_names
                 integration_test_repo = GitRepoAddress(

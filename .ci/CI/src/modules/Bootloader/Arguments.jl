@@ -19,6 +19,36 @@ function output_paths()::Dict{String, String}
 end
 
 """
+    get_output_job_yaml(job_yamls::Dict, platform::TestPlatform)
+
+The output sink is returned depending on the platform type. For CPU it is “output-cpu” and for CUDA
+or AMDGPU it is “output-gpu”. If a key in `job_yaml` is not set because the generated code is not
+to be written to a file, the sink `stdout` is returned.
+
+# Args
+
+- `job_yaml::Dict`: The job dict with with the different output sinks.
+- `platform::TestPlatform`: Depending on the platform, select the output sink.
+
+# Returns
+
+Output sink (::Dict)
+"""
+function get_output_job_yaml(job_yaml::Dict, platform::TestPlatform)::Dict
+    if !haskey(job_yaml, "stdout")
+        throw(ErrorException("job_yamls has no key stdout"))
+    end
+
+    if platform == CPU
+        return get(job_yaml, "output-cpu", job_yaml["stdout"])
+    elseif (platform == CUDA || platform == AMDGPU)
+        return get(job_yaml, "output-gpu", job_yaml["stdout"])
+    else
+        throw(ErrorException("Unknown platform: $(platform)"))
+    end
+end
+
+"""
     parse_commandline()::Dict{String, Any}
 
 # Return
