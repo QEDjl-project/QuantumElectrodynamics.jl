@@ -10,6 +10,40 @@ include("modules/Bootloader/JobPrinter.jl")
 using IntegrationTests
 using Logging
 
+"""
+    write_jobs!(job_yamls::Dict{String, Dict}, args::Dict{String, Any})
+
+Write CI jobs to stdout or file. If a file output is empty, generate dummy job.
+
+# Args
+- `job_yamls::Dict{String, Dict}`: dict with CI jobs
+- `args::Dict{String, Any}`: Script arguments to get output path for file output.
+"""
+function write_jobs!(job_yamls::Dict{String, Dict}, args::Dict{String, Any})
+    if !isempty(job_yamls["stdout"])
+        print_job_yaml(job_yamls["stdout"], stdout)
+    end
+
+    # If the output sink is a file for a child pipeline and there is no CI job defined,
+    # add dummy job that the CI pipeline does not fail.
+    for output_name in keys(job_yamls)
+        if output_name != "stdout"
+            generate_dummy_job_yaml!(job_yamls[output_name])
+        end
+    end
+
+    # if defined, write the different job yamls to the different output files
+    for output_name in keys(output_paths())
+        if haskey(job_yamls, output_name)
+            open(args[output_name], "w") do out
+                print_job_yaml(job_yamls[output_name], out)
+            end
+        end
+    end
+
+    return nothing
+end
+
 # use main function to avoid to define global variables
 function main()
     args = parse_commandline()
@@ -34,21 +68,6 @@ function main()
     info_test_configs(UnitTest, tests_configurations)
     info_test_configs(IntegrationTest, tests_configurations)
 
-    # if no tests should be generated, exit early
-    if isempty(tests_configurations[UnitTest]) && isempty(tests_configurations[IntegrationTest])
-        exit(0)
-    end
-
-    if !is_cpu_tests(args) && !isnothing(args["output-cpu"])
-        @error "The output path for CPU tests is set, but CPU tests are not enabled"
-        exit(1)
-    end
-
-    if !is_cuda_tests(args) && !is_amdgpu_tests(args) && !isnothing(args["output-gpu"])
-        @error "The output path for GPU tests is set, but GPU tests are not enabled"
-        exit(1)
-    end
-
     # the "stdout" entry is required, otherwise
     # `get(job_yamls, "<name>", job_yamls["stdout"])` is not working
     # for unknown reason, job_yamls["stdout"] is accessed also in the case,
@@ -59,6 +78,17 @@ function main()
             job_yamls[output_name] = Dict()
         end
     end
+
+    # if no tests should be generated, exit early
+    if isempty(tests_configurations[UnitTest]) && isempty(tests_configurations[IntegrationTest])
+        # Special case: The user defined file output for child pipelines.
+        # It is not allowed to use an empty file for child pipeline. Therefore generated dummy jobs.
+        if keys(job_yamls) != ["stdout"]
+            write_jobs!(job_yamls, args)
+        end
+        exit(0)
+    end
+
 
     tools_git_repo = get_git_ci_tools_url_branch()
 
@@ -162,20 +192,8 @@ function main()
         )
     end
 
-    if !isempty(job_yamls["stdout"])
-        print_job_yaml(job_yamls["stdout"], stdout)
-    end
-
-    # if defined, write the different job yamls to the different output files
-    for output_name in keys(output_paths())
-        if haskey(job_yamls, output_name)
-            open(args[output_name], "w") do out
-                print_job_yaml(job_yamls[output_name], out)
-            end
-        end
-    end
-
-    return nothing
+    write_jobs!(job_yamls, args)
+    return exit(0)
 end
 
 # TODO: if Julia 1.11 is minimum, replace it it with: function (@main)(args)
