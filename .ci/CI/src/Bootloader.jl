@@ -52,7 +52,16 @@ function main()
     setup_dev_env::Bool = target_branch != "main"
     package_path = get_project_path(args)
     test_package = get_package_name_version(package_path)
-    pull_request = is_pull_request(get(ENV, "CI_COMMIT_REF_NAME", ""))
+
+    # TOOD: move detecting if is a pull request from environment variable CI_COMMIT_REF_NAME
+    # in an extra script
+    # Workaround: check if environment variable `--pr` is set to override environment variable
+    # CI_COMMIT_REF_NAME
+    if "--pr" in ARGS
+        pull_request = args["pr"]
+    else
+        pull_request = is_pull_request(get(ENV, "CI_COMMIT_REF_NAME", ""))
+    end
 
     @info "Test package name: $(test_package.name)"
     @info "Test package version: $(test_package.version)"
