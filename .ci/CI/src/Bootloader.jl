@@ -27,7 +27,7 @@ function write_jobs!(job_yamls::Dict{String, Dict}, args::Dict{String, Any})
     # If the output sink is a file for a child pipeline and there is no CI job defined,
     # add dummy job that the CI pipeline does not fail.
     for output_name in keys(job_yamls)
-        if output_name != "stdout"
+        if output_name != "stdout" && isempty(job_yamls[output_name])
             generate_dummy_job_yaml!(job_yamls[output_name])
         end
     end
