@@ -4,7 +4,7 @@
 Adding instructions to a CI job to set up a container environment with Julia and ROCm installation.
 
 # Args
-- `job_yaml::Dict:` Dict in which the new job is added.
+- `job_yaml::Dict`: Dict in which the new job is added.
 - `unit_test_type::ReleaseVersion`: Julia version to be installed.
 """
 function _add_julia_rocm_environment!(job_yaml::Dict, unit_test_type::ReleaseVersion)
