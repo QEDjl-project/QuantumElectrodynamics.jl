@@ -15,6 +15,10 @@ All environment variables are optional or have an alternative script argument. P
 - **CI_COMMIT_MESSAGE**: Contains the git message. If a line begins with `CI_UNIT_PKG_URL` or `CI_INTG_PKG_URL_`, the same function is triggered as setting the environment variable `CI_UNIT_PKG_URL_<QED_PACKAGE_NAME>` or `CI_INTG_PKG_URL_<QED_PACKAGE_NAME>`.
 - **CI_UNIT_TEST_VERSIONS**: Set the Julia versions for the unit tests (e.g: `CI_UNIT_TEST_VERSIONS=1.11, 1.12, rc, nightly`).
 - **CI_INTEG_TEST_VERSIONS**: Set the Julia versions for the integration tests (e.g: `CI_INTEG_TEST_VERSIONS=1.11, 1.12, rc, nightly`).
+- **CI_ENABLE_CPU_TESTS**: Enable or disable generating unit tests for CPU.
+- **CI_ENABLE_CUDA_TESTS**: Enable or disable generating unit tests for Nvidia GPU.
+- **CI_ENABLE_AMDGPU_TESTS**: Enable or disable generating unit tests for AMD GPU.
+- **CI_ENABLE_INTEG_TESTS**: Enable or disable generating integration tests. Depending the enabled unit tests, integration tests for CPU, Nvidia and AMD GPU are generated.
 
 You can set the environment variables in two different ways:
 
