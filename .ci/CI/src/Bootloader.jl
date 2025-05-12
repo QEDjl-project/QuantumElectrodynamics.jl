@@ -90,6 +90,13 @@ function main()
 
             julia_version_prefix = "_" * replace(julia_version_type_name.version, "." => "_")
 
+            if platform == CUDA
+                julia_version_prefix = "_cuda" * julia_version_prefix
+            end
+
+            if platform == AMDGPU
+                julia_version_prefix = "_amdgpu" * julia_version_prefix
+            end
 
             for integration_package_name in integration_test_package_names
                 integration_test_repo = GitRepoAddress(

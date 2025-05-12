@@ -51,7 +51,7 @@ function add_integration_test_job_yaml!(
             "https://github.com/QEDjl-project/QuantumElectrodynamics.jl.git", "dev"
         )
     )
-    if test_platform in [CUDA, AMDGPU, ONEAPI, METAL]
+    if test_platform in [ONEAPI, METAL]
         throw(ArgumentError("argument test_platform not implemented for $(test_platform)"))
     end
 
@@ -94,9 +94,26 @@ function add_integration_test_job_yaml!(
             "CI_TEST_TYPE" => "integ",
         ),
         "interruptible" => true,
-        "tags" => ["cpuonly"],
         "script" => script,
     )
+
+    if test_platform == AMDGPU
+        _add_julia_rocm_environment!(current_job_yaml, integration_test_type)
+    end
+
+    if test_platform == CPU
+        current_job_yaml["tags"] = ["cpuonly"]
+    elseif test_platform == CUDA
+        current_job_yaml["tags"] = ["cuda", "x86_64"]
+    elseif test_platform == AMDGPU
+        current_job_yaml["tags"] = ["rocm", "x86_64"]
+    else
+        throw(
+            ArgumentError(
+                "test_platform argument with value $(test_platform) not supported"
+            ),
+        )
+    end
 
     if can_fail
         current_job_yaml["allow_failure"] = true

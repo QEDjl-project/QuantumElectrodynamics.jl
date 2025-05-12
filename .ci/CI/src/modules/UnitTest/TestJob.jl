@@ -46,14 +46,7 @@ function add_unit_test_job_yaml!(
     )
 
     if test_platform == AMDGPU
-        job_yaml["image"] = "rocm/dev-ubuntu-24.04:6.2.4-complete"
-        job_yaml["before_script"] = [
-            "curl -fsSL https://install.julialang.org | sh -s -- -y -p /julia",
-            "export PATH=/julia/bin:\$PATH",
-            "echo \$PATH",
-            "juliaup add $(unit_test_type.version)",
-            "juliaup default $(unit_test_type.version)",
-        ]
+        _add_julia_rocm_environment!(job_yaml, unit_test_type)
     end
 
     job_name = "unit_test_julia_$(lowercase(string(test_platform)))_$(replace(unit_test_type.version, "." => "_"))"
