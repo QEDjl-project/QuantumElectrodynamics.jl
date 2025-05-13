@@ -1,6 +1,9 @@
 stages:
   - unit-test
+  - integration-test
   - verify-unit-test-deps
+
+include: .ci/bootloader_integration_tests.yml
 
 .untit_test_template:
   stage: unit-test
