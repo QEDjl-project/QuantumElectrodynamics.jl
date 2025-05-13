@@ -75,7 +75,10 @@ function parse_commandline()::Dict{String, Any}
         help = "If target branch is set, does not read the target branch from a GitHub Pull Request which is set via environment variable `CI_COMMIT_REF_NAME`."
         arg_type = String
         "--pr"
-        help = "Generate jobs for a pull request."
+        help = "Generate jobs for a pull request. If not set, the value of the environment variable CI_COMMIT_REF_NAME decides if it is pull request or not."
+        action = :store_true
+        "--no-pr"
+        help = "Generate jobs for a normal commit. If not set, the value of the environment variable CI_COMMIT_REF_NAME decides if it is pull request or not."
         action = :store_true
         "--project-path"
         help = "Set the path to the package folder of the package to be tested. Can also be set via the environment variable `CI_PROJECT_DIR`."

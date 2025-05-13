@@ -53,12 +53,18 @@ function main()
     package_path = get_project_path(args)
     test_package = get_package_name_version(package_path)
 
+    if "--pr" in ARGS && "--no-pr" in ARGS
+        throw(ErrorException("It is not allowed to set the arguments --pr and --no-pr at the same time."))
+    end
+
     # TOOD: move detecting if is a pull request from environment variable CI_COMMIT_REF_NAME
     # in an extra script
-    # Workaround: check if environment variable `--pr` is set to override environment variable
+    # Workaround: check if environment variable `--pr` or `--no-pr` is set to override environment variable
     # CI_COMMIT_REF_NAME
     if "--pr" in ARGS
-        pull_request = args["pr"]
+        pull_request = true
+    elseif "--no-pr" in ARGS
+        pull_request = false
     else
         pull_request = is_pull_request(get(ENV, "CI_COMMIT_REF_NAME", ""))
     end

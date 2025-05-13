@@ -4,6 +4,7 @@
     - julia --project=. src/Bootloader.jl
       --project-path ../../QEDcore
       --target-branch dev
+      --no-pr
       --cuda --amdgpu > output/test1/out.yaml
     #    Unit tests are generated
     - grep -q output/test1/out.yaml -e unit_test
@@ -44,6 +45,7 @@
     - julia --project=. src/Bootloader.jl
       --project-path ../../QEDcore
       --target-branch main
+      --no-pr
       --cuda --amdgpu
       --output-cpu=output/test3/cpu.yaml
       --output-gpu=output/test3/gpu.yaml
