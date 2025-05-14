@@ -95,6 +95,10 @@ trigger_job:
     # use Bootloader.jl code of the pull request
     CI_GIT_CI_TOOLS_URL: "${CI_PROJECT_URL}.git"
     CI_GIT_CI_TOOLS_BRANCH: $CI_COMMIT_REF_NAME
+    # need to enable generating test jobs for a pull request by hand because pipeline is triggered
+    # by other project and not a pull request (automatic detection mechanism does not work)
+    # use CI_QED_IS_PR instead CI_ENABLE_INTEG_TESTS to simulate behavior of pull request
+    CI_QED_IS_PR: "ON"
   trigger:
     project: hzdr/qedjl-project/qedcore.jl
     strategy: depend

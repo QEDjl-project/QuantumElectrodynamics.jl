@@ -61,7 +61,15 @@ function main()
     # in an extra script
     # Workaround: check if environment variable `--pr` or `--no-pr` is set to override environment variable
     # CI_COMMIT_REF_NAME
-    if "--pr" in ARGS
+    if haskey(ENV, "CI_QED_IS_PR")
+        if ENV["CI_QED_IS_PR"] == "ON"
+            pull_request = true
+        elseif ENV["CI_QED_IS_PR"] == "OFF"
+            pull_request = false
+        else
+            throw(ErrorException("Only \"ON\" or \"OFF\" allowed for CI_QED_IS_PR"))
+        end
+    elseif "--pr" in ARGS
         pull_request = true
     elseif "--no-pr" in ARGS
         pull_request = false
@@ -78,7 +86,7 @@ function main()
 
     tests_configurations = Dict()
     tests_configurations[UnitTest] = get_unit_test_configs(args)
-    tests_configurations[IntegrationTest] = get_integration_test_configs(args)
+    tests_configurations[IntegrationTest] = get_integration_test_configs(args, pull_request)
 
     info_test_configs(UnitTest, tests_configurations)
     info_test_configs(IntegrationTest, tests_configurations)
