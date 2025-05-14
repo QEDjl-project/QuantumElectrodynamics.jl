@@ -8,13 +8,12 @@
       --cuda --amdgpu > output/test1/out.yaml
     #    Unit tests are generated
     - grep -q output/test1/out.yaml -e unit_test
-    #    Integration tests are generated
-    - grep -q output/test1/out.yaml -e integration_test
+    #    No integration tests should be generated
+    - |-
+      [ $(grep output/test1/out.yaml -c -e ^integration_test) -eq 0 ]
     #    GPU tests are generated
     - grep output/test1/out.yaml -e unit_test | grep -q -e cuda
     - grep output/test1/out.yaml -e unit_test | grep -q -e amdgpu
-    - grep output/test1/out.yaml -e integration_test | grep -q -e cuda
-    - grep output/test1/out.yaml -e integration_test | grep -q -e amdgpu
     #    check if VerifyEnv.jl is used
     - grep -q output/test1/out.yaml -e "VerifyEnv.jl"
 
@@ -29,7 +28,6 @@
     #    Unit tests are generated
     - grep -q output/test2/out.yaml -e unit_test
     #    Integration tests are generated
-    #    TODO: if issue #102 is solved, no integration test should be generated
     - grep -q output/test2/out.yaml -e integration_test
     #    GPU tests are generated
     - grep output/test2/out.yaml -e unit_test | grep -q -e cuda
@@ -53,23 +51,16 @@
     #    Unit tests are generated
     - grep -q output/test3/cpu.yaml -e unit_test
     - grep -q output/test3/gpu.yaml -e unit_test
-    #    Integration tests are generated
-    #    TODO: if issue #102 is solved, no integration test should be generated
-    - grep -q output/test3/cpu.yaml -e integration_test
+        #    No integration tests should be generated
     - |-
-      [ $(grep output/test3/cpu.yaml -e ^integration_test | grep -c "_release_test") -eq 0 ]
-    - grep -q output/test3/gpu.yaml -e integration_test
+      [ $(grep output/test3/cpu.yaml -c -e ^integration_test) -eq 0 ]
     - |-
-      [ $(grep output/test3/gpu.yaml -e ^integration_test | grep -c "_release_test") -eq 0 ]
+      [ $(grep output/test3/gpu.yaml -c -e ^integration_test) -eq 0 ]
     #    GPU tests are generated
     - grep output/test3/gpu.yaml -e unit_test | grep -q -e cuda
     - grep output/test3/gpu.yaml -e unit_test | grep -q -e amdgpu
     - |-
       [ $(grep output/test3/cpu.yaml -e ^unit_test | grep -c "amdgpu") -eq 0 ]
-    - grep output/test3/gpu.yaml -e integration_test | grep -q -e cuda
-    - grep output/test3/gpu.yaml -e integration_test | grep -q -e amdgpu
-    - |-
-      [ $(grep output/test3/cpu.yaml -e ^integration_test | grep -c "cuda") -eq 0 ]
     #    check if VerifyEnv.jl is not used
     - |-
       [ $(grep output/test3/verify.yaml -c -e VerifyEnv.jl) -eq 0 ]

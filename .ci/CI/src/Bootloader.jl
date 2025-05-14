@@ -78,7 +78,7 @@ function main()
 
     tests_configurations = Dict()
     tests_configurations[UnitTest] = get_unit_test_configs(args)
-    tests_configurations[IntegrationTest] = get_integration_test_configs(args)
+    tests_configurations[IntegrationTest] = get_integration_test_configs(args, pull_request)
 
     info_test_configs(UnitTest, tests_configurations)
     info_test_configs(IntegrationTest, tests_configurations)

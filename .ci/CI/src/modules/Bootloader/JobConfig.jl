@@ -63,8 +63,16 @@ end
 """
 Returns all integration tests configurations configured by script arguments and environment variables.
 """
-function get_integration_test_configs(args::Dict{String, Any})::Vector{Tuple{JuliaVersionType, TestPlatform}}
+function get_integration_test_configs(
+        args::Dict{String, Any},
+        # TODO: remove extra argument, if `is_pull_request` does not depend on `CI_COMMIT_REF_NAME` any more
+        is_pr::Bool
+    )::Vector{Tuple{JuliaVersionType, TestPlatform}}
     integ_test_types = Vector{Tuple{JuliaVersionType, TestPlatform}}()
+
+    if !is_pr
+        return integ_test_types
+    end
 
     if !is_integ_tests(args)
         return integ_test_types
