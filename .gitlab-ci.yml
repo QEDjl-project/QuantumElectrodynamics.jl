@@ -1,6 +1,7 @@
 stages:
   - unit-test
   - integration-test
+  - qedcore-integration-test
   - verify-unit-test-deps
 
 include: .ci/bootloader_integration_tests.yml
@@ -87,3 +88,16 @@ verify-unit-test-deps:
   interruptible: true
   tags:
     - cpuonly
+
+trigger_job:
+  stage: qedcore-integration-test
+  variables:
+    # use Bootloader.jl code of the pull request
+    CI_GIT_CI_TOOLS_URL: "${CI_PROJECT_URL}.git"
+    CI_GIT_CI_TOOLS_BRANCH: $CI_COMMIT_REF_NAME
+  trigger:
+    project: hzdr/qedjl-project/qedcore.jl
+    strategy: depend
+  # run only in pull requests
+  rules:
+    - if: $CI_COMMIT_REF_NAME =~ /^pr-*./
