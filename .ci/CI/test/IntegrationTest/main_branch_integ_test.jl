@@ -12,7 +12,7 @@
                 "main"
             ),
             CI.ReleaseVersion("1.10"),
-            CI.CPU,
+            CI.CPU(),
             CI.GitRepoAddress("", "")
         )
 
@@ -75,7 +75,7 @@
                 "feature1"
             ),
             CI.ReleaseVersion("1.12"),
-            CI.CPU,
+            CI.CPU(),
             CI.GitRepoAddress("", "")
         )
 

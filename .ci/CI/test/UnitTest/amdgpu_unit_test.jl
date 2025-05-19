@@ -20,7 +20,7 @@
             test_package,
             setup_dev_env,
             CI.ReleaseVersion(version),
-            CI.AMDGPU,
+            CI.AMDGPU(),
             tools_git_repo
         )
 

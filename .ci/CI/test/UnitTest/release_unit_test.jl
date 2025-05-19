@@ -20,7 +20,7 @@
             test_package,
             setup_dev_env,
             CI.ReleaseCandidate(),
-            CI.CPU,
+            CI.CPU(),
             tools_git_repo
         )
 

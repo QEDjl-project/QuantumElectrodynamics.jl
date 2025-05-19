@@ -26,7 +26,7 @@ generated job contains all properties to be directly translated to GitLab CI yam
 - `test_package::TestPackage`: Properties of the package to be tested, such as name and version.
 - `setup_dev_env::Bool`: If the value is true, additional job code is generated that allows the dev
     or feature branch versions of the QED dependencies to be used.
-- `setup_dev_env::Bool`: If the value is true, add GitLab CI flag `allow_failure: true`.
+- `can_fail::Bool`: If the value is true, add GitLab CI flag `allow_failure: true`.
 - `integration_test_name::AbstractString`: Name of the integration test.
 - `integration_test_repo::GitRepoAddress`: Git repository URL and branch of the package used for
     the integration test.
@@ -46,17 +46,122 @@ function add_integration_test_job_yaml!(
         integration_test_name::AbstractString,
         integration_test_repo::GitRepoAddress,
         integration_test_type::ReleaseVersion,
-        test_platform::TestPlatform = CPU,
+        test_platform::CPU,
         tools_git_repo::GitRepoAddress = GitRepoAddress(
             "https://github.com/QEDjl-project/QuantumElectrodynamics.jl.git", "dev"
         )
     )
-    if test_platform in [ONEAPI, METAL]
-        throw(ArgumentError("argument test_platform not implemented for $(test_platform)"))
-    end
-
     _add_stage_once!(job_dict, "integ-test")
 
+    job_yaml = _get_normal_unit_test(
+        test_package,
+        setup_dev_env,
+        can_fail,
+        integration_test_repo,
+        integration_test_type,
+        tools_git_repo
+    )
+    job_yaml["tags"] = ["cpuonly"]
+
+    job_dict["integration_test_$(integration_test_name)"] = job_yaml
+    return nothing
+end
+
+function add_integration_test_job_yaml!(
+        job_dict::Dict,
+        test_package::TestPackage,
+        setup_dev_env::Bool,
+        can_fail::Bool,
+        integration_test_name::AbstractString,
+        integration_test_repo::GitRepoAddress,
+        integration_test_type::ReleaseVersion,
+        test_platform::CUDA,
+        tools_git_repo::GitRepoAddress = GitRepoAddress(
+            "https://github.com/QEDjl-project/QuantumElectrodynamics.jl.git", "dev"
+        )
+    )
+    _add_stage_once!(job_dict, "integ-test")
+
+    job_yaml = _get_normal_unit_test(
+        test_package,
+        setup_dev_env,
+        can_fail,
+        integration_test_repo,
+        integration_test_type,
+        tools_git_repo
+    )
+    job_yaml["tags"] = ["cuda", "x86_64"]
+
+    job_dict["integration_test_$(integration_test_name)"] = job_yaml
+    return nothing
+end
+
+function add_integration_test_job_yaml!(
+        job_dict::Dict,
+        test_package::TestPackage,
+        setup_dev_env::Bool,
+        can_fail::Bool,
+        integration_test_name::AbstractString,
+        integration_test_repo::GitRepoAddress,
+        integration_test_type::ReleaseVersion,
+        test_platform::AMDGPU,
+        tools_git_repo::GitRepoAddress = GitRepoAddress(
+            "https://github.com/QEDjl-project/QuantumElectrodynamics.jl.git", "dev"
+        )
+    )
+    _add_stage_once!(job_dict, "integ-test")
+
+    job_yaml = _get_normal_unit_test(
+        test_package,
+        setup_dev_env,
+        can_fail,
+        integration_test_repo,
+        integration_test_type,
+        tools_git_repo
+    )
+    _add_julia_rocm_environment!(job_yaml, integration_test_type)
+    job_yaml["tags"] = ["rocm", "x86_64"]
+
+
+    job_dict["integration_test_$(integration_test_name)"] = job_yaml
+    return nothing
+end
+
+"""
+    _get_normal_unit_test(
+        test_package::TestPackage,
+        setup_dev_env::Bool,
+        can_fail::Bool,
+        integration_test_repo::GitRepoAddress,
+        integration_test_type::ReleaseVersion,
+        tools_git_repo::GitRepoAddress
+    )::Dict
+
+Creates a normal integration test job for a specific Julia version.
+
+# Args
+- `test_package::TestPackage`: Properties of the package to be tested, such as name and version.
+- `setup_dev_env::Bool`: If the value is true, additional job code is generated that allows the dev
+    or feature branch versions of the QED dependencies to be used.
+- `can_fail::Bool`: If the value is true, add GitLab CI flag `allow_failure: true`.
+- `integration_test_repo::GitRepoAddress`: Git repository URL and branch of the package used for
+    the integration test.
+- `integration_test_type::TestType`: Depending on the type, slightly different unit tests are generated.
+    Read the documentation of the concrete type to get more information.
+- `tools_git_repo::GitRepoAddress`: URL and branch of the Git repository from which the CI tools are
+    cloned in unit test job.
+Return
+
+Returns a dict containing the integration test, which can be output directly as GitLab CI yaml.
+"""
+function _get_normal_unit_test(
+        test_package::TestPackage,
+        setup_dev_env::Bool,
+        can_fail::Bool,
+        integration_test_repo::GitRepoAddress,
+        integration_test_type::ReleaseVersion,
+        tools_git_repo::GitRepoAddress
+    )::Dict
     script = ["apt update", "apt install -y git", "cd /"]
 
     if setup_dev_env
@@ -84,7 +189,7 @@ function add_integration_test_job_yaml!(
     push!(script, "julia --project=. -e 'import Pkg; Pkg.instantiate()'")
     push!(script, "julia --project=. -e 'import Pkg; Pkg.test(; coverage = true)'")
 
-    current_job_yaml = Dict(
+    job_yaml = Dict(
         "image" => "julia:$(integration_test_type.version)",
         "stage" => "integ-test",
         "variables" => Dict(
@@ -97,28 +202,9 @@ function add_integration_test_job_yaml!(
         "script" => script,
     )
 
-    if test_platform == AMDGPU
-        _add_julia_rocm_environment!(current_job_yaml, integration_test_type)
-    end
-
-    if test_platform == CPU
-        current_job_yaml["tags"] = ["cpuonly"]
-    elseif test_platform == CUDA
-        current_job_yaml["tags"] = ["cuda", "x86_64"]
-    elseif test_platform == AMDGPU
-        current_job_yaml["tags"] = ["rocm", "x86_64"]
-    else
-        throw(
-            ArgumentError(
-                "test_platform argument with value $(test_platform) not supported"
-            ),
-        )
-    end
-
     if can_fail
-        current_job_yaml["allow_failure"] = true
+        job_yaml["allow_failure"] = true
     end
 
-    job_dict["integration_test_$(integration_test_name)"] = current_job_yaml
-    return nothing
+    return job_yaml
 end

@@ -40,7 +40,7 @@ fi",
             test_package,
             setup_dev_env,
             CI.Nightly(nightly_image),
-            CI.CPU,
+            CI.CPU(),
             tools_git_repo
         )
 

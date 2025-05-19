@@ -11,7 +11,7 @@ function get_unit_test_configs(args::Dict{String, Any})::Vector{Tuple{JuliaVersi
                 unit_test_types,
                 (
                     Nightly(get_unit_test_nightly_baseimage()),
-                    CPU,
+                    CPU(),
                 )
             )
 
@@ -20,7 +20,7 @@ function get_unit_test_configs(args::Dict{String, Any})::Vector{Tuple{JuliaVersi
                 unit_test_types,
                 (
                     ReleaseCandidate(),
-                    CPU,
+                    CPU(),
                 )
             )
             continue
@@ -31,7 +31,7 @@ function get_unit_test_configs(args::Dict{String, Any})::Vector{Tuple{JuliaVersi
                     unit_test_types,
                     (
                         ReleaseVersion(julia_version),
-                        CPU,
+                        CPU(),
                     )
                 )
             end
@@ -41,7 +41,7 @@ function get_unit_test_configs(args::Dict{String, Any})::Vector{Tuple{JuliaVersi
                     unit_test_types,
                     (
                         ReleaseVersion(julia_version),
-                        CUDA,
+                        CUDA(),
                     )
                 )
             end
@@ -51,7 +51,7 @@ function get_unit_test_configs(args::Dict{String, Any})::Vector{Tuple{JuliaVersi
                     unit_test_types,
                     (
                         ReleaseVersion(julia_version),
-                        AMDGPU,
+                        AMDGPU(),
                     )
                 )
             end
@@ -88,7 +88,7 @@ function get_integration_test_configs(
                 integ_test_types,
                 (
                     ReleaseVersion(julia_version),
-                    CPU,
+                    CPU(),
                 )
             )
         end
@@ -98,7 +98,7 @@ function get_integration_test_configs(
                 integ_test_types,
                 (
                     ReleaseVersion(julia_version),
-                    CUDA,
+                    CUDA(),
                 )
             )
         end
@@ -108,7 +108,7 @@ function get_integration_test_configs(
                 integ_test_types,
                 (
                     ReleaseVersion(julia_version),
-                    AMDGPU,
+                    AMDGPU(),
                 )
             )
         end

@@ -26,31 +26,71 @@ contains all properties to be directly translated to GitLab CI yaml.
 """
 function add_unit_test_job_yaml! end
 
+_get_unit_test_name_prefix(test_platform::TestPlatform) = "unit_test_julia_" * lowercase(get_platform_name(test_platform))
+
 function add_unit_test_job_yaml!(
         job_dict::Dict,
         test_package::TestPackage,
         setup_dev_env::Bool,
         unit_test_type::ReleaseVersion,
-        test_platform::TestPlatform = CPU,
+        test_platform::CPU,
         tools_git_repo::GitRepoAddress = GitRepoAddress(
             "https://github.com/QEDjl-project/QuantumElectrodynamics.jl.git", "dev"
         )
     )
-    if test_platform in [ONEAPI, METAL]
-        throw(ArgumentError("argument test_platform not implemented for $(test_platform)"))
-    end
-
     _add_stage_once!(job_dict, "unit-test")
     job_yaml = _get_normal_unit_test(
         unit_test_type.version, test_package, setup_dev_env, test_platform, tools_git_repo
     )
+    job_yaml["tags"] = ["cpuonly"]
 
-    if test_platform == AMDGPU
-        _add_julia_rocm_environment!(job_yaml, unit_test_type)
-    end
+    job_name = _get_unit_test_name_prefix(test_platform)
+    job_name *= "_" * replace(unit_test_type.version, "." => "_")
+    job_dict[job_name] = job_yaml
+    return nothing
+end
 
-    job_name = "unit_test_julia_$(lowercase(string(test_platform)))_$(replace(unit_test_type.version, "." => "_"))"
+function add_unit_test_job_yaml!(
+        job_dict::Dict,
+        test_package::TestPackage,
+        setup_dev_env::Bool,
+        unit_test_type::ReleaseVersion,
+        test_platform::CUDA,
+        tools_git_repo::GitRepoAddress = GitRepoAddress(
+            "https://github.com/QEDjl-project/QuantumElectrodynamics.jl.git", "dev"
+        )
+    )
+    _add_stage_once!(job_dict, "unit-test")
+    job_yaml = _get_normal_unit_test(
+        unit_test_type.version, test_package, setup_dev_env, test_platform, tools_git_repo
+    )
+    job_yaml["tags"] = ["cuda", "x86_64"]
 
+    job_name = _get_unit_test_name_prefix(test_platform)
+    job_name *= "_" * replace(unit_test_type.version, "." => "_")
+    job_dict[job_name] = job_yaml
+    return nothing
+end
+
+function add_unit_test_job_yaml!(
+        job_dict::Dict,
+        test_package::TestPackage,
+        setup_dev_env::Bool,
+        unit_test_type::ReleaseVersion,
+        test_platform::AMDGPU,
+        tools_git_repo::GitRepoAddress = GitRepoAddress(
+            "https://github.com/QEDjl-project/QuantumElectrodynamics.jl.git", "dev"
+        )
+    )
+    _add_stage_once!(job_dict, "unit-test")
+    job_yaml = _get_normal_unit_test(
+        unit_test_type.version, test_package, setup_dev_env, test_platform, tools_git_repo
+    )
+    _add_julia_rocm_environment!(job_yaml, unit_test_type)
+    job_yaml["tags"] = ["rocm", "x86_64"]
+
+    job_name = _get_unit_test_name_prefix(test_platform)
+    job_name *= "_" * replace(unit_test_type.version, "." => "_")
     job_dict[job_name] = job_yaml
     return nothing
 end
@@ -60,22 +100,20 @@ function add_unit_test_job_yaml!(
         test_package::TestPackage,
         setup_dev_env::Bool,
         unit_test_type::ReleaseCandidate,
-        test_platform::TestPlatform = CPU,
+        test_platform::CPU,
         tools_git_repo::GitRepoAddress = GitRepoAddress(
             "https://github.com/QEDjl-project/QuantumElectrodynamics.jl.git", "dev"
         )
     )
-    if test_platform != CPU
-        throw(ArgumentError("argument test_platform not implemented for $(test_platform)"))
-    end
-
     _add_stage_once!(job_dict, "unit-test")
     job_yaml = _get_normal_unit_test(
         "rc", test_package, setup_dev_env, test_platform, tools_git_repo
     )
     job_yaml["allow_failure"] = true
+    job_yaml["tags"] = ["cpuonly"]
 
-    job_name = "unit_test_julia_$(lowercase(string(test_platform)))_release_candidate"
+    job_name = _get_unit_test_name_prefix(test_platform)
+    job_name *= "_release_candidate"
 
     job_dict[job_name] = job_yaml
     return nothing
@@ -86,15 +124,11 @@ function add_unit_test_job_yaml!(
         test_package::TestPackage,
         setup_dev_env::Bool,
         unit_test_type::Nightly,
-        test_platform::TestPlatform = CPU,
+        test_platform::CPU,
         tools_git_repo::GitRepoAddress = GitRepoAddress(
             "https://github.com/QEDjl-project/QuantumElectrodynamics.jl.git", "dev"
         )
     )
-    if test_platform != CPU
-        throw(ArgumentError("argument test_platform not implemented for $(test_platform)"))
-    end
-
     _add_stage_once!(job_dict, "unit-test")
     job_yaml = _get_normal_unit_test(
         "nightly", test_package, setup_dev_env, test_platform, tools_git_repo
@@ -128,8 +162,10 @@ fi",
         "cp -r \$JULIA_EXTRACT_FOLDER/* /usr",
     ]
     job_yaml["allow_failure"] = true
+    job_yaml["tags"] = ["cpuonly"]
 
-    job_name = "unit_test_julia_$(lowercase(string(test_platform)))_nightly"
+    job_name = _get_unit_test_name_prefix(test_platform)
+    job_name *= "_nightly"
 
     job_dict[job_name] = job_yaml
     return nothing
@@ -180,8 +216,8 @@ function _get_normal_unit_test(
         job_yaml["variables"] = Dict()
     end
 
-    for tp in instances(TestPlatform)
-        job_yaml["variables"]["TEST_$(tp)"] = (tp == test_platform) ? "1" : "0"
+    for tp in TestPlatforms
+        job_yaml["variables"]["TEST_$(get_platform_name(tp))"] = (tp == test_platform) ? "1" : "0"
     end
 
     script = [
@@ -211,20 +247,6 @@ function _get_normal_unit_test(
     job_yaml["script"] = script
 
     job_yaml["interruptible"] = true
-
-    if test_platform == CPU
-        job_yaml["tags"] = ["cpuonly"]
-    elseif test_platform == CUDA
-        job_yaml["tags"] = ["cuda", "x86_64"]
-    elseif test_platform == AMDGPU
-        job_yaml["tags"] = ["rocm", "x86_64"]
-    else
-        throw(
-            ArgumentError(
-                "test_platform argument with value $(test_platform) not supported"
-            ),
-        )
-    end
 
     return job_yaml
 end

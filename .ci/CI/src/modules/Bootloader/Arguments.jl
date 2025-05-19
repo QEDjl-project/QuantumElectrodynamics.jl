@@ -39,9 +39,9 @@ function get_output_job_yaml(job_yaml::Dict, platform::TestPlatform)::Dict
         throw(ErrorException("job_yamls has no key stdout"))
     end
 
-    if platform == CPU
+    if platform == CPU()
         return get(job_yaml, "output-cpu", job_yaml["stdout"])
-    elseif (platform == CUDA || platform == AMDGPU)
+    elseif (platform == CUDA() || platform == AMDGPU())
         return get(job_yaml, "output-gpu", job_yaml["stdout"])
     else
         throw(ErrorException("Unknown platform: $(platform)"))
