@@ -4,12 +4,11 @@ stages:
   - qedcore-integration-test
   - verify-unit-test-deps
 
-include: .ci/bootloader_integration_tests.yml
-
 .untit_test_template:
   stage: unit-test
   variables:
       CI_TEST_TYPE: "unit"
+      DISABLE_CI_LONG_TESTS: "ON"
   script:
     # test CI scripts
     - cd ${CI_PROJECT_DIR}/.ci/CI/
@@ -85,6 +84,19 @@ verify-unit-test-deps:
       else
         julia ${CI_PROJECT_DIR}/.ci/CI/src/VerifyEnv.jl
       fi
+  interruptible: true
+  tags:
+    - cpuonly
+
+bootloader_jl_integration_test:
+  image: julia:1.10
+  stage: integration-test
+  variables:
+    DISABLE_CI_SHORT_TESTS: "ON"
+  script:
+    - cd ${CI_PROJECT_DIR}/.ci/CI/
+    - julia --project=. -e 'import Pkg; Pkg.instantiate()'
+    - julia --project=. -e 'import Pkg; Pkg.test()'
   interruptible: true
   tags:
     - cpuonly
