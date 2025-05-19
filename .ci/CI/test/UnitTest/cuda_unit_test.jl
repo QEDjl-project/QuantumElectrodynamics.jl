@@ -18,7 +18,7 @@
             test_package,
             setup_dev_env,
             CI.ReleaseVersion(version),
-            CI.CUDA,
+            CI.CUDA(),
             tools_git_repo
         )
 

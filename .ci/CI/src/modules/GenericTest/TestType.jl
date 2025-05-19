@@ -42,7 +42,25 @@ Base.show(io::IO, obj::TestType) = print(io, get_test_type_name(obj))
 """
 Specify target processor for the tests.
 """
-@enum TestPlatform CPU CUDA AMDGPU ONEAPI METAL
+abstract type TestPlatform end
+struct CPU <: TestPlatform end
+struct CUDA <: TestPlatform end
+struct AMDGPU <: TestPlatform end
+struct ONEAPI <: TestPlatform end
+struct METAL <: TestPlatform end
+
+TestPlatforms = [CPU(), CUDA(), AMDGPU(), ONEAPI(), METAL()]
+
+"""
+Get string representation
+"""
+function get_platform_name(::Type{T}) where {T <: TestPlatform}
+    return string(nameof(T))
+end
+
+function get_platform_name(::T) where {T <: TestPlatform}
+    return get_platform_name(T)
+end
 
 abstract type JuliaVersionType end
 

@@ -11,7 +11,7 @@
             "feature42"
         ),
         CI.ReleaseVersion("1.9"),
-        CI.CPU,
+        CI.CPU(),
         CI.GitRepoAddress(
             "https://github.com/fork/QED.jl.git",
             "feature47"

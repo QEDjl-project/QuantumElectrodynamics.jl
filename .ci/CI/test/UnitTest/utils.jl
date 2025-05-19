@@ -49,8 +49,8 @@ function get_generic_unit_job(
         "CI_TEST_TYPE" => "unit",
     )
 
-    for tp in instances(CI.TestPlatform)
-        job_yaml["variables"]["TEST_$(tp)"] = "0"
+    for tp in CI.TestPlatforms
+        job_yaml["variables"]["TEST_$(CI.get_platform_name(tp))"] = "0"
     end
 
     job_yaml["interruptible"] = true
