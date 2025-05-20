@@ -41,7 +41,7 @@
             "git clone --depth 1 -b feature47 https://github.com/fork/QED.jl.git /integration_test_tools",
             "git clone --depth 1 -b feature42 https://github.com/fork/QEDcore.jl.git integration_test",
             "cd integration_test",
-            "julia --project=. /integration_test_tools/.ci/CI/src/SetupDevEnv.jl",
+            "julia --project=. /integration_test_tools/.ci/CI/script/SetupDevEnv.jl",
             "julia --project=. -e 'import Pkg; Pkg.instantiate()'",
             "julia --project=. -e 'import Pkg; Pkg.test(; coverage = true)'",
         ],

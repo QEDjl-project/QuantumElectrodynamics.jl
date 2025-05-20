@@ -21,12 +21,9 @@ using TOML
 using Logging
 using LibGit2
 
-# workaround if it is included in CI.jl for testing purpose
-if abspath(PROGRAM_FILE) == @__FILE__
-    include("modules/GenericTest/TestType.jl")
-    include("modules/Utils.jl")
-    include("modules/IntegTest/Graph.jl")
-end
+include("../src/modules/GenericTest/TestType.jl")
+include("../src/modules/Utils.jl")
+include("../src/modules/IntegTest/Graph.jl")
 
 """
     get_test_type_from_env_var()::TestType

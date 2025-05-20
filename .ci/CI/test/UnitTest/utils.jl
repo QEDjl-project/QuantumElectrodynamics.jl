@@ -7,7 +7,7 @@ function get_dev_unit_job_script_section(
     return [
         "apt update && apt install -y git",
         "git clone --depth 1 -b $(git_repo_branch) $(git_repo_url) /tmp/integration_test_tools/",
-        "julia --project=. /tmp/integration_test_tools/.ci/CI/src/SetupDevEnv.jl \${CI_PROJECT_DIR}/Project.toml",
+        "julia --project=. /tmp/integration_test_tools/.ci/CI/script/SetupDevEnv.jl \${CI_PROJECT_DIR}/Project.toml",
         "julia --project=. -e 'import Pkg; Pkg.instantiate()'",
         "julia --project=. -e 'import Pkg; Pkg.test(; coverage = true)'",
     ]
@@ -27,7 +27,7 @@ function get_main_unit_job_script_section(
     return [
         "apt update && apt install -y git",
         "git clone --depth 1 -b $(tools_git_repo.branch) $(tools_git_repo.url) /tmp/integration_test_tools/",
-        "julia --project=. /tmp/integration_test_tools/.ci/CI/src/SetupDevEnv.jl \${CI_PROJECT_DIR}/Project.toml" * (setup_dev_env ? "" : " NO_MESSAGE"),
+        "julia --project=. /tmp/integration_test_tools/.ci/CI/script/SetupDevEnv.jl \${CI_PROJECT_DIR}/Project.toml" * (setup_dev_env ? "" : " NO_MESSAGE"),
         "julia --project=. -e 'import Pkg; Pkg.instantiate()'",
         "julia --project=. -e 'import Pkg; Pkg.test(; coverage = true)'",
     ]

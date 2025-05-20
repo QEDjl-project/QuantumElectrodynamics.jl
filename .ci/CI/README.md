@@ -41,7 +41,7 @@ If we want to merge in the main branch, we do it because we want to publish the 
 The script `SetupDevEnv.jl` checks the dependencies of the current project and provides a Julia environment that provides all current development versions of the QED dependencies.
 
 ```bash
-julia --project=/path/to/the/julia/environment src/SetupDevEnv.jl
+julia --project=/path/to/the/julia/environment script/SetupDevEnv.jl
 ```
 
 ## Optional Environment variables
