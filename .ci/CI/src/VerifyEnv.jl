@@ -1,6 +1,6 @@
 # workaround if it is included in CI.jl for testing purpose
 if abspath(PROGRAM_FILE) == @__FILE__
-    include("modules/GenericTest.jl")
+    include("modules/Types.jl")
     include("modules/Utils.jl")
 end
 

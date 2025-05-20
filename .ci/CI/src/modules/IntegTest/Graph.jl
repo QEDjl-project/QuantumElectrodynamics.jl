@@ -1,3 +1,7 @@
+# Note: This file is used by SetupDevEnv.jl
+#       It is not allowed to use third party packages.
+#       Only standard library packages are allowed.
+
 """
     _git_clone(repo_url::AbstractString, directory::AbstractString)
 
