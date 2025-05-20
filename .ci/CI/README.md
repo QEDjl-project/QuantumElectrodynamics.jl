@@ -48,6 +48,8 @@ julia --project=/path/to/the/julia/environment script/SetupDevEnv.jl
 
 All dependencies are added via `Pkg.develop("dep_name")` by default. Therefore the default development branch is used. To set a custom URL, you can define the environment variables `CI_UNIT_PKG_URL_<dep_name>`. For example, you set the environment variable `CI_UNIT_PKG_URL_QEDbase=https://github.com/User/QEDbase.jl#feature1`, the script will execute the command `Pkg.develop(url="https://github.com/User/QEDbase.jl#feature1")`, when the dependency QEDbase was found and matched in the `Project.toml`. Then the branch `feature1` from `https://github.com/User/QEDbase.jl` is used as a dependency.
 
+The environment variable `CI_SETUP_DEV_ENV_DRY_RUN=ON` can be set to activate the dry-run mode. In this mode, the project environment is not modified and only logging information is displayed.
+
 # Test Environment variables
 
 The Julia tests are divided into two categories of tests - short and long running tests. The categories can be deactivated with the environment variables `DISABLE_CI_SHORT_TESTS=ON` and `DISABLE_CI_LONG_TESTS=ON`.

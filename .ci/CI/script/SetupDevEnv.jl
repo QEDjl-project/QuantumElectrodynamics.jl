@@ -88,6 +88,18 @@ function check_environment_variables(test_type::TestType)
 end
 
 """
+If environment variable `CI_SETUP_DEV_ENV_DRY_RUN=ON` is set, return true.
+"""
+function is_dry_run()::Bool
+    if haskey(ENV, "CI_SETUP_DEV_ENV_DRY_RUN")
+        if ENV["CI_SETUP_DEV_ENV_DRY_RUN"] == "ON"
+            return true
+        end
+    end
+    return false
+end
+
+"""
     get_test_specific_custom_urls(::UnitTest, urls::CustomDependencyUrls)::Dict{String, String}
 
 Returns reference to the dict containing the custom repository URLs for the given test type.
@@ -341,8 +353,9 @@ Remove the given packages from the active environment.
 
 # Args
 - `dependencies::Vector{String}`: Packages to remove
+- `dry_run::Bool`: If true, display only logging messages and do not remove packages.
 """
-function remove_packages(dependencies::Vector{String})
+function remove_packages(dependencies::Vector{String}, dry_run::Bool)
     @info "remove packages: $(dependencies)"
     project_pkg_name = Pkg.project().name
 
@@ -355,7 +368,9 @@ function remove_packages(dependencies::Vector{String})
 
         # if the package is in the extra section, it cannot be removed
         try
-            Pkg.rm(pkg)
+            if !dry_run
+                Pkg.rm(pkg)
+            end
         catch
             @warn "tried to remove uninstalled package $(pkg)"
         end
@@ -385,7 +400,7 @@ changed so that it is compatible with the project to be tested.
     - `compat_changes::Dict{String,String}`: Sets the Compat entries in the dependency projects to
         the specified version. The key is the name of the compatibility entry and the value is the
         new version.
-
+    - `dry_run::Bool`: If true, display only logging messages and do not install packages.
 """
 function install_qed_dev_packages(
         pkg_to_install::Vector{String},
@@ -393,6 +408,7 @@ function install_qed_dev_packages(
         dev_package_name::AbstractString,
         dev_package_path::AbstractString,
         compat_changes::Dict{String, String},
+        dry_run::Bool
     )
     @info "install QED packages"
 
@@ -407,7 +423,9 @@ function install_qed_dev_packages(
 
         if pkg == dev_package_name
             @info "install dev package: $(dev_package_path)"
-            Pkg.develop(; path = dev_package_path)
+            if !dry_run
+                Pkg.develop(; path = dev_package_path)
+            end
         else
             project_path = joinpath(qed_path, pkg)
 
@@ -416,7 +434,9 @@ function install_qed_dev_packages(
             end
 
             @info "install dependency package: $(project_path)"
-            Pkg.develop(; path = project_path)
+            if !dry_run
+                Pkg.develop(; path = project_path)
+            end
         end
     end
     return
@@ -475,8 +495,12 @@ end
 if abspath(PROGRAM_FILE) == @__FILE__
     try
         test_type::TestType = get_test_type_from_env_var()
+        dry_run = is_dry_run()
         @info "Use Custom dependency URLs for test type: $(test_type)"
         @info "Custom URL environment variable prefix: $(get_test_type_env_var_prefix(test_type))"
+        if dry_run
+            @warn "try-run mode enabled"
+        end
 
         check_environment_variables(test_type)
 
@@ -510,7 +534,7 @@ if abspath(PROGRAM_FILE) == @__FILE__
 
         # remove all QED packages, because otherwise Julia tries to resolve the whole
         # environment if a package is added via Pkg.develop() which can cause circulare dependencies
-        remove_packages(linear_pkg_ordering)
+        remove_packages(linear_pkg_ordering, dry_run)
 
         install_qed_dev_packages(
             linear_pkg_ordering,
@@ -518,6 +542,7 @@ if abspath(PROGRAM_FILE) == @__FILE__
             ENV["CI_DEV_PKG_NAME"],
             ENV["CI_DEV_PKG_PATH"],
             compat_changes,
+            dry_run
         )
     catch e
         # print debug information if uncatch error is thrown
