@@ -1,4 +1,5 @@
 [deps]
+TOML = "fa267f1f-6049-4f14-aa54-33bafae1ed76"
 Term = "22787eb5-b846-44ae-b979-8e399b8463ab"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 YAML = "ddb6d928-2868-570f-bddf-ab3f9cf99eb6"
