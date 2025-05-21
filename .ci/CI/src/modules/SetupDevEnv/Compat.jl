@@ -31,7 +31,7 @@ end
         name::AbstractString, version::AbstractString, project_path::AbstractString
     )
 
-Change the version of an existing compat enties of a dependency.
+Change the version of an existing compat entries of a dependency.
 
 # Args
 
