@@ -6,4 +6,5 @@ include("modules/UnitTest.jl")
 include("modules/IntegTest.jl")
 include("modules/GitLabTargetBranch.jl")
 include("modules/SetupDevEnv.jl")
+include("modules/GitLabCIConf.jl")
 end

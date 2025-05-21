@@ -5,6 +5,7 @@ version = "0.1.0"
 
 [deps]
 ArgParse = "c7e460c6-2fb9-53a9-8c5b-16f535851c63"
+GitHub = "bc5e4493-9b4d-5f90-b8aa-2b2bcaad7a26"
 HTTP = "cd3eb016-35fb-5094-929b-558a96fad6f3"
 IntegrationTests = "6be7cfa2-1838-408e-bc49-3a824ac3a1fb"
 JSON = "682c06a0-de6a-54ab-a142-c8b1cf79cde6"
@@ -16,6 +17,7 @@ YAML = "ddb6d928-2868-570f-bddf-ab3f9cf99eb6"
 
 [compat]
 ArgParse = "1.2.0"
+GitHub = "5.9.0"
 julia = "1"
 
 [extras]

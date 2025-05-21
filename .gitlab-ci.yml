@@ -96,6 +96,18 @@ bootloader_jl_integration_test:
   tags:
     - cpuonly
 
+get_gitlab_ci_conf_jl_integration_test:
+  image: julia:1.10
+  stage: integration-test
+  script:
+    - cd ${CI_PROJECT_DIR}/.ci/CI/
+    - julia --project=. -e 'import Pkg; Pkg.instantiate()'
+    - $(julia --project=. ${CI_PROJECT_DIR}/.ci/CI/script/GetGitLabCIConf.jl)
+    - env | grep CI_QED_
+  interruptible: true
+  tags:
+    - cpuonly
+
 trigger_job:
   stage: qedcore-integration-test
   variables:

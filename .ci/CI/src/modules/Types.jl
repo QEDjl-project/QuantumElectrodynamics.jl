@@ -169,3 +169,22 @@ struct CustomDependencyUrls
 
     CustomDependencyUrls() = new(Dict{String, String}(), Dict{String, String}())
 end
+
+"""
+    struct GitHubPR
+
+# Members
+- `user::AbstractString`: GitHub user or group
+- `project::AbstractString`: repository name
+- `pr_number::Int`: Pull Request Number
+"""
+struct GitHubPR
+    user::AbstractString
+    project::AbstractString
+    pr_number::Int
+end
+
+Base.:(==)(a::GitHubPR, b::GitHubPR) = a.user == b.user && a.project == b.project && a.pr_number == b.pr_number
+
+"Get String representation of GitHubPR"
+github_pr_to_string(gh_pr::GitHubPR) = "User: $(gh_pr.user)\nProject: $(gh_pr.project)\nPR number: $(gh_pr.pr_number)"
