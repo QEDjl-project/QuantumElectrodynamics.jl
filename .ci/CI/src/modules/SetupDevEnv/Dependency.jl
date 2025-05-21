@@ -50,7 +50,7 @@ end
         graph::Dict, stop_package::AbstractString=""
     )::Vector{Set{String}}
 
-Executes a search and reduction algorithm. In each round, all leaves in the graph are searched for
+Execute a search and reduction algorithm. In each round, all leaves in the graph are searched for
 and added to a set. If a leaf is found, it is removed from the graph. At the end of a round, the
 set is added to a list. The algorithm loops until the graph is reduced to an empty graph or the
 stop package is found.
@@ -69,7 +69,7 @@ The algorithm works on a copy of the input graph.
 # Returns
 
 Returns a list of sets. The index position stands for the round in which the leaf was found,
-e.g. pkg_ordering[1] stands for the first round. The set contains all leaves that were found in the
+e.g., pkg_ordering[1] stands for the first round. The set contains all the leaves that were found in the
 round. There is no order within a round.
 """
 function get_package_dependency_list(
@@ -144,7 +144,7 @@ end
         required_dependencies::AbstractVector{String}
     )::Vector{String}
 
-Computes an ordered list of packages that shows how to add packages to a Julia environment without
+Compute an ordered list of packages that shows how to add packages to a Julia environment without
 adding a package from the list as an implicit dependency of another package from the list for a
 given package.
 

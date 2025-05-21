@@ -5,8 +5,7 @@
 """
     get_test_type_from_env_var()::TestType
 
-Depending on the value of the environment variable `CI_TEST_TYPE`, the test type to be tested is
-returned. Depending on the type, different user-defined dependency URLs are used.
+Return the test type to be tested depending on the value of the environment variable `CI_TEST_TYPE`. Depending on the type, different user-defined dependency URLs are used.
 
 # Returns
 
@@ -65,7 +64,10 @@ function check_environment_variables(test_type::TestType)
 end
 
 """
-If environment variable `CI_SETUP_DEV_ENV_DRY_RUN=ON` is set, return true.
+
+    is_dry_run()
+    
+Return true if the environment variable `CI_SETUP_DEV_ENV_DRY_RUN=ON` is set, false otherwise.
 """
 function is_dry_run()::Bool
     if haskey(ENV, "CI_SETUP_DEV_ENV_DRY_RUN")

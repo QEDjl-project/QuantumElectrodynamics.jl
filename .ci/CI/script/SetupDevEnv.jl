@@ -33,7 +33,7 @@ include("../src/modules/IntegTest/Graph.jl")
 """
     get_test_specific_custom_urls(::TestType, urls::CustomDependencyUrls)::Dict{String, String}
 
-Returns reference to the dict containing the custom repository URLs for the given test type.
+Return a reference to the dict containing the custom repository URLs for the given test type.
 
 # Returns
 

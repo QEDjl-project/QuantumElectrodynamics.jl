@@ -5,11 +5,11 @@
 """
     get_compat_changes()::Dict{String,String}
 
-Generates a list of new compatibility versions for dependency packages.
+Generate a list of new compatibility versions for dependency packages.
 
 # Returns
 
-Returns a dictionary, where the key is the name and the value is the version to be changed.
+Return a dictionary, where the key is the name and the value is the version to be changed.
 
 """
 function get_compat_changes()::Dict{String, String}
