@@ -228,12 +228,12 @@ function _get_normal_unit_test(
     if setup_dev_env
         push!(
             script,
-            "julia --project=. /tmp/integration_test_tools/.ci/CI/src/SetupDevEnv.jl \${CI_PROJECT_DIR}/Project.toml",
+            "julia --project=. /tmp/integration_test_tools/.ci/CI/script/SetupDevEnv.jl \${CI_PROJECT_DIR}/Project.toml",
         )
     else
         push!(
             script,
-            "julia --project=. /tmp/integration_test_tools/.ci/CI/src/SetupDevEnv.jl \${CI_PROJECT_DIR}/Project.toml NO_MESSAGE",
+            "julia --project=. /tmp/integration_test_tools/.ci/CI/script/SetupDevEnv.jl \${CI_PROJECT_DIR}/Project.toml NO_MESSAGE",
         )
     end
 

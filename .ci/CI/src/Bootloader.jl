@@ -1,3 +1,4 @@
+include("modules/Types.jl")
 include("modules/GitLabTargetBranch.jl")
 include("modules/GenericTest.jl")
 include("modules/UnitTest.jl")

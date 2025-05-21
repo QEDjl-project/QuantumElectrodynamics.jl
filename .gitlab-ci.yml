@@ -23,9 +23,9 @@ stages:
     - >
       if [[ $CI_COMMIT_BRANCH == "main" || $CI_COMMIT_REF_NAME == "main" || $CI_COMMIT_BRANCH == "dev" || $CI_COMMIT_REF_NAME == "dev" ]]; then
         # set name of the commit message from CI_COMMIT_MESSAGE to NO_MESSAGE, that the script does not read accidentally custom packages from the commit message of a merge commit
-        julia --project=. ${CI_PROJECT_DIR}/.ci/CI/src/SetupDevEnv.jl ${CI_PROJECT_DIR}/Project.toml NO_MESSAGE
+        julia --project=. ${CI_PROJECT_DIR}/.ci/CI/script/SetupDevEnv.jl ${CI_PROJECT_DIR}/Project.toml NO_MESSAGE
       else
-        julia --project=. ${CI_PROJECT_DIR}/.ci/CI/src/SetupDevEnv.jl ${CI_PROJECT_DIR}/Project.toml
+        julia --project=. ${CI_PROJECT_DIR}/.ci/CI/script/SetupDevEnv.jl ${CI_PROJECT_DIR}/Project.toml
       fi
     - julia --project=. -e 'import Pkg; Pkg.instantiate()'
     - julia --project=. -e 'import Pkg; Pkg.test(; coverage = true)'

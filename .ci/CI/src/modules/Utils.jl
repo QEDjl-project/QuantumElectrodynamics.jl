@@ -1,3 +1,7 @@
+# Note: This file is used by SetupDevEnv.jl
+#       It is not allowed to use third party packages.
+#       Only standard library packages are allowed.
+
 using TOML
 using Logging
 using LibGit2
@@ -140,4 +144,25 @@ function append_custom_dependency_urls_from_git_message!(
         end
     end
     return
+end
+
+"""
+    print_pkg_urls(urls::Dict{String, String})::String
+
+Format dict of package URLs to a single string.
+
+# Args
+
+- `urls::Dict{String, String}`: The keys are package names and the values are the URLs of it.
+"""
+function print_pkg_urls(urls::Dict{String, String})::String
+    io = IOBuffer()
+    for (index, (pkg_name, url)) in enumerate(urls)
+        if index < length(urls)
+            println(io, "$(pkg_name): $(url)")
+        else
+            print(io, "$(pkg_name): $(url)")
+        end
+    end
+    return String(take!(io))
 end

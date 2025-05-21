@@ -1,6 +1,6 @@
 using Pkg
 
-include("modules/GenericTest.jl")
+include("modules/Types.jl")
 include("modules/Utils.jl")
 
 # the script be directly executed in bash to set the environment variables
