@@ -119,7 +119,8 @@ function append_custom_dependency_urls_from_git_message!(
         return nothing
     end
 
-    @info "Git commit message is set."
+    io = IOBuffer()
+    println(io, "Git commit message is set.")
     for line in split(env["CI_COMMIT_MESSAGE"], "\n"), (test_type, url_dict) in test_types
         line = strip(line)
         env_prefix = get_test_type_env_var_prefix(test_type)
@@ -135,10 +136,11 @@ function append_custom_dependency_urls_from_git_message!(
             end
 
             pkg_name = pkg_name[(length(env_prefix) + 1):end]
-            @info "add $(pkg_name)=$(url) to $(get_test_type_name(test_type)) custom urls"
+            println(io, "add $(pkg_name)=$(url) to $(get_test_type_name(test_type)) custom urls")
             url_dict[pkg_name] = url
         end
     end
+    @info String(take!(io))
     return
 end
 

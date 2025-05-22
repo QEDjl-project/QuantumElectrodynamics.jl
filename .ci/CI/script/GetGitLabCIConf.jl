@@ -108,6 +108,10 @@ if abspath(PROGRAM_FILE) == @__FILE__
         handle_normal_commit!(ci_commit_ref_name, output_env_vars)
     end
 
+    if output_env_vars["CI_QED_TARGET_BRANCH"] != "main"
+        CI.read_commit_message!(output_env_vars)
+    end
+
     if !check_output_variables(output_env_vars)
         exit(1)
     end
