@@ -1,3 +1,31 @@
+using GitHub
+
+# define which environment variables should be set, if tag is found
+const know_tags = Dict{String, Vector{Tuple{String, String}}}(
+    "doc" => [
+        ("CI_QED_ENABLE_CPU_TESTS", "OFF"),
+        ("CI_QED_ENABLE_CUDA_TESTS", "OFF"),
+        ("CI_QED_ENABLE_AMDGPU_TESTS", "OFF"),
+        ("CI_QED_ENABLE_INTEG_TESTS", "OFF"),
+    ],
+    "no-cpu-test" => [
+        ("CI_QED_ENABLE_CPU_TESTS", "OFF"),
+    ],
+    "no-gpu-test" => [
+        ("CI_QED_ENABLE_CUDA_TESTS", "OFF"),
+        ("CI_QED_ENABLE_AMDGPU_TESTS", "OFF"),
+    ],
+    "no-cuda-test" => [
+        ("CI_QED_ENABLE_CUDA_TESTS", "OFF"),
+    ],
+    "no-amdgpu-test" => [
+        ("CI_QED_ENABLE_AMDGPU_TESTS", "OFF"),
+    ],
+    "no-integ-test" => [
+        ("CI_QED_ENABLE_INTEG_TESTS", "OFF"),
+    ],
+)
+
 """
     handle_pull_request!(ci_commit_ref_name::AbstractString, output_env_vars::Dict{String, String})
 
@@ -15,6 +43,44 @@ function handle_pull_request!(ci_commit_ref_name::AbstractString, output_env_var
     pr = CI.pull_github_pull_request(pull_request_info)
 
     output_env_vars["CI_QED_TARGET_BRANCH"] = pr.base.ref
+    _read_pull_request_labels!(pr, output_env_vars)
+    return nothing
+end
+
+"""
+    _read_pull_request_labels!(pr::GitHub.PullRequest, output_env_vars::Dict{String, String})
+
+Reads the labels from the given pull request. If a label begins with `CI:`, the prefix is removed
+and a check is made to see whether it is defined in `know_tags`. If it is defined, the
+corresponding environment variables are added to `output_env_vars`.
+
+# Args
+- `pr::GitHub.PullRequest`: Pull request object with labels
+- `output_env_vars::Dict{String, String}`: Environment variables for the output.
+
+"""
+function _read_pull_request_labels!(pr::GitHub.PullRequest, output_env_vars::Dict{String, String})
+    global know_tags
+
+    io = IOBuffer()
+    for label in pr.labels
+        if startswith(label.name, "CI:")
+            println(io, label.name)
+            tag = strip(label.name[(length("CI:") + 1):end])
+            if !haskey(know_tags, tag)
+                @warn "Unknown tag: $(tag)"
+            else
+                for (env_var_name, env_var_value) in know_tags[tag]
+                    output_env_vars[env_var_name] = env_var_value
+                end
+            end
+        end
+    end
+
+    msg = String(take!(io))
+    if msg != ""
+        @info "found CI labels:\n$(msg)"
+    end
     return nothing
 end
 
