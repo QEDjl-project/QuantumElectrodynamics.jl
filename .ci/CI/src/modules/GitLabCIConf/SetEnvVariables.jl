@@ -1,4 +1,49 @@
 """
+    handle_pull_request!(ci_commit_ref_name::AbstractString, output_env_vars::Dict{String, String})
+
+Handle the case, if a pull request is encoded in the `CI_COMMIT_REF_NAME` environment variable.
+Write several environment variable values to `output_env_vars`.
+
+# Args
+- `ci_commit_ref_name::AbstractString`: Content of the `CI_COMMIT_REF_NAME` environment variable.
+- `output_env_vars::Dict{String, String}`: Environment variables for the output.
+"""
+function handle_pull_request!(ci_commit_ref_name::AbstractString, output_env_vars::Dict{String, String})
+    output_env_vars["CI_QED_IS_PR"] = "ON"
+    pull_request_info = CI.parse_gitlab_ci_pull_request(ci_commit_ref_name)
+    @info "Pull request info:\n$(CI.github_pr_to_string(pull_request_info))"
+    pr = CI.pull_github_pull_request(pull_request_info)
+
+    output_env_vars["CI_QED_TARGET_BRANCH"] = pr.base.ref
+    return nothing
+end
+
+"""
+    handle_normal_commit!(ci_commit_ref_name::AbstractString, output_env_vars::Dict{String, String})
+
+Handle the case, if the `CI_COMMIT_REF_NAME` environment variable points to a normal commit.
+Write several environment variable values to `output_env_vars`.
+
+# Args
+- `ci_commit_ref_name::AbstractString`: Content of the `CI_COMMIT_REF_NAME` environment variable.
+- `output_env_vars::Dict{String, String}`: Environment variables for the output.
+"""
+function handle_normal_commit!(ci_commit_ref_name::AbstractString, output_env_vars::Dict{String, String})
+    output_env_vars["CI_QED_IS_PR"] = "OFF"
+    @info "Commit is not part of a pull request"
+
+    # If the commit is not a pull request, CI_COMMIT_REF_NAME stores the target branch name
+    # Special case: for version tags we use the same rules like for the main branch
+    try
+        VersionNumber(ci_commit_ref_name)
+        output_env_vars["CI_QED_TARGET_BRANCH"] = "main"
+    catch
+        output_env_vars["CI_QED_TARGET_BRANCH"] = ci_commit_ref_name
+    end
+    return nothing
+end
+
+"""
     read_commit_message!(output_env_vars::Dict{String, String})
 
 Reads the CI commit message defined in the environment variable `CI_COMMIT_MESSAGE`, if set. If it
