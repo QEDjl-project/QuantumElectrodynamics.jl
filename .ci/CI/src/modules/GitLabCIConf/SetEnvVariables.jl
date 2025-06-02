@@ -1,6 +1,7 @@
 using GitHub
 
 # define which environment variables should be set, if tag is found
+# it is not allow the set the same environment variable with different values
 const know_tags = Dict{String, Vector{Tuple{String, String}}}(
     "doc" => [
         ("CI_QED_ENABLE_CPU_TESTS", "OFF"),
@@ -23,6 +24,9 @@ const know_tags = Dict{String, Vector{Tuple{String, String}}}(
     ],
     "no-integ-test" => [
         ("CI_QED_ENABLE_INTEG_TESTS", "OFF"),
+    ],
+    "large-test" => [
+        ("CI_QED_LARGE_TESTS", "ON"),
     ],
 )
 
