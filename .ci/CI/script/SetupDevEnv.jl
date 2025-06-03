@@ -53,7 +53,7 @@ if abspath(PROGRAM_FILE) == @__FILE__
             @info "Disable custom URLs for QED dependencies"
         end
 
-        test_specific_custom_urls = get_test_specific_custom_urls(
+        test_specific_custom_urls = CI.get_test_specific_custom_urls(
             test_type, custom_dependency_urls
         )
         if !isempty(test_specific_custom_urls)

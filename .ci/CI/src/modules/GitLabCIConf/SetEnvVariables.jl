@@ -2,7 +2,7 @@ using GitHub
 
 # define which environment variables should be set, if tag is found
 # it is not allow the set the same environment variable with different values
-const know_tags = Dict{String, Vector{Tuple{String, String}}}(
+const known_tags = Dict{String, Vector{Tuple{String, String}}}(
     "doc" => [
         ("CI_QED_ENABLE_CPU_TESTS", "OFF"),
         ("CI_QED_ENABLE_CUDA_TESTS", "OFF"),
@@ -55,7 +55,7 @@ end
     _read_pull_request_labels!(pr::GitHub.PullRequest, output_env_vars::Dict{String, String})
 
 Reads the labels from the given pull request. If a label begins with `CI:`, the prefix is removed
-and a check is made to see whether it is defined in `know_tags`. If it is defined, the
+and a check is made to see whether it is defined in `known_tags`. If it is defined, the
 corresponding environment variables are added to `output_env_vars`.
 
 # Args
@@ -64,17 +64,17 @@ corresponding environment variables are added to `output_env_vars`.
 
 """
 function _read_pull_request_labels!(pr::GitHub.PullRequest, output_env_vars::Dict{String, String})
-    global know_tags
+    global known_tags
 
     io = IOBuffer()
     for label in pr.labels
         if startswith(label.name, "CI:")
             println(io, label.name)
             tag = strip(label.name[(length("CI:") + 1):end])
-            if !haskey(know_tags, tag)
+            if !haskey(known_tags, tag)
                 @warn "Unknown tag: $(tag)"
             else
-                for (env_var_name, env_var_value) in know_tags[tag]
+                for (env_var_name, env_var_value) in known_tags[tag]
                     output_env_vars[env_var_name] = env_var_value
                 end
             end

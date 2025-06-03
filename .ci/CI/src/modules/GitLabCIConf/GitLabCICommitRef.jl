@@ -50,7 +50,7 @@ function parse_gitlab_ci_pull_request(
     if (pr_number <= 0)
         throw(
             ErrorException(
-                "A PR number always needs to be a positive integer number bigger than 0: $pr_number",
+                "a PR number always needs to be a positive integer number bigger than 0: $pr_number",
             )
         )
     end
