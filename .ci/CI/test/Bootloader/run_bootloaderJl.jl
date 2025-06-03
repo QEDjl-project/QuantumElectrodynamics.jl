@@ -132,13 +132,6 @@ end
         @test count_keys_contains(r"^unit_test.*cuda", job_data) > 0
         @test count_keys_contains(r"^unit_test.*amdgpu", job_data) > 0
 
-        # if the target branch is not main, the NO_MESSAGE flag for SetupDevEnv.jl should be not set
-        for job_name in keys(job_data)
-            if startswith(job_name, "unit_test")
-                @test script_region_contains(r"NO_MESSAGE", job_data[job_name]) == false
-            end
-        end
-
         @test haskey(job_data, "verify-unit-test-deps")
         @test script_region_contains(r"VerifyEnv\.jl", job_data["verify-unit-test-deps"])
     end
@@ -201,19 +194,6 @@ end
         @test count_keys_contains(r"^unit_test.*amdgpu", cpu_yaml) == 0
         @test count_keys_contains(r"^unit_test.*cuda", gpu_yaml) > 0
         @test count_keys_contains(r"^unit_test.*amdgpu", gpu_yaml) > 0
-
-        # if the target branch is main, the NO_MESSAGE flag for SetupDevEnv.jl should be set
-        for job_name in keys(cpu_yaml)
-            if startswith(job_name, "unit_test")
-                @test script_region_contains(r"NO_MESSAGE", cpu_yaml[job_name])
-            end
-        end
-
-        for job_name in keys(gpu_yaml)
-            if startswith(job_name, "unit_test")
-                @test script_region_contains(r"NO_MESSAGE", gpu_yaml[job_name])
-            end
-        end
 
         @test haskey(verify_yaml, "DummyJob")
         @test script_region_contains(r"VerifyEnv\.jl", verify_yaml["DummyJob"]) == false

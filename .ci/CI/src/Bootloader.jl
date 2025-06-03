@@ -121,7 +121,6 @@ function main()
         add_unit_test_job_yaml!(
             output_yaml,
             test_package,
-            setup_dev_env,
             julia_version_type_name,
             platform,
             tools_git_repo

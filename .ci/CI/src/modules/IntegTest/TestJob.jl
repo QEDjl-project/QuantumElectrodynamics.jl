@@ -178,7 +178,8 @@ function _get_normal_unit_test(
     push!(script, "cd integration_test")
 
     if setup_dev_env
-        push!(script, "julia --project=. /integration_test_tools/.ci/CI/script/SetupDevEnv.jl")
+        push!(script, "julia --project=/integration_test_tools/.ci/CI -e 'import Pkg; Pkg.instantiate()'")
+        push!(script, "julia --project=/integration_test_tools/.ci/CI /integration_test_tools/.ci/CI/script/SetupDevEnv.jl \$PWD")
     else
         push!(
             script,

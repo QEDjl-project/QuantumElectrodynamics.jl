@@ -5,9 +5,9 @@
     git_branch = "branch"
     tools_git_repo = CI.GitRepoAddress(git_url, git_branch)
 
-    for setup_dev_env in [true, false], nightly_image in ["debian:bookworm-slim", "custom_image:latest"]
+    for nightly_image in ["debian:bookworm-slim", "custom_image:latest"]
         expected_job = get_generic_unit_job("stupid_name", test_package)
-        expected_job["script"] = get_main_unit_job_script_section(setup_dev_env, tools_git_repo)
+        expected_job["script"] = get_main_unit_job_script_section(tools_git_repo)
 
         expected_job["before_script"] = [
             "apt update && apt install -y wget",
@@ -38,7 +38,6 @@ fi",
         CI.add_unit_test_job_yaml!(
             job_dict,
             test_package,
-            setup_dev_env,
             CI.Nightly(nightly_image),
             CI.CPU(),
             tools_git_repo
