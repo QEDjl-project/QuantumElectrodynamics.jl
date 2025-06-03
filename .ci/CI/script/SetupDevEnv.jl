@@ -21,17 +21,11 @@ using TOML
 using Logging
 using LibGit2
 
-# Cannot use `using CI` because the script operates in the package environment of the target package.
-# If we would install the CI package in target package environment, the test environment would be not
-# "clean" anymore.
-include("../src/modules/Types.jl")
-include("../src/modules/Utils.jl")
-include("../src/modules/SetupDevEnv.jl")
-include("../src/modules/IntegTest/Graph.jl")
-
+using CI
+using Pkg
 
 """
-    get_test_specific_custom_urls(::TestType, urls::CustomDependencyUrls)::Dict{String, String}
+    get_test_specific_custom_urls(::CI.TestType, urls::CI.CustomDependencyUrls)::Dict{String, String}
 
 Return a reference to the dict containing the custom repository URLs for the given test type.
 
@@ -42,29 +36,42 @@ The key is the name of the package and the value the custom URL.
 function get_test_specific_custom_urls end
 
 get_test_specific_custom_urls(
-    ::UnitTest, urls::CustomDependencyUrls
+    ::CI.UnitTest, urls::CI.CustomDependencyUrls
 )::Dict{String, String} = urls.unit
 
 get_test_specific_custom_urls(
-    ::IntegrationTest, urls::CustomDependencyUrls
+    ::CI.IntegrationTest, urls::CI.CustomDependencyUrls
 )::Dict{String, String} = urls.integ
 
 
 if abspath(PROGRAM_FILE) == @__FILE__
     try
-        test_type::TestType = get_test_type_from_env_var()
-        dry_run = is_dry_run()
-        @info "Use Custom dependency URLs for test type: $(test_type)"
-        @info "Custom URL environment variable prefix: $(get_test_type_env_var_prefix(test_type))"
+        if length(ARGS) < 1
+            @error "Define path to target Project as first argument."
+            exit(1)
+        end
+
+        Pkg.activate(ARGS[1])
+
+        test_type::CI.TestType = CI.get_test_type_from_env_var()
+        dry_run = CI.is_dry_run()
+
         if dry_run
             @warn "try-run mode enabled"
         end
 
-        check_environment_variables(test_type)
+        CI.check_environment_variables(test_type)
 
-        custom_dependency_urls = CustomDependencyUrls()
-        append_custom_dependency_urls_from_git_message!(custom_dependency_urls)
-        append_custom_dependency_urls_from_env_var!(custom_dependency_urls)
+        custom_dependency_urls = CI.CustomDependencyUrls()
+        if CI.is_pull_request(get(ENV, "CI_COMMIT_REF_NAME", ""))
+            @info "Use Custom dependency URLs for test type: $(test_type)\n" *
+                "Custom URL environment variable prefix: $(CI.get_test_type_env_var_prefix(test_type))"
+
+            CI.append_custom_dependency_urls_from_git_message!(custom_dependency_urls)
+            CI.append_custom_dependency_urls_from_env_var!(custom_dependency_urls)
+        else
+            @info "Disable custom URLs for QED dependencies"
+        end
 
         test_specific_custom_urls = get_test_specific_custom_urls(
             test_type, custom_dependency_urls
@@ -75,28 +82,28 @@ if abspath(PROGRAM_FILE) == @__FILE__
 
         active_project_project_toml = Pkg.project().path
 
-        compat_changes = get_compat_changes()
+        compat_changes = CI.get_compat_changes()
 
         qed_path = mktempdir(; cleanup = false)
 
-        pkg_tree = build_qed_dependency_graph!(
+        pkg_tree = CI.build_qed_dependency_graph!(
             qed_path, compat_changes, test_specific_custom_urls
         )
-        pkg_ordering = get_package_dependency_list(pkg_tree)
+        pkg_ordering = CI.get_package_dependency_list(pkg_tree)
 
-        required_deps = get_filtered_dependencies(
+        required_deps = CI.get_filtered_dependencies(
             r"^(QED*|QuantumElectrodynamics*)", active_project_project_toml
         )
 
-        linear_pkg_ordering = calculate_linear_dependency_ordering(
+        linear_pkg_ordering = CI.calculate_linear_dependency_ordering(
             pkg_ordering, required_deps
         )
 
         # remove all QED packages, because otherwise Julia tries to resolve the whole
         # environment if a package is added via Pkg.develop() which can cause circulare dependencies
-        remove_packages(linear_pkg_ordering, dry_run)
+        CI.remove_packages(linear_pkg_ordering, dry_run)
 
-        install_qed_dev_packages(
+        CI.install_qed_dev_packages(
             linear_pkg_ordering,
             qed_path,
             ENV["CI_DEV_PKG_NAME"],

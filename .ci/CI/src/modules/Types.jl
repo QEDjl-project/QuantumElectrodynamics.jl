@@ -1,7 +1,3 @@
-# Note: This file is used by SetupDevEnv.jl
-#       It is not allowed to use third party packages.
-#       Only standard library packages are allowed.
-
 """
 Represent type of tests to be tested
 """

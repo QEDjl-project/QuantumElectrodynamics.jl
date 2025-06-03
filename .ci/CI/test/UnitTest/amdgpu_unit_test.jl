@@ -5,10 +5,10 @@
     git_branch = "branch"
     tools_git_repo = CI.GitRepoAddress(git_url, git_branch)
 
-    for version in julia_versions, setup_dev_env in [true, false]
+    for version in julia_versions
         expected_job = get_generic_unit_job(version, test_package)
         expected_job["before_script"] = get_amdgpu_before_script(version)
-        expected_job["script"] = get_main_unit_job_script_section(setup_dev_env, tools_git_repo)
+        expected_job["script"] = get_main_unit_job_script_section(tools_git_repo)
 
         expected_job["image"] = "rocm/dev-ubuntu-24.04:6.2.4-complete"
         expected_job["variables"]["TEST_AMDGPU"] = "1"
@@ -18,7 +18,6 @@
         CI.add_unit_test_job_yaml!(
             job_dict,
             test_package,
-            setup_dev_env,
             CI.ReleaseVersion(version),
             CI.AMDGPU(),
             tools_git_repo

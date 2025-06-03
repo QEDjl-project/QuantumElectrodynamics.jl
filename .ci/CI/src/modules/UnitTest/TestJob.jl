@@ -2,7 +2,6 @@
     add_unit_test_job_yaml!(
         job_dict::Dict,
         test_package::TestPackage,
-        setup_dev_env::Bool,
         unit_test_type::TestType,
         test_platform::TestPlatform = CPU,
         tools_git_repo::GitRepoAddress = GitRepoAddress(
@@ -16,8 +15,6 @@ contains all properties to be directly translated to GitLab CI yaml.
 # Args
 - `job_dict::Dict`: Dict in which the new job is added.
 - `test_package::TestPackage`: Properties of the package to be tested, such as name and version.
-- `setup_dev_env::Bool`: If the value is true, additional job code is generated that allows the dev
-    or feature branch versions of the QED dependencies to be used.
 - `unit_test_type::TestType`: Depending on the type, slightly different unit tests are generated.
     Read the documentation of the concrete type to get more information.
 - `test_platform::TestPlatform`: Set target platform test, e.g. CPU, Nvidia GPU or AMD GPU.
@@ -31,7 +28,6 @@ _get_unit_test_name_prefix(test_platform::TestPlatform) = "unit_test_julia_" * l
 function add_unit_test_job_yaml!(
         job_dict::Dict,
         test_package::TestPackage,
-        setup_dev_env::Bool,
         unit_test_type::ReleaseVersion,
         test_platform::CPU,
         tools_git_repo::GitRepoAddress = GitRepoAddress(
@@ -40,7 +36,7 @@ function add_unit_test_job_yaml!(
     )
     _add_stage_once!(job_dict, "unit-test")
     job_yaml = _get_normal_unit_test(
-        unit_test_type.version, test_package, setup_dev_env, test_platform, tools_git_repo
+        unit_test_type.version, test_package, test_platform, tools_git_repo
     )
     job_yaml["tags"] = ["cpuonly"]
 
@@ -53,7 +49,6 @@ end
 function add_unit_test_job_yaml!(
         job_dict::Dict,
         test_package::TestPackage,
-        setup_dev_env::Bool,
         unit_test_type::ReleaseVersion,
         test_platform::CUDA,
         tools_git_repo::GitRepoAddress = GitRepoAddress(
@@ -62,7 +57,7 @@ function add_unit_test_job_yaml!(
     )
     _add_stage_once!(job_dict, "unit-test")
     job_yaml = _get_normal_unit_test(
-        unit_test_type.version, test_package, setup_dev_env, test_platform, tools_git_repo
+        unit_test_type.version, test_package, test_platform, tools_git_repo
     )
     job_yaml["tags"] = ["cuda", "x86_64"]
 
@@ -75,7 +70,6 @@ end
 function add_unit_test_job_yaml!(
         job_dict::Dict,
         test_package::TestPackage,
-        setup_dev_env::Bool,
         unit_test_type::ReleaseVersion,
         test_platform::AMDGPU,
         tools_git_repo::GitRepoAddress = GitRepoAddress(
@@ -84,7 +78,7 @@ function add_unit_test_job_yaml!(
     )
     _add_stage_once!(job_dict, "unit-test")
     job_yaml = _get_normal_unit_test(
-        unit_test_type.version, test_package, setup_dev_env, test_platform, tools_git_repo
+        unit_test_type.version, test_package, test_platform, tools_git_repo
     )
     _add_julia_rocm_environment!(job_yaml, unit_test_type)
     job_yaml["tags"] = ["rocm", "x86_64"]
@@ -98,7 +92,6 @@ end
 function add_unit_test_job_yaml!(
         job_dict::Dict,
         test_package::TestPackage,
-        setup_dev_env::Bool,
         unit_test_type::ReleaseCandidate,
         test_platform::CPU,
         tools_git_repo::GitRepoAddress = GitRepoAddress(
@@ -107,7 +100,7 @@ function add_unit_test_job_yaml!(
     )
     _add_stage_once!(job_dict, "unit-test")
     job_yaml = _get_normal_unit_test(
-        "rc", test_package, setup_dev_env, test_platform, tools_git_repo
+        "rc", test_package, test_platform, tools_git_repo
     )
     job_yaml["allow_failure"] = true
     job_yaml["tags"] = ["cpuonly"]
@@ -122,7 +115,6 @@ end
 function add_unit_test_job_yaml!(
         job_dict::Dict,
         test_package::TestPackage,
-        setup_dev_env::Bool,
         unit_test_type::Nightly,
         test_platform::CPU,
         tools_git_repo::GitRepoAddress = GitRepoAddress(
@@ -131,7 +123,7 @@ function add_unit_test_job_yaml!(
     )
     _add_stage_once!(job_dict, "unit-test")
     job_yaml = _get_normal_unit_test(
-        "nightly", test_package, setup_dev_env, test_platform, tools_git_repo
+        "nightly", test_package, test_platform, tools_git_repo
     )
     job_yaml["image"] = unit_test_type.container_image
 
@@ -175,7 +167,6 @@ end
     _get_normal_unit_test(
         version::AbstractString,
         test_package::TestPackage,
-        setup_dev_env::Bool,
         test_platform::TestPlatform,
         tools_git_repo::GitRepoAddress,
     )
@@ -185,8 +176,6 @@ Creates a normal unit test job for a specific Julia version.
 # Args
 - `version::AbstractString`: Julia version used for the tests.
 - `test_package::TestPackage`: Properties of the package to be tested, such as name and version.
-- `setup_dev_env::Bool`: If the value is true, additional job code is generated that allows the dev
-    or feature branch versions of the QED dependencies to be used.
 - `test_platform::TestPlatform`: Set target platform test, e.g. CPU, Nvidia GPU or AMD GPU.
 - `tools_git_repo::GitRepoAddress`: URL and branch of the Git repository from which the CI tools are
     cloned in unit test job.
@@ -198,7 +187,6 @@ Returns a dict containing the unit test, which can be output directly as GitLab 
 function _get_normal_unit_test(
         version::AbstractString,
         test_package::TestPackage,
-        setup_dev_env::Bool,
         test_platform::TestPlatform,
         tools_git_repo::GitRepoAddress,
     )::Dict
@@ -220,31 +208,14 @@ function _get_normal_unit_test(
         job_yaml["variables"]["TEST_$(get_platform_name(tp))"] = (tp == test_platform) ? "1" : "0"
     end
 
-    script = [
+    job_yaml["script"] = [
         "apt update && apt install -y git",
         "git clone --depth 1 -b $(tools_git_repo.branch) $(tools_git_repo.url) /tmp/integration_test_tools/",
+        "julia --project=/tmp/integration_test_tools/.ci/CI/ -e 'import Pkg; Pkg.instantiate()'",
+        "julia --project=/tmp/integration_test_tools/.ci/CI/ /tmp/integration_test_tools/.ci/CI/script/SetupDevEnv.jl \${CI_PROJECT_DIR}",
+        "julia --project=. -e 'import Pkg; Pkg.instantiate()'",
+        "julia --project=. -e 'import Pkg; Pkg.test(; coverage = true)'",
     ]
-
-    if setup_dev_env
-        push!(
-            script,
-            "julia --project=. /tmp/integration_test_tools/.ci/CI/script/SetupDevEnv.jl \${CI_PROJECT_DIR}/Project.toml",
-        )
-    else
-        push!(
-            script,
-            "julia --project=. /tmp/integration_test_tools/.ci/CI/script/SetupDevEnv.jl \${CI_PROJECT_DIR}/Project.toml NO_MESSAGE",
-        )
-    end
-
-    script = vcat(
-        script,
-        [
-            "julia --project=. -e 'import Pkg; Pkg.instantiate()'",
-            "julia --project=. -e 'import Pkg; Pkg.test(; coverage = true)'",
-        ],
-    )
-    job_yaml["script"] = script
 
     job_yaml["interruptible"] = true
 
