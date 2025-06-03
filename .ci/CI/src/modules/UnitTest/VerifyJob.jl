@@ -33,7 +33,8 @@ function add_unit_test_verify_job_yaml!(
             "script" => [
                 "apt update && apt install -y git",
                 "git clone --depth 1 -b $(tools_git_repo.branch) $(tools_git_repo.url) /tools",
-                "julia /tools/.ci/CI/src/VerifyEnv.jl",
+                "julia --project=/tools/.ci/CI/ -e 'import Pkg; Pkg.instantiate()'",
+                "julia --project=/tools/.ci/CI/ /tools/.ci/CI/script/VerifyEnv.jl",
             ],
             "interruptible" => true,
             "tags" => ["cpuonly"],

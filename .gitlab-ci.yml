@@ -16,7 +16,7 @@ stages:
     - julia --project=. -e 'import Pkg; Pkg.test(; coverage = true)'
     - cd ${CI_PROJECT_DIR}
     # test QuantumElectrodynamics.jl
-    - $(julia --project=. ${CI_PROJECT_DIR}/.ci/CI/src/GetProjectNameVersionPath.jl)
+    - $(julia --project=${CI_PROJECT_DIR}/.ci/CI/ ${CI_PROJECT_DIR}/.ci/CI/script/GetProjectNameVersionPath.jl ${CI_PROJECT_DIR})
     - echo "CI_DEV_PKG_NAME -> $CI_DEV_PKG_NAME"
     - echo "CI_DEV_PKG_VERSION -> $CI_DEV_PKG_VERSION"
     - echo "CI_DEV_PKG_PATH -> $CI_DEV_PKG_PATH"
@@ -77,7 +77,8 @@ verify-unit-test-deps:
         # does not check for custom package URLs on the main and dev branch
         echo "no custom package URL check necessary"
       else
-        julia ${CI_PROJECT_DIR}/.ci/CI/src/VerifyEnv.jl
+        julia --project=${CI_PROJECT_DIR}/.ci/CI/ -e 'import Pkg; Pkg.instantiate()'
+        julia --project=${CI_PROJECT_DIR}/.ci/CI/ ${CI_PROJECT_DIR}/.ci/CI/script/VerifyEnv.jl
       fi
   interruptible: true
   tags:
