@@ -24,26 +24,6 @@ using LibGit2
 using CI
 using Pkg
 
-"""
-    get_test_specific_custom_urls(::CI.TestType, urls::CI.CustomDependencyUrls)::Dict{String, String}
-
-Return a reference to the dict containing the custom repository URLs for the given test type.
-
-# Returns
-
-The key is the name of the package and the value the custom URL.
-"""
-function get_test_specific_custom_urls end
-
-get_test_specific_custom_urls(
-    ::CI.UnitTest, urls::CI.CustomDependencyUrls
-)::Dict{String, String} = urls.unit
-
-get_test_specific_custom_urls(
-    ::CI.IntegrationTest, urls::CI.CustomDependencyUrls
-)::Dict{String, String} = urls.integ
-
-
 if abspath(PROGRAM_FILE) == @__FILE__
     try
         if length(ARGS) < 1
@@ -73,7 +53,7 @@ if abspath(PROGRAM_FILE) == @__FILE__
             @info "Disable custom URLs for QED dependencies"
         end
 
-        test_specific_custom_urls = get_test_specific_custom_urls(
+        test_specific_custom_urls = CI.get_test_specific_custom_urls(
             test_type, custom_dependency_urls
         )
         if !isempty(test_specific_custom_urls)

@@ -11,6 +11,7 @@ else
     include("IntegrationTest/runtests.jl")
     include("Util/runtests.jl")
     include("SetupDevEnv/runtests.jl")
+    include("GitLabCIConf/runtests.jl")
 end
 
 if haskey(ENV, "DISABLE_CI_LONG_TESTS")

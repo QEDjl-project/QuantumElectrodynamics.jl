@@ -22,6 +22,24 @@ get_test_type_env_var_prefix(::TestType) = error("unknown test type")
 get_test_type_env_var_prefix(::UnitTest) = "CI_UNIT_PKG_URL_"
 get_test_type_env_var_prefix(::IntegrationTest) = "CI_INTG_PKG_URL_"
 
+# TODO: rename me to get_test_type_env_var_prefix(), if Bootloader.jl is moved to script
+"""
+    get_test_type_env_var_prefix2(::TestType)
+
+Depending on the test type, a different prefix for a environment variable name is returned.
+Environment starting with the prefix contains custom dependency URLs.
+
+# Args
+`::TestType` The test type
+
+# Returns
+
+Prefix of variable names that are read in order to obtain user-defined URLs.
+"""
+get_test_type_env_var_prefix2(::TestType) = error("unknown test type")
+get_test_type_env_var_prefix2(::UnitTest) = "CI_QED_UNIT_PKG_URL_"
+get_test_type_env_var_prefix2(::IntegrationTest) = "CI_QED_INTG_PKG_URL_"
+
 """
     get_test_type_name(::TestType)
 
@@ -169,3 +187,42 @@ struct CustomDependencyUrls
 
     CustomDependencyUrls() = new(Dict{String, String}(), Dict{String, String}())
 end
+
+"""
+    get_test_specific_custom_urls(::TestType, urls::CustomDependencyUrls)::Dict{String, String}
+
+Return a reference to the dict containing the custom repository URLs for the given test type.
+
+# Returns
+
+The key is the name of the package and the value the custom URL.
+"""
+function get_test_specific_custom_urls end
+
+get_test_specific_custom_urls(
+    ::UnitTest, urls::CustomDependencyUrls
+)::Dict{String, String} = urls.unit
+
+get_test_specific_custom_urls(
+    ::IntegrationTest, urls::CustomDependencyUrls
+)::Dict{String, String} = urls.integ
+
+
+"""
+    struct GitHubPR
+
+# Members
+- `user::AbstractString`: GitHub user or group
+- `project::AbstractString`: repository name
+- `pr_number::Int`: Pull Request Number
+"""
+struct GitHubPR
+    user::AbstractString
+    project::AbstractString
+    pr_number::Int
+end
+
+Base.:(==)(a::GitHubPR, b::GitHubPR) = a.user == b.user && a.project == b.project && a.pr_number == b.pr_number
+
+"Get String representation of GitHubPR"
+github_pr_to_string(gh_pr::GitHubPR) = "User: $(gh_pr.user)\nProject: $(gh_pr.project)\nPR number: $(gh_pr.pr_number)"

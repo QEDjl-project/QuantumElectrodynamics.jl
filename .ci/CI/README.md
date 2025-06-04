@@ -44,6 +44,14 @@ The script `SetupDevEnv.jl` checks the dependencies of the current project and p
 julia --project=. script/SetupDevEnv.jl /path/to/the/julia/environment
 ```
 
+# GetGitLabCIConf.jl
+
+`GetGitLabCIConf.jl` reads the environment variable `CI_COMMIT_REF_NAME`. Depending on the value, it creates the environment variables for `Bootloader.jl`. If the value of `CI_COMMIT_REF_NAME` encodes a reference to a GitHub pull request, all public information is pulled from it. The following information is grepped from the pull request.
+
+## Pull Request Label support
+
+If the pull request sets labels starting with `CI:`, `GetGitLabCIConf.jl` will parse them and compare them with dict [know_tags](./src/modules/GitLabCIConf/SetEnvVariables.jl). It removes the prefix `CI: ` (including spaces), strip the string and checks if it is defined in the `know_tags`. If it is defined, the corresponding environment variables are set.
+
 ## Optional Environment variables
 
 All dependencies are added via `Pkg.develop("dep_name")` by default. Therefore the default development branch is used. To set a custom URL, you can define the environment variables `CI_UNIT_PKG_URL_<dep_name>`. For example, you set the environment variable `CI_UNIT_PKG_URL_QEDbase=https://github.com/User/QEDbase.jl#feature1`, the script will execute the command `Pkg.develop(url="https://github.com/User/QEDbase.jl#feature1")`, when the dependency QEDbase was found and matched in the `Project.toml`. Then the branch `feature1` from `https://github.com/User/QEDbase.jl` is used as a dependency.
