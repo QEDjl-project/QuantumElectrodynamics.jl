@@ -1,8 +1,4 @@
-# workaround if it is included in CI.jl for testing purpose
-if abspath(PROGRAM_FILE) == @__FILE__
-    include("modules/Types.jl")
-    include("modules/Utils.jl")
-end
+using CI
 
 struct EnvironmentVerificationException <: Exception
     envs::Set{AbstractString}
@@ -10,7 +6,7 @@ end
 
 function Base.showerror(io::IO, e::EnvironmentVerificationException)
     local err_str = "Found custom dependencies for unit tests.\n"
-    local env_prefix = get_test_type_env_var_prefix(UnitTest())
+    local env_prefix = CI.get_test_type_env_var_prefix(UnitTest())
     for env_name in e.envs
         err_str *= "  $(env_prefix)$(env_name)\n"
     end
@@ -19,9 +15,9 @@ function Base.showerror(io::IO, e::EnvironmentVerificationException)
 end
 
 if abspath(PROGRAM_FILE) == @__FILE__
-    custom_dependency_urls = CustomDependencyUrls()
-    append_custom_dependency_urls_from_git_message!(custom_dependency_urls)
-    append_custom_dependency_urls_from_env_var!(custom_dependency_urls)
+    custom_dependency_urls = CI.CustomDependencyUrls()
+    CI.append_custom_dependency_urls_from_git_message!(custom_dependency_urls)
+    CI.append_custom_dependency_urls_from_env_var!(custom_dependency_urls)
 
     if isempty(custom_dependency_urls.unit)
         @info "No custom dependencies for unit tests detected."
