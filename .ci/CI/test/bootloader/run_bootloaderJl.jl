@@ -32,9 +32,9 @@ function get_ci_jl_project_path()
 end
 
 """
-Returns the path of the Bootloader.jl script.
+Returns the path of the bootloader.jl script.
 """
-get_bootloader_jl_path() = joinpath(get_ci_jl_project_path(), "src", "Bootloader.jl")
+get_bootloader_jl_path() = joinpath(get_ci_jl_project_path(), "script", "bootloader.jl")
 
 """
     run_process(command::Vector{String})

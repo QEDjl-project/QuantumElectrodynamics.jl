@@ -112,7 +112,7 @@ get_gitlab_ci_conf_jl_integration_test:
 trigger_job:
   stage: qedcore-integration-test
   variables:
-    # use Bootloader.jl code of the pull request
+    # use bootloader.jl code of the pull request
     CI_GIT_CI_TOOLS_URL: "${CI_PROJECT_URL}.git"
     CI_GIT_CI_TOOLS_BRANCH: $CI_COMMIT_REF_NAME
     # need to enable generating test jobs for a pull request by hand because pipeline is triggered

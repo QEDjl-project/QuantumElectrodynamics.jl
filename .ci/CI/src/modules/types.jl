@@ -22,7 +22,7 @@ get_test_type_env_var_prefix(::TestType) = error("unknown test type")
 get_test_type_env_var_prefix(::UnitTest) = "CI_UNIT_PKG_URL_"
 get_test_type_env_var_prefix(::IntegrationTest) = "CI_INTG_PKG_URL_"
 
-# TODO: rename me to get_test_type_env_var_prefix(), if Bootloader.jl is moved to script
+# TODO: rename me to get_test_type_env_var_prefix(), if bootloader.jl is moved to script
 """
     get_test_type_env_var_prefix2(::TestType)
 

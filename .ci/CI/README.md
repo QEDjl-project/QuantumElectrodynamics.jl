@@ -1,12 +1,12 @@
-# Bootloader.jl
+# bootloader.jl
 
 ## Usage
 
-The `Bootloader.jl` script generates the unit and integration tests depending on environment variables and script arguments. It also uses the dependencies in the `Project.toml` of a specific project to generate the integration tests for this project.
+The `bootloader.jl` script generates the unit and integration tests depending on environment variables and script arguments. It also uses the dependencies in the `Project.toml` of a specific project to generate the integration tests for this project.
 
 ## Environment Variables
 
-All environment variables are optional or have an alternative script argument. Please run `julia --project src/Bootloader.jl --help` to display all script arguments.
+All environment variables are optional or have an alternative script argument. Please run `julia --project script/bootloader.jl --help` to display all script arguments.
 
 - **CI_PROJECT_DIR**: Directory path of the package (containing the `Project.toml`) where the tests are generated for.
 - **CI_COMMIT_REF_NAME**: Name of the target branch. In the case of a pull request, the environment variable must have a special pattern: `pr-<PR number>/<repo owner of the source branch>/<project name>/<source branch name>`, e.g: `pr-41/SimeonEhrig/QuantumElectrodynamics.jl/setDevDepDeps`.
@@ -46,7 +46,7 @@ julia --project=. script/setup_dev_env.jl /path/to/the/julia/environment
 
 # get_gitlab_ci_conf.jl
 
-`get_gitlab_ci_conf.jl` reads the environment variable `CI_COMMIT_REF_NAME`. Depending on the value, it creates the environment variables for `Bootloader.jl`. If the value of `CI_COMMIT_REF_NAME` encodes a reference to a GitHub pull request, all public information is pulled from it. The following information is grepped from the pull request.
+`get_gitlab_ci_conf.jl` reads the environment variable `CI_COMMIT_REF_NAME`. Depending on the value, it creates the environment variables for `bootloader.jl`. If the value of `CI_COMMIT_REF_NAME` encodes a reference to a GitHub pull request, all public information is pulled from it. The following information is grepped from the pull request.
 
 ## Pull Request Label support
 
