@@ -10,7 +10,7 @@
                 "apt update && apt install -y git",
                 "git clone --depth 1 -b $(git_repo.branch) $(git_repo.url) /tools",
                 "julia --project=/tools/.ci/CI/ -e 'import Pkg; Pkg.instantiate()'",
-                "julia --project=/tools/.ci/CI/ /tools/.ci/CI/script/VerifyEnv.jl",
+                "julia --project=/tools/.ci/CI/ /tools/.ci/CI/script/verify_env.jl",
             ],
             "interruptible" => true,
             "tags" => ["cpuonly"],
@@ -36,7 +36,7 @@ end
             "image" => "alpine:latest",
             "stage" => "verify-unit-test-deps",
             "interruptible" => true,
-            "script" => ["echo \"No check necessary if SetupDevEnv.jl is not used.\""]
+            "script" => ["echo \"No check necessary if setup_dev_env.jl is not used.\""]
         )
     )
 

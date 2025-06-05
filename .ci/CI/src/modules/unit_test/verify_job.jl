@@ -34,7 +34,7 @@ function add_unit_test_verify_job_yaml!(
                 "apt update && apt install -y git",
                 "git clone --depth 1 -b $(tools_git_repo.branch) $(tools_git_repo.url) /tools",
                 "julia --project=/tools/.ci/CI/ -e 'import Pkg; Pkg.instantiate()'",
-                "julia --project=/tools/.ci/CI/ /tools/.ci/CI/script/VerifyEnv.jl",
+                "julia --project=/tools/.ci/CI/ /tools/.ci/CI/script/verify_env.jl",
             ],
             "interruptible" => true,
             "tags" => ["cpuonly"],
@@ -42,7 +42,7 @@ function add_unit_test_verify_job_yaml!(
     else
         generate_dummy_job_yaml!(
             job_dict,
-            "No check necessary if SetupDevEnv.jl is not used.",
+            "No check necessary if setup_dev_env.jl is not used.",
             "verify-unit-test-deps"
         )
     end

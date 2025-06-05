@@ -16,12 +16,12 @@ stages:
     - julia --project=. -e 'import Pkg; Pkg.test(; coverage = true)'
     - cd ${CI_PROJECT_DIR}
     # test QuantumElectrodynamics.jl
-    - $(julia --project=${CI_PROJECT_DIR}/.ci/CI/ ${CI_PROJECT_DIR}/.ci/CI/script/GetProjectNameVersionPath.jl ${CI_PROJECT_DIR})
+    - $(julia --project=${CI_PROJECT_DIR}/.ci/CI/ ${CI_PROJECT_DIR}/.ci/CI/script/get_project_name_version_path.jl ${CI_PROJECT_DIR})
     - echo "CI_DEV_PKG_NAME -> $CI_DEV_PKG_NAME"
     - echo "CI_DEV_PKG_VERSION -> $CI_DEV_PKG_VERSION"
     - echo "CI_DEV_PKG_PATH -> $CI_DEV_PKG_PATH"
     - julia --project=${CI_PROJECT_DIR}/.ci/CI -e 'import Pkg; Pkg.test(; coverage = true)'
-    - julia --project=${CI_PROJECT_DIR}/.ci/CI ${CI_PROJECT_DIR}/.ci/CI/script/SetupDevEnv.jl ${CI_PROJECT_DIR}
+    - julia --project=${CI_PROJECT_DIR}/.ci/CI ${CI_PROJECT_DIR}/.ci/CI/script/setup_dev_env.jl ${CI_PROJECT_DIR}
     - julia --project=. -e 'import Pkg; Pkg.instantiate()'
     - julia --project=. -e 'import Pkg; Pkg.test(; coverage = true)'
   interruptible: true
@@ -78,7 +78,7 @@ verify-unit-test-deps:
         echo "no custom package URL check necessary"
       else
         julia --project=${CI_PROJECT_DIR}/.ci/CI/ -e 'import Pkg; Pkg.instantiate()'
-        julia --project=${CI_PROJECT_DIR}/.ci/CI/ ${CI_PROJECT_DIR}/.ci/CI/script/VerifyEnv.jl
+        julia --project=${CI_PROJECT_DIR}/.ci/CI/ ${CI_PROJECT_DIR}/.ci/CI/script/verify_env.jl
       fi
   interruptible: true
   tags:
@@ -103,7 +103,7 @@ get_gitlab_ci_conf_jl_integration_test:
   script:
     - cd ${CI_PROJECT_DIR}/.ci/CI/
     - julia --project=. -e 'import Pkg; Pkg.instantiate()'
-    - $(julia --project=. ${CI_PROJECT_DIR}/.ci/CI/script/GetGitLabCIConf.jl)
+    - $(julia --project=. ${CI_PROJECT_DIR}/.ci/CI/script/get_gitlab_ci_conf.jl)
     - env | grep CI_QED_
   interruptible: true
   tags:

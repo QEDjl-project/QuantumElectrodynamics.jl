@@ -42,7 +42,7 @@
             "git clone --depth 1 -b feature42 https://github.com/fork/QEDcore42.jl.git integration_test",
             "cd integration_test",
             "julia --project=/integration_test_tools/.ci/CI -e 'import Pkg; Pkg.instantiate()'",
-            "julia --project=/integration_test_tools/.ci/CI /integration_test_tools/.ci/CI/script/SetupDevEnv.jl \$PWD",
+            "julia --project=/integration_test_tools/.ci/CI /integration_test_tools/.ci/CI/script/setup_dev_env.jl \$PWD",
             "julia --project=. -e 'import Pkg; Pkg.instantiate()'",
             "julia --project=. -e 'import Pkg; Pkg.test(; coverage = true)'",
         ],
