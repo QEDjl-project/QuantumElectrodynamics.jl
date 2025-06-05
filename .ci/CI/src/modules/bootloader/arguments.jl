@@ -58,7 +58,7 @@ Parsed script arguments.
 function parse_commandline()::Dict{String, Any}
     s = ArgParseSettings()
 
-    @add_arg_table s begin
+    @add_arg_table! s begin
         "--nocpu"
         help = "Disable the generation of CPU tests."
         action = :store_true
