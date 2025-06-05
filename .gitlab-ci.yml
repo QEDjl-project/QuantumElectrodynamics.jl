@@ -121,6 +121,7 @@ trigger_job:
     CI_QED_IS_PR: "ON"
   trigger:
     project: hzdr/qedjl-project/qedcore.jl
+    branch: pr-118/SimeonEhrig/QEDcore.jl/snakeCaseBootloaderJl
     strategy: depend
   # run only in pull requests
   rules:
