@@ -34,23 +34,23 @@ If we want to merge in the main branch, we do it because we want to publish the 
     1. If all of these pass, we will not need to increase the minor version of this package.
     2. If they do not all pass, the minor version must be increased and the failing packages must also be released later with an updated compat entry. In either case the release can proceed, as the released packages will continue to work because of their current compat entries.
 
-# SetupDevEnv.jl
+# setup_dev_env.jl
 
 ## Usage
 
-The script `SetupDevEnv.jl` checks the dependencies of the current project and provides a Julia environment that provides all current development versions of the QED dependencies.
+The script `setup_dev_env.jl` checks the dependencies of the current project and provides a Julia environment that provides all current development versions of the QED dependencies.
 
 ```bash
-julia --project=. script/SetupDevEnv.jl /path/to/the/julia/environment
+julia --project=. script/setup_dev_env.jl /path/to/the/julia/environment
 ```
 
-# GetGitLabCIConf.jl
+# get_gitlab_ci_conf.jl
 
-`GetGitLabCIConf.jl` reads the environment variable `CI_COMMIT_REF_NAME`. Depending on the value, it creates the environment variables for `Bootloader.jl`. If the value of `CI_COMMIT_REF_NAME` encodes a reference to a GitHub pull request, all public information is pulled from it. The following information is grepped from the pull request.
+`get_gitlab_ci_conf.jl` reads the environment variable `CI_COMMIT_REF_NAME`. Depending on the value, it creates the environment variables for `Bootloader.jl`. If the value of `CI_COMMIT_REF_NAME` encodes a reference to a GitHub pull request, all public information is pulled from it. The following information is grepped from the pull request.
 
 ## Pull Request Label support
 
-If the pull request sets labels starting with `CI:`, `GetGitLabCIConf.jl` will parse them and compare them with dict [know_tags](./src/modules/GitLabCIConf/SetEnvVariables.jl). It removes the prefix `CI: ` (including spaces), strip the string and checks if it is defined in the `know_tags`. If it is defined, the corresponding environment variables are set.
+If the pull request sets labels starting with `CI:`, `get_gitlab_ci_conf.jl` will parse them and compare them with dict [know_tags](./src/modules/GitLabCIConf/SetEnvVariables.jl). It removes the prefix `CI: ` (including spaces), strip the string and checks if it is defined in the `know_tags`. If it is defined, the corresponding environment variables are set.
 
 ## Optional Environment variables
 

@@ -212,7 +212,7 @@ function _get_normal_unit_test(
         "apt update && apt install -y git",
         "git clone --depth 1 -b $(tools_git_repo.branch) $(tools_git_repo.url) /tmp/integration_test_tools/",
         "julia --project=/tmp/integration_test_tools/.ci/CI/ -e 'import Pkg; Pkg.instantiate()'",
-        "julia --project=/tmp/integration_test_tools/.ci/CI/ /tmp/integration_test_tools/.ci/CI/script/SetupDevEnv.jl \${CI_PROJECT_DIR}",
+        "julia --project=/tmp/integration_test_tools/.ci/CI/ /tmp/integration_test_tools/.ci/CI/script/setup_dev_env.jl \${CI_PROJECT_DIR}",
         "julia --project=. -e 'import Pkg; Pkg.instantiate()'",
         "julia --project=. -e 'import Pkg; Pkg.test(; coverage = true)'",
     ]

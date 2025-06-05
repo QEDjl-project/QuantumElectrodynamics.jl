@@ -11,7 +11,7 @@
             "feature42"
         ),
         CI.ReleaseVersion("1.13"),
-        CI.CUDA(),
+        CI.AMDGPU(),
         CI.GitRepoAddress(
             "https://github.com/fork/QED.jl.git",
             "feature47"
@@ -23,7 +23,7 @@
 
     expected_job_yaml = Dict()
     expected_job_yaml["integration_test_QEDcore"] = Dict(
-        "image" => "julia:1.13",
+        "image" => "rocm/dev-ubuntu-24.04:6.2.4-complete",
         "stage" => "integ-test",
         "allow_failure" => true,
         "variables" => Dict(
@@ -33,7 +33,14 @@
             "CI_TEST_TYPE" => "integ",
         ),
         "interruptible" => true,
-        "tags" => ["cuda", "x86_64"],
+        "tags" => ["rocm", "x86_64"],
+        "before_script" => [
+            "curl -fsSL https://install.julialang.org | sh -s -- -y -p /julia",
+            "export PATH=/julia/bin:\$PATH",
+            "echo \$PATH",
+            "juliaup add 1.13",
+            "juliaup default 1.13",
+        ],
         "script" => [
             "apt update",
             "apt install -y git",
@@ -42,7 +49,7 @@
             "git clone --depth 1 -b feature42 https://github.com/fork/QEDcore.jl.git integration_test",
             "cd integration_test",
             "julia --project=/integration_test_tools/.ci/CI -e 'import Pkg; Pkg.instantiate()'",
-            "julia --project=/integration_test_tools/.ci/CI /integration_test_tools/.ci/CI/script/SetupDevEnv.jl \$PWD",
+            "julia --project=/integration_test_tools/.ci/CI /integration_test_tools/.ci/CI/script/setup_dev_env.jl \$PWD",
             "julia --project=. -e 'import Pkg; Pkg.instantiate()'",
             "julia --project=. -e 'import Pkg; Pkg.test(; coverage = true)'",
         ],

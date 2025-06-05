@@ -100,7 +100,7 @@ QEDFeynmanDiagrams.jl | `CI_UNIT_PKG_URL_QEDFeynmanDiagrams` | `CI_INTG_PKG_URL_
 
 In this section, we explain how the unit tests are prepared and executed. It is not mandatory to read the section if you only want to use the CI.
 
-Before the unit tests are executed, the `SetupDevEnv.jl` is executed, which prepares the project environment for the unit test. It reads the `Project.toml` of the project give via argument and adds the version of the `dev` branch of all QED dependency (`Pkg.develop()`) if no line starting with `CI_UNIT_PKG_URL_` was defined in the commit message. If `CI_UNIT_PKG_URL_` was defined, it will use the custom URL.
+Before the unit tests are executed, the `setup_dev_env.jl` is executed, which prepares the project environment for the unit test. It reads the `Project.toml` of the project give via argument and adds the version of the `dev` branch of all QED dependency (`Pkg.develop()`) if no line starting with `CI_UNIT_PKG_URL_` was defined in the commit message. If `CI_UNIT_PKG_URL_` was defined, it will use the custom URL.
 
 The commit message is defined in the environment variable `CI_COMMIT_MESSAGE` by GitLab CI. If the variable is not defined, the script ignores the commit message. If you want to disable reading the commit message, you can set the name of the commit message variable to an undefined variable via the first argument of the `integTestGen.jl` script. We use this when executing the CI on the `main` or `dev` branch. On these branches, it should not be possible to use custom URLs for unit or integration tests. Therefore we disable it, which also allows the use of `CI_INTG_PKG_URL_` variables as regular part of the merge commit message.
 
@@ -109,7 +109,7 @@ The commit message is defined in the environment variable `CI_COMMIT_MESSAGE` by
 If you want to run the script locally, you can set custom URLs via environment variables. For example:
 
 ```bash
-CI_UNIT_PKG_URL_QEDbase="www.github.com/User/QEDbase#0e1593b" CI_UNIT_PKG_URL_QEDfields="www.github.com/User/QEDfields#60324ad" julia --project=. script/SetupDevEnv.jl /path/to/QED/repo`
+CI_UNIT_PKG_URL_QEDbase="www.github.com/User/QEDbase#0e1593b" CI_UNIT_PKG_URL_QEDfields="www.github.com/User/QEDfields#60324ad" julia --project=. script/setup_dev_env.jl /path/to/QED/repo`
 ```
 
 # Integration Tests for CI Develops

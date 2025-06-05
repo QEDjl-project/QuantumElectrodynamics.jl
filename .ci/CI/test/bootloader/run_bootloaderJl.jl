@@ -133,7 +133,7 @@ end
         @test count_keys_contains(r"^unit_test.*amdgpu", job_data) > 0
 
         @test haskey(job_data, "verify-unit-test-deps")
-        @test script_region_contains(r"VerifyEnv\.jl", job_data["verify-unit-test-deps"])
+        @test script_region_contains(r"verify_env\.jl", job_data["verify-unit-test-deps"])
     end
 
     @testset "target branch dev, pull request" begin
@@ -159,7 +159,7 @@ end
         @test count_keys_contains(r"^integration_test.*amdgpu", job_data) > 0
 
         @test haskey(job_data, "verify-unit-test-deps")
-        @test script_region_contains(r"VerifyEnv\.jl", job_data["verify-unit-test-deps"])
+        @test script_region_contains(r"verify_env\.jl", job_data["verify-unit-test-deps"])
     end
 
     @testset "target branch main, no pull request" begin
@@ -196,7 +196,7 @@ end
         @test count_keys_contains(r"^unit_test.*amdgpu", gpu_yaml) > 0
 
         @test haskey(verify_yaml, "DummyJob")
-        @test script_region_contains(r"VerifyEnv\.jl", verify_yaml["DummyJob"]) == false
+        @test script_region_contains(r"verify_env\.jl", verify_yaml["DummyJob"]) == false
     end
 
     @testset "target branch main, pull request" begin
@@ -239,6 +239,6 @@ end
         @test count_keys_contains(r"^integration_test.*amdgpu", gpu_yaml) > 0
 
         @test haskey(verify_yaml, "DummyJob")
-        @test script_region_contains(r"VerifyEnv\.jl", verify_yaml["DummyJob"]) == false
+        @test script_region_contains(r"verify_env\.jl", verify_yaml["DummyJob"]) == false
     end
 end
