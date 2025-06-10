@@ -14,7 +14,7 @@ else
     include("gitlab_ci_conf/runtests.jl")
 end
 
-if haskey(ENV, "DISABLE_CI_LONG_TESTS")
+if haskey(ENV, "CI_QED_DISABLE_LONG_TESTS")
     @warn "disable long running tests"
 else
     include("bootloader/runtests.jl")

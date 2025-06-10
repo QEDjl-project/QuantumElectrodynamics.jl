@@ -16,7 +16,7 @@
             CI.append_custom_dependency_urls_from_env_var!(
                 custom_dependency_urls,
                 Dict{String, String}(
-                    "CI_UNIT_PKG_URL_QEDcore" => "https://github.com/unit/QEDcore#master"
+                    "CI_QED_UNIT_PKG_URL_QEDcore" => "https://github.com/unit/QEDcore#master"
                 ),
             )
             @test custom_dependency_urls.unit ==
@@ -31,10 +31,10 @@
             CI.append_custom_dependency_urls_from_env_var!(
                 custom_dependency_urls,
                 Dict{String, String}(
-                    "CI_INTG_PKG_URL_QEDfields" => "https://github.com/integ/QEDfields",
-                    "CI_UNIT_PKG_URL_QEDprocess" => "https://github.com/unit/QEDprocess",
-                    "CI_UNIT_PKG_URL_QEDbase" => "https://github.com/unit/QEDbase#feature1",
-                    "CI_INTG_PKG_URL_QEDbase" => "https://github.com/integ/QEDbase",
+                    "CI_QED_INTG_PKG_URL_QEDfields" => "https://github.com/integ/QEDfields",
+                    "CI_QED_UNIT_PKG_URL_QEDprocess" => "https://github.com/unit/QEDprocess",
+                    "CI_QED_UNIT_PKG_URL_QEDbase" => "https://github.com/unit/QEDbase#feature1",
+                    "CI_QED_INTG_PKG_URL_QEDbase" => "https://github.com/integ/QEDbase",
                 ),
             )
             @test custom_dependency_urls.unit == Dict(
@@ -54,8 +54,8 @@
             CI.append_custom_dependency_urls_from_env_var!(
                 custom_dependency_urls,
                 Dict{String, String}(
-                    "CI_INTG_PKG_URL_QEDfields" => "https://github.com/integ/QEDfields",
-                    "CI_INTG_PKG_URL_QEDbase" => "https://github.com/integ/QEDbase",
+                    "CI_QED_INTG_PKG_URL_QEDfields" => "https://github.com/integ/QEDfields",
+                    "CI_QED_INTG_PKG_URL_QEDbase" => "https://github.com/integ/QEDbase",
                 ),
             )
             @test isempty(custom_dependency_urls.unit)
@@ -90,8 +90,8 @@ end
                         This is a nice message.
                         And another line.
 
-                        CI_UNIT_PKG_URL_QEDcore: https://github.com/unit/QEDcore
-                        CI_UNIT_PKG_URL_QED: https://github.com/unit/QED#f456j3
+                        CI_QED_UNIT_PKG_URL_QEDcore: https://github.com/unit/QEDcore
+                        CI_QED_UNIT_PKG_URL_QED: https://github.com/unit/QED#f456j3
                         """,
                 ),
             )
@@ -114,7 +114,7 @@ end
                         This is a nice message.
                         And another line.
 
-                        CI_INTG_PKG_URL_QEDfields: https://github.com/integ/QEDfields
+                        CI_QED_INTG_PKG_URL_QEDfields: https://github.com/integ/QEDfields
                         """,
                 ),
             )
@@ -135,11 +135,11 @@ end
                         This is a nice message.
                         And another line.
 
-                        CI_INTG_PKG_URL_QEDfields: https://github.com/integ/QEDfields#dev
-                        CI_INTG_PKG_URL_QEDprocesses: https://github.com/integ/QEDprocesses
-                        CI_INTG_PKG_URL_QEDbase: https://github.com/integ/QEDbase
-                        CI_UNIT_PKG_URL_QEDbase: https://github.com/unit/QEDbase#f156134
-                        CI_UNIT_PKG_URL_QEDcore: https://github.com/unit/QEDcore
+                        CI_QED_INTG_PKG_URL_QEDfields: https://github.com/integ/QEDfields#dev
+                        CI_QED_INTG_PKG_URL_QEDprocesses: https://github.com/integ/QEDprocesses
+                        CI_QED_INTG_PKG_URL_QEDbase: https://github.com/integ/QEDbase
+                        CI_QED_UNIT_PKG_URL_QEDbase: https://github.com/unit/QEDbase#f156134
+                        CI_QED_UNIT_PKG_URL_QEDcore: https://github.com/unit/QEDcore
                         """,
                 ),
             )
@@ -166,7 +166,7 @@ end
                         This is a nice message.
                         And another line.
 
-                        CI_INTG_PKG_URL_QEDfields=https//github.com/integ/QEDfields
+                        CI_QED_INTG_PKG_URL_QEDfields=https//github.com/integ/QEDfields
                         """,
                 ),
             )
@@ -179,7 +179,7 @@ end
                         This is a nice message.
                         And another line.
 
-                        CI_INTG_PKG_URL_QEDfields=https://github.com/integ/QEDfields
+                        CI_QED_INTG_PKG_URL_QEDfields=https://github.com/integ/QEDfields
                         """,
                 ),
             )
@@ -197,7 +197,7 @@ end
                         This is a nice message.
                         And another line.
 
-                        CI_UNIT_PKG_URL_QEDfields=https://github.com/integ/QEDfields
+                        CI_QED_UNIT_PKG_URL_QEDfields=https://github.com/integ/QEDfields
                         """,
                 ),
             )
@@ -211,10 +211,10 @@ end
         CI.append_custom_dependency_urls_from_env_var!(
             custom_dependency_urls,
             Dict{String, String}(
-                "CI_INTG_PKG_URL_QEDfields" => "https://github.com/integ/QEDfieldsEnv",
-                "CI_UNIT_PKG_URL_QEDprocess" => "https://github.com/unit/QEDprocessEnv",
-                "CI_UNIT_PKG_URL_QEDbase" => "https://github.com/unit/QEDbaseEnv",
-                "CI_INTG_PKG_URL_QEDbase" => "https://github.com/integ/QEDbaseEnv",
+                "CI_QED_INTG_PKG_URL_QEDfields" => "https://github.com/integ/QEDfieldsEnv",
+                "CI_QED_UNIT_PKG_URL_QEDprocess" => "https://github.com/unit/QEDprocessEnv",
+                "CI_QED_UNIT_PKG_URL_QEDbase" => "https://github.com/unit/QEDbaseEnv",
+                "CI_QED_INTG_PKG_URL_QEDbase" => "https://github.com/integ/QEDbaseEnv",
             ),
         )
 
@@ -226,10 +226,10 @@ end
                     This is a nice message.
                     And another line.
 
-                    CI_INTG_PKG_URL_QEDfields: https://github.com/integ/QEDfieldsMsg
-                    CI_INTG_PKG_URL_QEDprocesses: https://github.com/integ/QEDprocessesMsg
-                    CI_UNIT_PKG_URL_QEDbase: https://github.com/unit/QEDbaseMsg
-                    CI_UNIT_PKG_URL_QEDcore: https://github.com/unit/QEDcoreMsg
+                    CI_QED_INTG_PKG_URL_QEDfields: https://github.com/integ/QEDfieldsMsg
+                    CI_QED_INTG_PKG_URL_QEDprocesses: https://github.com/integ/QEDprocessesMsg
+                    CI_QED_UNIT_PKG_URL_QEDbase: https://github.com/unit/QEDbaseMsg
+                    CI_QED_UNIT_PKG_URL_QEDcore: https://github.com/unit/QEDcoreMsg
                     """,
             ),
         )

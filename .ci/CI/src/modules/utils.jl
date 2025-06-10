@@ -22,11 +22,11 @@ end
     )
 
 Reads user-defined repository URLs from the environment variables. An environment variable must
-either start with the prefix `CI_UNIT_PKG_URL` for custom URLs for unit tests or with the prefix
-`CI_INTG_PKG_URL_` for integration tests.
+either start with the prefix `CI_QED_UNIT_PKG_URL` for custom URLs for unit tests or with the prefix
+`CI_QED_INTG_PKG_URL_` for integration tests.
 The prefix is removed from the variable name and saved as the package name in
 custom_dependency_urls with the variable value. For example,
-`CI_UNIT_PKG_URL_QEDbase=https://github.com/integ/QEDbase` is saved as
+`CI_QED_UNIT_PKG_URL_QEDbase=https://github.com/integ/QEDbase` is saved as
 `QEDbase=https://github.com/integ/QEDbase`.
 If the variable is set, the user-defined URL is used instead of the standard URL for the Git clone.
 
@@ -79,8 +79,8 @@ end
     )
 
 Parse the commit message, if set via variable (usual `CI_COMMIT_MESSAGE`) and set custom URLs.
-A line with a custom URL must either start with the prefix `CI_UNIT_PKG_URL` for custom URLs for
-unit tests or with the prefix `CI_INTG_PKG_URL_` for integration tests, followed by an `: ` and the
+A line with a custom URL must either start with the prefix `CI_QED_UNIT_PKG_URL` for custom URLs for
+unit tests or with the prefix `CI_QED_INTG_PKG_URL_` for integration tests, followed by an `: ` and the
 URL.
 
 ```
@@ -89,16 +89,16 @@ Git headline
 This is a nice message.
 And another line.
 
-CI_INTG_PKG_URL_QEDfields: https://github.com/integ/QEDfields
-CI_INTG_PKG_URL_QEDprocesses: https://github.com/integ/QEDprocesses
-CI_INTG_PKG_URL_QEDbase: https://github.com/integ/QEDbase
-CI_UNIT_PKG_URL_QEDbase: https://github.com/unit/QEDbase
-CI_UNIT_PKG_URL_QEDcore: https://github.com/unit/QEDcore
+CI_QED_INTG_PKG_URL_QEDfields: https://github.com/integ/QEDfields
+CI_QED_INTG_PKG_URL_QEDprocesses: https://github.com/integ/QEDprocesses
+CI_QED_INTG_PKG_URL_QEDbase: https://github.com/integ/QEDbase
+CI_QED_UNIT_PKG_URL_QEDbase: https://github.com/unit/QEDbase
+CI_QED_UNIT_PKG_URL_QEDcore: https://github.com/unit/QEDcore
 ```
 
 The prefix is removed from the variable name and saved as the package name in
 custom_dependency_urls with the variable value. For example,
-`CI_UNIT_PKG_URL_QEDbase: https://github.com/integ/QEDbase` is saved as
+`CI_QED_UNIT_PKG_URL_QEDbase: https://github.com/integ/QEDbase` is saved as
 `QEDbase=https://github.com/integ/QEDbase`.
 If the variable is set, the user-defined URL is used instead of the standard URL for the Git clone.
 

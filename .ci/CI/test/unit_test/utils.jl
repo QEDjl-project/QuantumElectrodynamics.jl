@@ -43,10 +43,10 @@ function get_generic_unit_job(
     job_yaml["stage"] = "unit-test"
     job_yaml["image"] = "julia:$(julia_version)"
     job_yaml["variables"] = Dict(
-        "CI_DEV_PKG_NAME" => test_package.name,
-        "CI_DEV_PKG_PATH" => test_package.path,
-        "CI_DEV_PKG_VERSION" => test_package.version,
-        "CI_TEST_TYPE" => "unit",
+        "CI_QED_DEV_PKG_NAME" => test_package.name,
+        "CI_QED_DEV_PKG_PATH" => test_package.path,
+        "CI_QED_DEV_PKG_VERSION" => test_package.version,
+        "CI_QED_TEST_TYPE" => "unit",
     )
 
     for tp in CI.TestPlatforms

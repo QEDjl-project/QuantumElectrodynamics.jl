@@ -7,8 +7,8 @@ stages:
 .untit_test_template:
   stage: unit-test
   variables:
-      CI_TEST_TYPE: "unit"
-      DISABLE_CI_LONG_TESTS: "ON"
+      CI_QED_TEST_TYPE: "unit"
+      CI_QED_DISABLE_LONG_TESTS: "ON"
   script:
     # test CI scripts
     - cd ${CI_PROJECT_DIR}/.ci/CI/
@@ -17,9 +17,9 @@ stages:
     - cd ${CI_PROJECT_DIR}
     # test QuantumElectrodynamics.jl
     - $(julia --project=${CI_PROJECT_DIR}/.ci/CI/ ${CI_PROJECT_DIR}/.ci/CI/script/get_project_name_version_path.jl ${CI_PROJECT_DIR})
-    - echo "CI_DEV_PKG_NAME -> $CI_DEV_PKG_NAME"
-    - echo "CI_DEV_PKG_VERSION -> $CI_DEV_PKG_VERSION"
-    - echo "CI_DEV_PKG_PATH -> $CI_DEV_PKG_PATH"
+    - echo "CI_QED_DEV_PKG_NAME -> $CI_QED_DEV_PKG_NAME"
+    - echo "CI_QED_DEV_PKG_VERSION -> $CI_QED_DEV_PKG_VERSION"
+    - echo "CI_QED_DEV_PKG_PATH -> $CI_QED_DEV_PKG_PATH"
     - julia --project=${CI_PROJECT_DIR}/.ci/CI -e 'import Pkg; Pkg.test(; coverage = true)'
     - julia --project=${CI_PROJECT_DIR}/.ci/CI ${CI_PROJECT_DIR}/.ci/CI/script/setup_dev_env.jl ${CI_PROJECT_DIR}
     - julia --project=. -e 'import Pkg; Pkg.instantiate()'
@@ -113,11 +113,11 @@ trigger_job:
   stage: qedcore-integration-test
   variables:
     # use bootloader.jl code of the pull request
-    CI_GIT_CI_TOOLS_URL: "${CI_PROJECT_URL}.git"
-    CI_GIT_CI_TOOLS_BRANCH: $CI_COMMIT_REF_NAME
+    CI_QED_GIT_CI_TOOLS_URL: "${CI_PROJECT_URL}.git"
+    CI_QED_GIT_CI_TOOLS_BRANCH: $CI_COMMIT_REF_NAME
     # need to enable generating test jobs for a pull request by hand because pipeline is triggered
     # by other project and not a pull request (automatic detection mechanism does not work)
-    # use CI_QED_IS_PR instead CI_ENABLE_INTEG_TESTS to simulate behavior of pull request
+    # use CI_QED_IS_PR instead CI_QED_ENABLE_INTEG_TESTS to simulate behavior of pull request
     CI_QED_IS_PR: "ON"
   trigger:
     project: hzdr/qedjl-project/qedcore.jl

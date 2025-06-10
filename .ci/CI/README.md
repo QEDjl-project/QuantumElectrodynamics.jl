@@ -10,20 +10,20 @@ All environment variables are optional or have an alternative script argument. P
 
 - **CI_PROJECT_DIR**: Directory path of the package (containing the `Project.toml`) where the tests are generated for.
 - **CI_COMMIT_REF_NAME**: Name of the target branch. In the case of a pull request, the environment variable must have a special pattern: `pr-<PR number>/<repo owner of the source branch>/<project name>/<source branch name>`, e.g: `pr-41/SimeonEhrig/QuantumElectrodynamics.jl/setDevDepDeps`.
-- **CI_UNIT_PKG_URL_<QED_PACKAGE_NAME>**: By default, the versions of the `dev` branch of the QED packages are used for the unit tests. The git clone can be overwritten by the environment variable `CI_UNIT_PKG_URL_<QED_PACKAGE_NAME>=https://url/to/the/repository#<commit_hash>`.
-- **CI_INTG_PKG_URL_<QED_PACKAGE_NAME>**: When an integration test is created, the development branch of the upstream project is cloned by default. The clone can be overwritten by the environment variable `CI_INTG_PKG_URL_<QED_PACKAGE_NAME>=https://url/to/the/repository#<commit_hash>`.
-- **CI_COMMIT_MESSAGE**: Contains the git message. If a line begins with `CI_UNIT_PKG_URL` or `CI_INTG_PKG_URL_`, the same function is triggered as setting the environment variable `CI_UNIT_PKG_URL_<QED_PACKAGE_NAME>` or `CI_INTG_PKG_URL_<QED_PACKAGE_NAME>`.
-- **CI_UNIT_TEST_VERSIONS**: Set the Julia versions for the unit tests (e.g: `CI_UNIT_TEST_VERSIONS=1.11, 1.12, rc, nightly`).
-- **CI_INTEG_TEST_VERSIONS**: Set the Julia versions for the integration tests (e.g: `CI_INTEG_TEST_VERSIONS=1.11, 1.12, rc, nightly`).
-- **CI_ENABLE_CPU_TESTS**: Enable or disable generating unit tests for CPU.
-- **CI_ENABLE_CUDA_TESTS**: Enable or disable generating unit tests for Nvidia GPU.
-- **CI_ENABLE_AMDGPU_TESTS**: Enable or disable generating unit tests for AMD GPU.
-- **CI_ENABLE_INTEG_TESTS**: Enable or disable generating integration tests. Depending the enabled unit tests, integration tests for CPU, Nvidia and AMD GPU are generated.
+- **CI_QED_UNIT_PKG_URL_<QED_PACKAGE_NAME>**: By default, the versions of the `dev` branch of the QED packages are used for the unit tests. The git clone can be overwritten by the environment variable `CI_QED_UNIT_PKG_URL_<QED_PACKAGE_NAME>=https://url/to/the/repository#<commit_hash>`.
+- **CI_QED_INTG_PKG_URL_<QED_PACKAGE_NAME>**: When an integration test is created, the development branch of the upstream project is cloned by default. The clone can be overwritten by the environment variable `CI_QED_INTG_PKG_URL_<QED_PACKAGE_NAME>=https://url/to/the/repository#<commit_hash>`.
+- **CI_COMMIT_MESSAGE**: Contains the git message. If a line begins with `CI_QED_UNIT_PKG_URL` or `CI_QED_INTG_PKG_URL_`, the same function is triggered as setting the environment variable `CI_QED_UNIT_PKG_URL_<QED_PACKAGE_NAME>` or `CI_QED_INTG_PKG_URL_<QED_PACKAGE_NAME>`.
+- **CI_QED_UNIT_TEST_VERSIONS**: Set the Julia versions for the unit tests (e.g: `CI_QED_UNIT_TEST_VERSIONS=1.11, 1.12, rc, nightly`).
+- **CI_QED_INTEG_TEST_VERSIONS**: Set the Julia versions for the integration tests (e.g: `CI_QED_INTEG_TEST_VERSIONS=1.11, 1.12, rc, nightly`).
+- **CI_QED_ENABLE_CPU_TESTS**: Enable or disable generating unit tests for CPU.
+- **CI_QED_ENABLE_CUDA_TESTS**: Enable or disable generating unit tests for Nvidia GPU.
+- **CI_QED_ENABLE_AMDGPU_TESTS**: Enable or disable generating unit tests for AMD GPU.
+- **CI_QED_ENABLE_INTEG_TESTS**: Enable or disable generating integration tests. Depending the enabled unit tests, integration tests for CPU, Nvidia and AMD GPU are generated.
 
 You can set the environment variables in two different ways:
 
 1. Permanent for the terminal session via: `export CI_PROJECT_DIR=/path/to/the/project`
-2. Only for a single command (Julia call): `CI_PROJECT_DIR=/path/to/the/project CI_DEV_PKG_NAME=QEDproject julia --project=. src/integTestGen.jl`
+2. Only for a single command (Julia call): `CI_PROJECT_DIR=/path/to/the/project CI_QED_DEV_PKG_NAME=QEDproject julia --project=. src/integTestGen.jl`
 
 ## Integration Tests for Pull Requests targeting the main branch
 
@@ -54,10 +54,10 @@ If the pull request sets labels starting with `CI:`, `get_gitlab_ci_conf.jl` wil
 
 ## Optional Environment variables
 
-All dependencies are added via `Pkg.develop("dep_name")` by default. Therefore the default development branch is used. To set a custom URL, you can define the environment variables `CI_UNIT_PKG_URL_<dep_name>`. For example, you set the environment variable `CI_UNIT_PKG_URL_QEDbase=https://github.com/User/QEDbase.jl#feature1`, the script will execute the command `Pkg.develop(url="https://github.com/User/QEDbase.jl#feature1")`, when the dependency QEDbase was found and matched in the `Project.toml`. Then the branch `feature1` from `https://github.com/User/QEDbase.jl` is used as a dependency.
+All dependencies are added via `Pkg.develop("dep_name")` by default. Therefore the default development branch is used. To set a custom URL, you can define the environment variables `CI_QED_UNIT_PKG_URL_<dep_name>`. For example, you set the environment variable `CI_QED_UNIT_PKG_URL_QEDbase=https://github.com/User/QEDbase.jl#feature1`, the script will execute the command `Pkg.develop(url="https://github.com/User/QEDbase.jl#feature1")`, when the dependency QEDbase was found and matched in the `Project.toml`. Then the branch `feature1` from `https://github.com/User/QEDbase.jl` is used as a dependency.
 
-The environment variable `CI_SETUP_DEV_ENV_DRY_RUN=ON` can be set to activate the dry-run mode. In this mode, the project environment is not modified, only displaying logging information.
+The environment variable `CI_QED_SETUP_DEV_ENV_DRY_RUN=ON` can be set to activate the dry-run mode. In this mode, the project environment is not modified, only displaying logging information.
 
 # Test Environment variables
 
-The Julia tests are divided into two categories of tests - short and long running tests. The categories can be deactivated with the environment variables `DISABLE_CI_SHORT_TESTS=ON` and `DISABLE_CI_LONG_TESTS=ON`.
+The Julia tests are divided into two categories of tests - short and long running tests. The categories can be deactivated with the environment variables `DISABLE_CI_SHORT_TESTS=ON` and `CI_QED_DISABLE_LONG_TESTS=ON`.
