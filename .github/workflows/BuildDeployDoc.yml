@@ -15,6 +15,8 @@ jobs:
       statuses: write
     runs-on: ubuntu-latest
     steps:
-      - uses: QEDjl-project/gh-actions/build-docs@v1
+      - uses: SimeonEhrig/gh-actions/build-docs@CIQED_env_prefix
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
+          github-tools-url: https://github.com/SimeonEhrig/QED.jl.git
+          github-tools-branch: moveBootloaderjl
