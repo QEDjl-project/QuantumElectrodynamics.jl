@@ -14,7 +14,7 @@ function output_paths()::Dict{String, String}
     return Dict(
         "output-cpu" => "Write CPU test job file to the given path. If not set, print job file content on stdout.",
         "output-gpu" => "Write GPU test job file to the given path. If not set, print job file content on stdout.",
-        "output-unit-test-verify" => "Write the unit test verification job file to the given path. If not set, print job file content on stdout.",
+        "output-verify" => "Write verification job file to the given path. If not set, print job file content on stdout.",
     )
 end
 
@@ -72,13 +72,10 @@ function parse_commandline()::Dict{String, Any}
         help = "Disable the generation of integration tests."
         action = :store_true
         "--target-branch"
-        help = "If target branch is set, does not read the target branch from a GitHub Pull Request which is set via environment variable `CI_COMMIT_REF_NAME`."
+        help = "If target branch is set, does not read the target branch from a GitHub Pull Request which is set via environment variable `CI_QED_TARGET_BRANCH`."
         arg_type = String
         "--pr"
-        help = "Generate jobs for a pull request. If not set, the value of the environment variable CI_COMMIT_REF_NAME decides if it is pull request or not."
-        action = :store_true
-        "--no-pr"
-        help = "Generate jobs for a normal commit. If not set, the value of the environment variable CI_COMMIT_REF_NAME decides if it is pull request or not."
+        help = "Generate jobs for a pull request. If not set, the value of the environment variable CI_QED_IS_PR decides if it is pull request or not."
         action = :store_true
         "--project-path"
         help = "Set the path to the package folder of the package to be tested. Can also be set via the environment variable `CI_PROJECT_DIR`."
@@ -138,7 +135,7 @@ end
     get_target_branch(args::Dict{String,Any})::String
 
 Get the target branch name. Can be set via argument `--target-branch` or environment variable
-`CI_COMMIT_REF_NAME`.
+`CI_QED_TARGET_BRANCH`.
 
 # Args
 - `args::Dict{String,Any}`: Parsed arguments
@@ -150,8 +147,8 @@ Target branch name.
 function get_target_branch(args::Dict{String, Any})::String
     ci_commit_ref_name = _get_config_from_arg_or_env_variable(
         "target-branch",
-        "CI_COMMIT_REF_NAME",
-        "Target branch is not set via argument `--target-branch` or environment variable `CI_COMMIT_REF_NAME`",
+        "CI_QED_TARGET_BRANCH",
+        "Target branch is not set via argument `--target-branch` or environment variable `CI_QED_TARGET_BRANCH`",
         args,
     )
 
@@ -290,6 +287,23 @@ True if integration tests should be generated, false otherwise.
 """
 function is_integ_tests(args::Dict{String, Any})::Bool
     return _is_test("nointeg", false, "CI_QED_ENABLE_INTEG_TESTS", args)
+end
+
+"""
+    is_pull_request(args::Dict{String,Any})::Bool
+
+Return true if tests the are generated for a pull request. Disabled by default. Set argument `--pr`
+to disable this or use the environment variable `CI_QED_IS_PR={"ON"|"OFF"}`.
+
+# Args
+- `args::Dict{String,Any}`: Parsed arguments
+
+# Return
+
+True if the tests are generated for a pull request, false otherwise.
+"""
+function is_pull_request(args::Dict{String, Any})::Bool
+    return _is_test("pr", true, "CI_QED_IS_PR", args)
 end
 
 """

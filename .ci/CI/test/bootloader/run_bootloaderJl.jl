@@ -120,7 +120,6 @@ end
                 get_bootloader_jl_path(),
                 "--project-path=$(QED_PROJECT_PATH)",
                 "--target-branch=dev",
-                "--no-pr",
                 "--cuda",
                 "--amdgpu",
             ]
@@ -174,7 +173,6 @@ end
                 get_bootloader_jl_path(),
                 "--project-path=$(QED_PROJECT_PATH)",
                 "--target-branch=main",
-                "--no-pr",
                 "--cuda",
                 "--amdgpu",
                 "--output-cpu=$(cpu_output)",

@@ -44,30 +44,7 @@ function main()
     setup_dev_env::Bool = target_branch != "main"
     package_path = CI.get_project_path(args)
     test_package = CI.get_package_name_version(package_path)
-
-    if "--pr" in ARGS && "--no-pr" in ARGS
-        throw(ErrorException("It is not allowed to set the arguments --pr and --no-pr at the same time."))
-    end
-
-    # TOOD: move detecting if is a pull request from environment variable CI_COMMIT_REF_NAME
-    # in an extra script
-    # Workaround: check if environment variable `--pr` or `--no-pr` is set to override environment variable
-    # CI_COMMIT_REF_NAME
-    if haskey(ENV, "CI_QED_IS_PR")
-        if ENV["CI_QED_IS_PR"] == "ON"
-            pull_request = true
-        elseif ENV["CI_QED_IS_PR"] == "OFF"
-            pull_request = false
-        else
-            throw(ErrorException("Only \"ON\" or \"OFF\" allowed for CI_QED_IS_PR"))
-        end
-    elseif "--pr" in ARGS
-        pull_request = true
-    elseif "--no-pr" in ARGS
-        pull_request = false
-    else
-        pull_request = CI.is_pull_request(get(ENV, "CI_COMMIT_REF_NAME", ""))
-    end
+    pull_request = CI.is_pull_request(args)
 
     @info "Test package name: $(test_package.name)"
     @info "Test package version: $(test_package.version)"
@@ -78,7 +55,7 @@ function main()
 
     tests_configurations = Dict()
     tests_configurations[CI.UnitTest] = CI.get_unit_test_configs(args)
-    tests_configurations[CI.IntegrationTest] = CI.get_integration_test_configs(args, pull_request)
+    tests_configurations[CI.IntegrationTest] = CI.get_integration_test_configs(args)
 
     CI.info_test_configs(CI.UnitTest, tests_configurations)
     CI.info_test_configs(CI.IntegrationTest, tests_configurations)
@@ -95,7 +72,7 @@ function main()
     end
 
     # if no tests should be generated, exit early
-    if isempty(tests_configurations[CI.UnitTest]) && isempty(tests_configurations[IntegrationTest])
+    if isempty(tests_configurations[CI.UnitTest]) && isempty(tests_configurations[CI.IntegrationTest])
         # Special case: The user defined file output for child pipelines.
         # It is not allowed to use an empty file for child pipeline. Therefore generated dummy jobs.
         if keys(job_yamls) != ["stdout"]
