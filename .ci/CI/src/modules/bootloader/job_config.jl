@@ -68,7 +68,7 @@ function get_integration_test_configs(
     )::Vector{Tuple{JuliaVersionType, TestPlatform}}
     integ_test_types = Vector{Tuple{JuliaVersionType, TestPlatform}}()
 
-    if !is_integ_tests(args)
+    if !is_integ_tests(args) || !is_pull_request(args)
         return integ_test_types
     end
 

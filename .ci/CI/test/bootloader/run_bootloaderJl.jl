@@ -177,7 +177,7 @@ end
                 "--amdgpu",
                 "--output-cpu=$(cpu_output)",
                 "--output-gpu=$(gpu_output)",
-                "--output-unit-test-verify=$(verify_output)",
+                "--output-verify=$(verify_output)",
             ]
         )
         @test error_code == 0
@@ -214,7 +214,7 @@ end
                 "--amdgpu",
                 "--output-cpu=$(cpu_output)",
                 "--output-gpu=$(gpu_output)",
-                "--output-unit-test-verify=$(verify_output)",
+                "--output-verify=$(verify_output)",
             ]
         )
         @test error_code == 0

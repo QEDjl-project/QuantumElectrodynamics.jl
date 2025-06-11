@@ -60,4 +60,4 @@ The environment variable `CI_QED_SETUP_DEV_ENV_DRY_RUN=ON` can be set to activat
 
 # Test Environment variables
 
-The Julia tests are divided into two categories of tests - short and long running tests. The categories can be deactivated with the environment variables `DISABLE_CI_SHORT_TESTS=ON` and `CI_QED_DISABLE_LONG_TESTS=ON`.
+The Julia tests are divided into two categories of tests - short and long running tests. The categories can be deactivated with the environment variables `CI_QED_DISABLE_SHORT_TESTS=ON` and `CI_QED_DISABLE_LONG_TESTS=ON`.

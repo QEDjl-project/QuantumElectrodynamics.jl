@@ -3,7 +3,7 @@ using Test
 
 include("test_utils.jl")
 
-if haskey(ENV, "DISABLE_CI_SHORT_TESTS")
+if haskey(ENV, "CI_QED_DISABLE_SHORT_TESTS")
     @warn "disable short running tests"
 else
     include("get_target_branch.jl")

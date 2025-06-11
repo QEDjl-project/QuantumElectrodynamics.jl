@@ -88,7 +88,7 @@ bootloader_jl_integration_test:
   image: julia:1.10
   stage: integration-test
   variables:
-    DISABLE_CI_SHORT_TESTS: "ON"
+    CI_QED_DISABLE_SHORT_TESTS: "ON"
   script:
     - cd ${CI_PROJECT_DIR}/.ci/CI/
     - julia --project=. -e 'import Pkg; Pkg.instantiate()'

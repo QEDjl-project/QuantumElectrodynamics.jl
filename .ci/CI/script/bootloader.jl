@@ -177,7 +177,7 @@ function main()
 
     if !isempty(tests_configurations[CI.UnitTest])
         CI.add_unit_test_verify_job_yaml!(
-            get(job_yamls, "output-unit-test-verify", job_yamls["stdout"]),
+            get(job_yamls, "output-verify", job_yamls["stdout"]),
             setup_dev_env,
             tools_git_repo,
         )
