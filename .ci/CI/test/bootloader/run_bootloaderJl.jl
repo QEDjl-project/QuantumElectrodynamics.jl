@@ -51,17 +51,27 @@ Error code, stdout and stderr as String.
 function run_process(command::Vector{String})::Tuple{Int, String, String}
     out = Pipe()
     err = Pipe()
-    process = run(
-        pipeline(
-            Cmd(command),
-            stdout = out,
-            stderr = err,
+    try
+        process = run(
+            pipeline(
+                Cmd(command),
+                stdout = out,
+                stderr = err,
+            )
         )
-    )
-    close(out.in)
-    close(err.in)
+        close(out.in)
+        close(err.in)
 
-    return (process.exitcode, String(read(out)), String(read(err)))
+        return (process.exitcode, String(read(out)), String(read(err)))
+    catch e
+        if isa(e, ProcessFailedException)
+            close(out.in)
+            close(err.in)
+            println("stdout:\n$(String(read(out)))")
+            println("stderr:\n$(String(read(err)))")
+        end
+        throw(e)
+    end
 end
 
 """
