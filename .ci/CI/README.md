@@ -23,7 +23,7 @@ All environment variables are optional or have an alternative script argument. P
 You can set the environment variables in two different ways:
 
 1. Permanent for the terminal session via: `export CI_PROJECT_DIR=/path/to/the/project`
-2. Only for a single command (Julia call): `CI_PROJECT_DIR=/path/to/the/project CI_QED_DEV_PKG_NAME=QEDproject julia --project=. src/integTestGen.jl`
+2. Only for a single julia session: `CI_PROJECT_DIR=/path/to/the/project CI_QED_DEV_PKG_NAME=QEDproject julia --project=. src/integTestGen.jl`
 
 ## Integration Tests for Pull Requests targeting the main branch
 
