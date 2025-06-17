@@ -53,8 +53,9 @@ function add_integration_test_job_yaml!(
     )
     _add_stage_once!(job_dict, "integ-test")
 
-    job_yaml = _get_normal_unit_test(
+    job_yaml = _get_normal_integration_test(
         test_package,
+        test_platform,
         setup_dev_env,
         can_fail,
         integration_test_repo,
@@ -82,8 +83,9 @@ function add_integration_test_job_yaml!(
     )
     _add_stage_once!(job_dict, "integ-test")
 
-    job_yaml = _get_normal_unit_test(
+    job_yaml = _get_normal_integration_test(
         test_package,
+        test_platform,
         setup_dev_env,
         can_fail,
         integration_test_repo,
@@ -111,8 +113,9 @@ function add_integration_test_job_yaml!(
     )
     _add_stage_once!(job_dict, "integ-test")
 
-    job_yaml = _get_normal_unit_test(
+    job_yaml = _get_normal_integration_test(
         test_package,
+        test_platform,
         setup_dev_env,
         can_fail,
         integration_test_repo,
@@ -128,8 +131,9 @@ function add_integration_test_job_yaml!(
 end
 
 """
-    _get_normal_unit_test(
+    _get_normal_integration_test(
         test_package::TestPackage,
+        test_platform::TestPlatform,
         setup_dev_env::Bool,
         can_fail::Bool,
         integration_test_repo::GitRepoAddress,
@@ -141,6 +145,7 @@ Creates a normal integration test job for a specific Julia version.
 
 # Args
 - `test_package::TestPackage`: Properties of the package to be tested, such as name and version.
+- `test_platform::TestPlatform`: Set target platform test, e.g. CPU, Nvidia GPU or AMD GPU.
 - `setup_dev_env::Bool`: If the value is true, additional job code is generated that allows the dev
     or feature branch versions of the QED dependencies to be used.
 - `can_fail::Bool`: If the value is true, add GitLab CI flag `allow_failure: true`.
@@ -154,15 +159,21 @@ Return
 
 Returns a dict containing the integration test, which can be output directly as GitLab CI yaml.
 """
-function _get_normal_unit_test(
+function _get_normal_integration_test(
         test_package::TestPackage,
+        test_platform::TestPlatform,
         setup_dev_env::Bool,
         can_fail::Bool,
         integration_test_repo::GitRepoAddress,
         integration_test_type::ReleaseVersion,
         tools_git_repo::GitRepoAddress
     )::Dict
-    script = ["apt update", "apt install -y git", "cd /"]
+    script = [
+        "env | grep CI_QED_",
+        "apt update",
+        "apt install -y git",
+        "cd /",
+    ]
 
     if setup_dev_env
         push!(
@@ -202,6 +213,10 @@ function _get_normal_unit_test(
         "interruptible" => true,
         "script" => script,
     )
+
+    for tp in TestPlatforms
+        job_yaml["variables"]["CI_QED_TEST_$(get_platform_name(tp))"] = (tp == test_platform) ? "1" : "0"
+    end
 
     if can_fail
         job_yaml["allow_failure"] = true

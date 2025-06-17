@@ -29,7 +29,7 @@ fi",
         expected_job["image"] = nightly_image
         expected_job["variables"]["JULIA_DOWNLOAD"] = "/julia/download"
         expected_job["variables"]["JULIA_EXTRACT"] = "/julia/extract"
-        expected_job["variables"]["TEST_CPU"] = "1"
+        expected_job["variables"]["CI_QED_TEST_CPU"] = "1"
         expected_job["tags"] = ["cpuonly"]
         expected_job["allow_failure"] = true
 

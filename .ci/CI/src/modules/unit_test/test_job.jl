@@ -205,10 +205,11 @@ function _get_normal_unit_test(
     end
 
     for tp in TestPlatforms
-        job_yaml["variables"]["TEST_$(get_platform_name(tp))"] = (tp == test_platform) ? "1" : "0"
+        job_yaml["variables"]["CI_QED_TEST_$(get_platform_name(tp))"] = (tp == test_platform) ? "1" : "0"
     end
 
     job_yaml["script"] = [
+        "env | grep CI_QED_",
         "apt update && apt install -y git",
         "git clone --depth 1 -b $(tools_git_repo.branch) $(tools_git_repo.url) /tmp/integration_test_tools/",
         "julia --project=/tmp/integration_test_tools/.ci/CI/ -e 'import Pkg; Pkg.instantiate()'",

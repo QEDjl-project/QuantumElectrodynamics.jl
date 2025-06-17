@@ -24,6 +24,7 @@ function get_main_unit_job_script_section(
         tools_git_repo::CI.GitRepoAddress
     )
     return [
+        "env | grep CI_QED_",
         "apt update && apt install -y git",
         "git clone --depth 1 -b $(tools_git_repo.branch) $(tools_git_repo.url) /tmp/integration_test_tools/",
         "julia --project=/tmp/integration_test_tools/.ci/CI/ -e 'import Pkg; Pkg.instantiate()'",
@@ -50,7 +51,7 @@ function get_generic_unit_job(
     )
 
     for tp in CI.TestPlatforms
-        job_yaml["variables"]["TEST_$(CI.get_platform_name(tp))"] = "0"
+        job_yaml["variables"]["CI_QED_TEST_$(CI.get_platform_name(tp))"] = "0"
     end
 
     job_yaml["interruptible"] = true
