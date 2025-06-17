@@ -12,9 +12,9 @@ function get_compat_changes()::Dict{String, String}
     @info "check for comapt changes"
     compat_changes = Dict{String, String}()
     with_logger(debuglogger) do
-        if haskey(ENV, "CI_DEV_PKG_VERSION")
-            compat_changes[string(ENV["CI_DEV_PKG_NAME"])] = string(
-                ENV["CI_DEV_PKG_VERSION"]
+        if haskey(ENV, "CI_QED_DEV_PKG_VERSION")
+            compat_changes[string(ENV["CI_QED_DEV_PKG_NAME"])] = string(
+                ENV["CI_QED_DEV_PKG_VERSION"]
             )
         end
         @debug "compat_changes: $(compat_changes)"

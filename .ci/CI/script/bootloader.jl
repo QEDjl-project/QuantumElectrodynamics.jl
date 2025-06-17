@@ -1,12 +1,5 @@
-include("modules/types.jl")
-include("modules/gitlab_target_branch.jl")
-include("modules/generic_test.jl")
-include("modules/unit_test.jl")
-include("modules/integ_test.jl")
-include("modules/utils.jl")
-include("modules/bootloader.jl")
-
 using IntegrationTests
+using CI
 using Logging
 
 """
@@ -20,22 +13,22 @@ Write CI jobs to stdout or file. If a file output is empty, generate dummy job.
 """
 function write_jobs!(job_yamls::Dict{String, Dict}, args::Dict{String, Any})
     if !isempty(job_yamls["stdout"])
-        print_job_yaml(job_yamls["stdout"], stdout)
+        CI.print_job_yaml(job_yamls["stdout"], stdout)
     end
 
     # If the output sink is a file for a child pipeline and there is no CI job defined,
     # add dummy job that the CI pipeline does not fail.
     for output_name in keys(job_yamls)
         if output_name != "stdout" && isempty(job_yamls[output_name])
-            generate_dummy_job_yaml!(job_yamls[output_name])
+            CI.generate_dummy_job_yaml!(job_yamls[output_name])
         end
     end
 
     # if defined, write the different job yamls to the different output files
-    for output_name in keys(output_paths())
+    for output_name in keys(CI.output_paths())
         if haskey(job_yamls, output_name)
             open(args[output_name], "w") do out
-                print_job_yaml(job_yamls[output_name], out)
+                CI.print_job_yaml(job_yamls[output_name], out)
             end
         end
     end
@@ -45,36 +38,13 @@ end
 
 # use main function to avoid to define global variables
 function main()
-    args = parse_commandline()
+    args = CI.parse_commandline()
 
-    target_branch = get_target_branch(args)
+    target_branch = CI.get_target_branch(args)
     setup_dev_env::Bool = target_branch != "main"
-    package_path = get_project_path(args)
-    test_package = get_package_name_version(package_path)
-
-    if "--pr" in ARGS && "--no-pr" in ARGS
-        throw(ErrorException("It is not allowed to set the arguments --pr and --no-pr at the same time."))
-    end
-
-    # TOOD: move detecting if is a pull request from environment variable CI_COMMIT_REF_NAME
-    # in an extra script
-    # Workaround: check if environment variable `--pr` or `--no-pr` is set to override environment variable
-    # CI_COMMIT_REF_NAME
-    if haskey(ENV, "CI_QED_IS_PR")
-        if ENV["CI_QED_IS_PR"] == "ON"
-            pull_request = true
-        elseif ENV["CI_QED_IS_PR"] == "OFF"
-            pull_request = false
-        else
-            throw(ErrorException("Only \"ON\" or \"OFF\" allowed for CI_QED_IS_PR"))
-        end
-    elseif "--pr" in ARGS
-        pull_request = true
-    elseif "--no-pr" in ARGS
-        pull_request = false
-    else
-        pull_request = is_pull_request(get(ENV, "CI_COMMIT_REF_NAME", ""))
-    end
+    package_path = CI.get_project_path(args)
+    test_package = CI.get_package_name_version(package_path)
+    pull_request = CI.is_pull_request(args)
 
     @info "Test package name: $(test_package.name)"
     @info "Test package version: $(test_package.version)"
@@ -84,25 +54,25 @@ function main()
     @info "Unit test: setup dev environment: $(setup_dev_env)"
 
     tests_configurations = Dict()
-    tests_configurations[UnitTest] = get_unit_test_configs(args)
-    tests_configurations[IntegrationTest] = get_integration_test_configs(args, pull_request)
+    tests_configurations[CI.UnitTest] = CI.get_unit_test_configs(args)
+    tests_configurations[CI.IntegrationTest] = CI.get_integration_test_configs(args)
 
-    info_test_configs(UnitTest, tests_configurations)
-    info_test_configs(IntegrationTest, tests_configurations)
+    CI.info_test_configs(CI.UnitTest, tests_configurations)
+    CI.info_test_configs(CI.IntegrationTest, tests_configurations)
 
     # the "stdout" entry is required, otherwise
     # `get(job_yamls, "<name>", job_yamls["stdout"])` is not working
     # for unknown reason, job_yamls["stdout"] is accessed also in the case,
     # if the key exist
     job_yamls::Dict{String, Dict} = Dict("stdout" => Dict())
-    for output_name in keys(output_paths())
+    for output_name in keys(CI.output_paths())
         if !isnothing(args[output_name])
             job_yamls[output_name] = Dict()
         end
     end
 
     # if no tests should be generated, exit early
-    if isempty(tests_configurations[UnitTest]) && isempty(tests_configurations[IntegrationTest])
+    if isempty(tests_configurations[CI.UnitTest]) && isempty(tests_configurations[CI.IntegrationTest])
         # Special case: The user defined file output for child pipelines.
         # It is not allowed to use an empty file for child pipeline. Therefore generated dummy jobs.
         if keys(job_yamls) != ["stdout"]
@@ -112,11 +82,11 @@ function main()
     end
 
 
-    tools_git_repo = get_git_ci_tools_url_branch()
+    tools_git_repo = CI.get_git_ci_tools_url_branch()
 
-    for (julia_version_type_name, platform) in tests_configurations[UnitTest]
-        output_yaml = get_output_job_yaml(job_yamls, platform)
-        add_unit_test_job_yaml!(
+    for (julia_version_type_name, platform) in tests_configurations[CI.UnitTest]
+        output_yaml = CI.get_output_job_yaml(job_yamls, platform)
+        CI.add_unit_test_job_yaml!(
             output_yaml,
             test_package,
             julia_version_type_name,
@@ -125,32 +95,32 @@ function main()
         )
     end
 
-    if !isempty(tests_configurations[IntegrationTest])
-        custom_dependency_urls = CustomDependencyUrls()
+    if !isempty(tests_configurations[CI.IntegrationTest])
+        custom_dependency_urls = CI.CustomDependencyUrls()
         if target_branch != "main"
-            append_custom_dependency_urls_from_git_message!(custom_dependency_urls)
-            append_custom_dependency_urls_from_env_var!(custom_dependency_urls)
+            CI.append_custom_dependency_urls_from_git_message!(custom_dependency_urls)
+            CI.append_custom_dependency_urls_from_env_var!(custom_dependency_urls)
         end
 
-        integration_test_package_names = get_qed_integration_test_package_names(
+        integration_test_package_names = CI.get_qed_integration_test_package_names(
             test_package, custom_dependency_urls.integ
         )
 
-        for (julia_version_type_name, platform) in tests_configurations[IntegrationTest]
-            output_yaml = get_output_job_yaml(job_yamls, platform)
+        for (julia_version_type_name, platform) in tests_configurations[CI.IntegrationTest]
+            output_yaml = CI.get_output_job_yaml(job_yamls, platform)
 
             julia_version_prefix = "_" * replace(julia_version_type_name.version, "." => "_")
 
-            if platform == CUDA()
+            if platform == CI.CUDA()
                 julia_version_prefix = "_cuda" * julia_version_prefix
             end
 
-            if platform == AMDGPU()
+            if platform == CI.AMDGPU()
                 julia_version_prefix = "_amdgpu" * julia_version_prefix
             end
 
             for integration_package_name in integration_test_package_names
-                integration_test_repo = GitRepoAddress(
+                integration_test_repo = CI.GitRepoAddress(
                     get(
                         custom_dependency_urls.integ,
                         integration_package_name,
@@ -158,7 +128,7 @@ function main()
                     )
                 )
 
-                add_integration_test_job_yaml!(
+                CI.add_integration_test_job_yaml!(
                     output_yaml,
                     test_package,
                     true, # setup dev env
@@ -184,12 +154,12 @@ function main()
                 #    In either case the release can proceed, as the released packages will continue to work
                 #    because of their current compat entries.
                 if target_branch == "main" && pull_request
-                    integration_test_release_repo = GitRepoAddress(
+                    integration_test_release_repo = CI.GitRepoAddress(
                         "https://github.com/QEDjl-project/$(integration_package_name).jl.git",
                         "main"
                     )
 
-                    add_integration_test_job_yaml!(
+                    CI.add_integration_test_job_yaml!(
                         output_yaml,
                         test_package,
                         false, # setup dev env
@@ -205,9 +175,9 @@ function main()
         end
     end
 
-    if !isempty(tests_configurations[UnitTest])
-        add_unit_test_verify_job_yaml!(
-            get(job_yamls, "output-unit-test-verify", job_yamls["stdout"]),
+    if !isempty(tests_configurations[CI.UnitTest])
+        CI.add_unit_test_verify_job_yaml!(
+            get(job_yamls, "output-verify", job_yamls["stdout"]),
             setup_dev_env,
             tools_git_repo,
         )

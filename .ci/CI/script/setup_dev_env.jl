@@ -86,8 +86,8 @@ if abspath(PROGRAM_FILE) == @__FILE__
         CI.install_qed_dev_packages(
             linear_pkg_ordering,
             qed_path,
-            ENV["CI_DEV_PKG_NAME"],
-            ENV["CI_DEV_PKG_PATH"],
+            ENV["CI_QED_DEV_PKG_NAME"],
+            ENV["CI_QED_DEV_PKG_PATH"],
             compat_changes,
             dry_run
         )

@@ -32,9 +32,9 @@ function get_ci_jl_project_path()
 end
 
 """
-Returns the path of the Bootloader.jl script.
+Returns the path of the bootloader.jl script.
 """
-get_bootloader_jl_path() = joinpath(get_ci_jl_project_path(), "src", "Bootloader.jl")
+get_bootloader_jl_path() = joinpath(get_ci_jl_project_path(), "script", "bootloader.jl")
 
 """
     run_process(command::Vector{String})
@@ -51,17 +51,27 @@ Error code, stdout and stderr as String.
 function run_process(command::Vector{String})::Tuple{Int, String, String}
     out = Pipe()
     err = Pipe()
-    process = run(
-        pipeline(
-            Cmd(command),
-            stdout = out,
-            stderr = err,
+    try
+        process = run(
+            pipeline(
+                Cmd(command),
+                stdout = out,
+                stderr = err,
+            )
         )
-    )
-    close(out.in)
-    close(err.in)
+        close(out.in)
+        close(err.in)
 
-    return (process.exitcode, String(read(out)), String(read(err)))
+        return (process.exitcode, String(read(out)), String(read(err)))
+    catch e
+        if isa(e, ProcessFailedException)
+            close(out.in)
+            close(err.in)
+            println("stdout:\n$(String(read(out)))")
+            println("stderr:\n$(String(read(err)))")
+        end
+        throw(e)
+    end
 end
 
 """
@@ -120,7 +130,6 @@ end
                 get_bootloader_jl_path(),
                 "--project-path=$(QED_PROJECT_PATH)",
                 "--target-branch=dev",
-                "--no-pr",
                 "--cuda",
                 "--amdgpu",
             ]
@@ -174,12 +183,11 @@ end
                 get_bootloader_jl_path(),
                 "--project-path=$(QED_PROJECT_PATH)",
                 "--target-branch=main",
-                "--no-pr",
                 "--cuda",
                 "--amdgpu",
                 "--output-cpu=$(cpu_output)",
                 "--output-gpu=$(gpu_output)",
-                "--output-unit-test-verify=$(verify_output)",
+                "--output-verify=$(verify_output)",
             ]
         )
         @test error_code == 0
@@ -216,7 +224,7 @@ end
                 "--amdgpu",
                 "--output-cpu=$(cpu_output)",
                 "--output-gpu=$(gpu_output)",
-                "--output-unit-test-verify=$(verify_output)",
+                "--output-verify=$(verify_output)",
             ]
         )
         @test error_code == 0

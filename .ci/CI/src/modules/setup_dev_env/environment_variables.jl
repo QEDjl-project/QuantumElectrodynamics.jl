@@ -1,24 +1,24 @@
 """
     get_test_type_from_env_var()::TestType
 
-Return the test type to be tested depending on the value of the environment variable `CI_TEST_TYPE`. Depending on the type, different user-defined dependency URLs are used.
+Return the test type to be tested depending on the value of the environment variable `CI_QED_TEST_TYPE`. Depending on the type, different user-defined dependency URLs are used.
 
 # Returns
 
 test type to be tested
 """
 function get_test_type_from_env_var()::TestType
-    if !haskey(ENV, "CI_TEST_TYPE")
-        @error "environment variable CI_TEST_TYPE needs to be set to \"unit\" or \"integ\""
+    if !haskey(ENV, "CI_QED_TEST_TYPE")
+        @error "environment variable CI_QED_TEST_TYPE needs to be set to \"unit\" or \"integ\""
         exit(1)
     end
 
-    if ENV["CI_TEST_TYPE"] == "unit"
+    if ENV["CI_QED_TEST_TYPE"] == "unit"
         return UnitTest()
-    elseif ENV["CI_TEST_TYPE"] == "integ"
+    elseif ENV["CI_QED_TEST_TYPE"] == "integ"
         return IntegrationTest()
     else
-        @error "environment variable CI_TEST_TYPE needs to have the value \"unit\" or \"integ\""
+        @error "environment variable CI_QED_TEST_TYPE needs to have the value \"unit\" or \"integ\""
         exit(1)
     end
 end
@@ -35,7 +35,7 @@ repository URLs are checked.
 """
 function check_environment_variables(test_type::TestType)
     # check required environment variables
-    for var in ("CI_DEV_PKG_NAME", "CI_DEV_PKG_PATH")
+    for var in ("CI_QED_DEV_PKG_NAME", "CI_QED_DEV_PKG_PATH")
         if !haskey(ENV, var)
             @error "environment variable $(var) needs to be set"
             exit(1)
@@ -45,7 +45,7 @@ function check_environment_variables(test_type::TestType)
     # display all used environment variables
     io = IOBuffer()
     println(io, "following environment variables are set:")
-    for e in ("CI_DEV_PKG_NAME", "CI_DEV_PKG_VERSION", "CI_DEV_PKG_PATH")
+    for e in ("CI_QED_DEV_PKG_NAME", "CI_QED_DEV_PKG_VERSION", "CI_QED_DEV_PKG_PATH")
         if haskey(ENV, e)
             println(io, "$(e): $(ENV[e])")
         end
@@ -63,11 +63,11 @@ end
 
     is_dry_run()
     
-Return true if the environment variable `CI_SETUP_DEV_ENV_DRY_RUN=ON` is set, false otherwise.
+Return true if the environment variable `CI_QED_SETUP_DEV_ENV_DRY_RUN=ON` is set, false otherwise.
 """
 function is_dry_run()::Bool
-    if haskey(ENV, "CI_SETUP_DEV_ENV_DRY_RUN")
-        if ENV["CI_SETUP_DEV_ENV_DRY_RUN"] == "ON"
+    if haskey(ENV, "CI_QED_SETUP_DEV_ENV_DRY_RUN")
+        if ENV["CI_QED_SETUP_DEV_ENV_DRY_RUN"] == "ON"
             return true
         end
     end
