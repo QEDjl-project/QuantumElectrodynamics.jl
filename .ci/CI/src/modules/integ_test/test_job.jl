@@ -53,7 +53,7 @@ function add_integration_test_job_yaml!(
     )
     _add_stage_once!(job_dict, "integ-test")
 
-    job_yaml = _get_normal_integration_test(
+    job_yaml = _get_default_integration_test(
         test_package,
         test_platform,
         setup_dev_env,
@@ -83,7 +83,7 @@ function add_integration_test_job_yaml!(
     )
     _add_stage_once!(job_dict, "integ-test")
 
-    job_yaml = _get_normal_integration_test(
+    job_yaml = _get_default_integration_test(
         test_package,
         test_platform,
         setup_dev_env,
@@ -113,7 +113,7 @@ function add_integration_test_job_yaml!(
     )
     _add_stage_once!(job_dict, "integ-test")
 
-    job_yaml = _get_normal_integration_test(
+    job_yaml = _get_default_integration_test(
         test_package,
         test_platform,
         setup_dev_env,
@@ -131,7 +131,7 @@ function add_integration_test_job_yaml!(
 end
 
 """
-    _get_normal_integration_test(
+    _get_default_integration_test(
         test_package::TestPackage,
         test_platform::TestPlatform,
         setup_dev_env::Bool,
@@ -159,7 +159,7 @@ Return
 
 Returns a dict containing the integration test, which can be output directly as GitLab CI yaml.
 """
-function _get_normal_integration_test(
+function _get_default_integration_test(
         test_package::TestPackage,
         test_platform::TestPlatform,
         setup_dev_env::Bool,

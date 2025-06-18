@@ -35,7 +35,7 @@ function add_unit_test_job_yaml!(
         )
     )
     _add_stage_once!(job_dict, "unit-test")
-    job_yaml = _get_normal_unit_test(
+    job_yaml = _get_default_unit_test(
         unit_test_type.version, test_package, test_platform, tools_git_repo
     )
     job_yaml["tags"] = ["cpuonly"]
@@ -56,7 +56,7 @@ function add_unit_test_job_yaml!(
         )
     )
     _add_stage_once!(job_dict, "unit-test")
-    job_yaml = _get_normal_unit_test(
+    job_yaml = _get_default_unit_test(
         unit_test_type.version, test_package, test_platform, tools_git_repo
     )
     job_yaml["tags"] = ["cuda", "x86_64"]
@@ -77,7 +77,7 @@ function add_unit_test_job_yaml!(
         )
     )
     _add_stage_once!(job_dict, "unit-test")
-    job_yaml = _get_normal_unit_test(
+    job_yaml = _get_default_unit_test(
         unit_test_type.version, test_package, test_platform, tools_git_repo
     )
     _add_julia_rocm_environment!(job_yaml, unit_test_type)
@@ -99,7 +99,7 @@ function add_unit_test_job_yaml!(
         )
     )
     _add_stage_once!(job_dict, "unit-test")
-    job_yaml = _get_normal_unit_test(
+    job_yaml = _get_default_unit_test(
         "rc", test_package, test_platform, tools_git_repo
     )
     job_yaml["allow_failure"] = true
@@ -122,7 +122,7 @@ function add_unit_test_job_yaml!(
         )
     )
     _add_stage_once!(job_dict, "unit-test")
-    job_yaml = _get_normal_unit_test(
+    job_yaml = _get_default_unit_test(
         "nightly", test_package, test_platform, tools_git_repo
     )
     job_yaml["image"] = unit_test_type.container_image
@@ -164,7 +164,7 @@ fi",
 end
 
 """
-    _get_normal_unit_test(
+    _get_default_unit_test(
         version::AbstractString,
         test_package::TestPackage,
         test_platform::TestPlatform,
@@ -184,7 +184,7 @@ Return
 
 Returns a dict containing the unit test, which can be output directly as GitLab CI yaml.
 """
-function _get_normal_unit_test(
+function _get_default_unit_test(
         version::AbstractString,
         test_package::TestPackage,
         test_platform::TestPlatform,
