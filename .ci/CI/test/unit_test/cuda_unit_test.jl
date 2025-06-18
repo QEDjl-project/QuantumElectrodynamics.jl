@@ -9,7 +9,7 @@
         expected_job = get_generic_unit_job(version, test_package)
         expected_job["script"] = get_main_unit_job_script_section(tools_git_repo)
 
-        expected_job["variables"]["TEST_CUDA"] = "1"
+        expected_job["variables"]["CI_QED_TEST_CUDA"] = "1"
         expected_job["tags"] = ["cuda", "x86_64"]
 
         job_dict = Dict()

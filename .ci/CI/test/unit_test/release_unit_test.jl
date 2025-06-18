@@ -8,7 +8,7 @@
     expected_job = get_generic_unit_job("rc", test_package)
     expected_job["script"] = get_main_unit_job_script_section(tools_git_repo)
 
-    expected_job["variables"]["TEST_CPU"] = "1"
+    expected_job["variables"]["CI_QED_TEST_CPU"] = "1"
     expected_job["tags"] = ["cpuonly"]
     expected_job["allow_failure"] = true
 

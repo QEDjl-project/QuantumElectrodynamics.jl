@@ -11,7 +11,7 @@
         expected_job["script"] = get_main_unit_job_script_section(tools_git_repo)
 
         expected_job["image"] = "rocm/dev-ubuntu-24.04:6.2.4-complete"
-        expected_job["variables"]["TEST_AMDGPU"] = "1"
+        expected_job["variables"]["CI_QED_TEST_AMDGPU"] = "1"
         expected_job["tags"] = ["rocm", "x86_64"]
 
         job_dict = Dict()
