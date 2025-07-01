@@ -97,7 +97,9 @@ function _read_pull_request_labels!(pr::GitHub.PullRequest, output_env_vars::Dic
                 @warn "Unknown tag: $(tag)"
             else
                 for (env_var_name, env_var_value) in known_tags[tag]
-                    _set_output_env_vars!(output_env_vars, env_var_name, env_var_value)
+                    # do not use _set_output_env_vars!(), as this environment should be variable
+                    # overridable
+                    output_env_vars[env_var_name] = env_var_value
                 end
             end
         end
@@ -151,7 +153,9 @@ function read_commit_message!(output_env_vars::Dict{String, String})
     for test_type in [UnitTest(), IntegrationTest()]
         for (name, value) in get_test_specific_custom_urls(test_type, custom_dependency_urls)
             env_name = get_test_type_env_var_prefix(test_type) * name
-            _set_output_env_vars!(output_env_vars, env_name, value)
+            # do not use _set_output_env_vars!(), as this environment should be variable
+            # overridable
+            output_env_vars[env_name] = value
         end
     end
     return nothing
