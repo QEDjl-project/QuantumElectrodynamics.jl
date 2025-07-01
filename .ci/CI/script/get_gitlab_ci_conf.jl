@@ -26,6 +26,12 @@ if abspath(PROGRAM_FILE) == @__FILE__
         exit(1)
     end
 
+    local env_info_output = "Environment variables:\n"
+    for (name, value) in output_env_vars
+        env_info_output *= "  $(name)=$(value)\n"
+    end
+    @info env_info_output
+
     for (name, value) in output_env_vars
         println("export $(name)=$(value)")
     end
