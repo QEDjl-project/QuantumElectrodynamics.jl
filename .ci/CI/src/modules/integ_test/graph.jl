@@ -104,6 +104,7 @@ Side effects of the function are:
     is checked out. The dict allows the use of custom URLs and branches for each QED project. The
     key is the package name and the value must have the following form: `<git_url>#<branch_name>`.
     The syntax is the same as for `Pkg.add()`.
+- `start_package_name::AbstractString`: Name of package which is the root of the dependency graph.
 
 # Returns
 
@@ -114,18 +115,19 @@ function build_qed_dependency_graph!(
         repository_base_path::AbstractString,
         compat_changes::Dict{String, String},
         custom_urls::Dict{String, String} = Dict{String, String}(),
+        start_package_name::AbstractString = "QuantumElectrodynamics"
     )::Dict
     @info "build QED dependency graph"
     io = IOBuffer()
     println(io, "input compat_changes: $(compat_changes)")
 
     qed_dependency_graph = Dict()
-    qed_dependency_graph["QuantumElectrodynamics"] = _build_qed_dependency_graph!(
+    qed_dependency_graph[start_package_name] = _build_qed_dependency_graph!(
         repository_base_path,
         compat_changes,
         custom_urls,
-        "QuantumElectrodynamics",
-        ["QuantumElectrodynamics"],
+        start_package_name,
+        [start_package_name],
     )
     println(io, "output compat_changes: $(compat_changes)")
     with_logger(debuglogger) do

@@ -61,6 +61,8 @@ The algorithm works on a copy of the input graph.
 - `graph::Dict`: The dependency graph that is to be reduced
 - `stop_package::AbstractString=""`: If the stop package is found, stop the reduction before the
     graph is empty.
+- `start_package_name::AbstractString`: Name of package which is the root of the dependency graph.
+
 
 # Returns
 
@@ -69,9 +71,9 @@ e.g., pkg_ordering[1] stands for the first round. The set contains all the leave
 round. There is no order within a round.
 """
 function get_package_dependency_list(
-        graph::Dict, stop_package::AbstractString = ""
+        graph::Dict, stop_package::AbstractString = "", start_package_name::AbstractString = "QuantumElectrodynamics"
     )::Vector{Set{String}}
-    pkg_ordering = _get_package_dependency_list!(graph, stop_package)
+    pkg_ordering = _get_package_dependency_list!(graph, stop_package, start_package_name)
 
     with_logger(debuglogger) do
         io = IOBuffer()
@@ -86,14 +88,14 @@ function get_package_dependency_list(
 end
 
 function _get_package_dependency_list!(
-        graph::Dict, stop_package::AbstractString
+        graph::Dict, stop_package::AbstractString, start_package_name::AbstractString
     )::Vector{Set{String}}
     @info "calculate the correct sequence for adding QED packages"
     graph_copy = deepcopy(graph)
     pkg_ordering = Vector{Set{String}}()
     while true
-        if isempty(keys(graph_copy["QuantumElectrodynamics"]))
-            push!(pkg_ordering, Set{String}(["QuantumElectrodynamics"]))
+        if isempty(keys(graph_copy[start_package_name]))
+            push!(pkg_ordering, Set{String}([start_package_name]))
             return pkg_ordering
         end
         leafs = Set{String}()
