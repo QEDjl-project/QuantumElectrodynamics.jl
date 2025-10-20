@@ -47,7 +47,7 @@ if abspath(PROGRAM_FILE) == @__FILE__
             @info "Setup dev environment for package $(pkg)\n$(pkg_path)"
 
             required_deps = CI.get_filtered_dependencies(
-                r"^(QED*|QuantumElectrodynamics*)", joinpath(pkg_path, "Project.toml")
+                CI.get_qed_filter_regex(), joinpath(pkg_path, "Project.toml")
             )
             linear_pkg_ordering = CI.calculate_linear_dependency_ordering(
                 pkg_ordering, required_deps

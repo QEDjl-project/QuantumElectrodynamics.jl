@@ -1,4 +1,13 @@
 """
+    get_qed_filter_regex()::Regex
+
+Only packages which matches this regex will be used to construct the QED dependency graph.
+"""
+function get_qed_filter_regex()::Regex
+    return r"^(QED*|QuantumElectrodynamics*)"
+end
+
+"""
     get_filtered_dependencies(
         name_filter::Regex, project_toml_path::AbstractString
     )::AbstractVector{String}
@@ -61,6 +70,7 @@ The algorithm works on a copy of the input graph.
 - `graph::Dict`: The dependency graph that is to be reduced
 - `stop_package::AbstractString=""`: If the stop package is found, stop the reduction before the
     graph is empty.
+- `start_package`: Package name where the search begins.
 
 # Returns
 
@@ -69,9 +79,9 @@ e.g., pkg_ordering[1] stands for the first round. The set contains all the leave
 round. There is no order within a round.
 """
 function get_package_dependency_list(
-        graph::Dict, stop_package::AbstractString = ""
+        graph::Dict, start_packages::AbstractString = "QuantumElectrodynamics", stop_package::AbstractString = ""
     )::Vector{Set{String}}
-    pkg_ordering = _get_package_dependency_list!(graph, stop_package)
+    pkg_ordering = _get_package_dependency_list!(graph, start_packages, stop_package)
 
     with_logger(debuglogger) do
         io = IOBuffer()
@@ -86,14 +96,14 @@ function get_package_dependency_list(
 end
 
 function _get_package_dependency_list!(
-        graph::Dict, stop_package::AbstractString
+        graph::Dict, start_packages::AbstractString, stop_package::AbstractString
     )::Vector{Set{String}}
     @info "calculate the correct sequence for adding QED packages"
     graph_copy = deepcopy(graph)
     pkg_ordering = Vector{Set{String}}()
     while true
-        if isempty(keys(graph_copy["QuantumElectrodynamics"]))
-            push!(pkg_ordering, Set{String}(["QuantumElectrodynamics"]))
+        if isempty(keys(graph_copy[start_packages]))
+            push!(pkg_ordering, Set{String}([start_packages]))
             return pkg_ordering
         end
         leafs = Set{String}()
