@@ -36,7 +36,7 @@
         disable_info_logger_output() do
             original_graph = deepcopy(graph)
 
-            pkg_ordering = CI.get_package_dependency_list(graph, "QuantumElectrodynamics")
+            pkg_ordering = CI.get_package_dependency_list(graph, "QuantumElectrodynamics", "QuantumElectrodynamics")
 
             # verify that CI.get_package_dependency_list does not modify the graph
             @test original_graph == graph
@@ -57,7 +57,7 @@
 
     @testset "stop: QEDfields" begin
         disable_info_logger_output() do
-            pkg_ordering = CI.get_package_dependency_list(graph, "QEDfields")
+            pkg_ordering = CI.get_package_dependency_list(graph, "QuantumElectrodynamics", "QEDfields")
 
             @test length(pkg_ordering) == 3
             @test pkg_ordering[1] == Set{String}(["QEDbase"])
@@ -68,7 +68,7 @@
 
     @testset "stop: QEDcore" begin
         disable_info_logger_output() do
-            pkg_ordering = CI.get_package_dependency_list(graph, "QEDcore")
+            pkg_ordering = CI.get_package_dependency_list(graph, "QuantumElectrodynamics", "QEDcore")
 
             @test length(pkg_ordering) == 2
             @test pkg_ordering[1] == Set{String}(["QEDbase"])
@@ -78,7 +78,7 @@
 
     @testset "stop: QEDbase" begin
         disable_info_logger_output() do
-            pkg_ordering = CI.get_package_dependency_list(graph, "QEDbase")
+            pkg_ordering = CI.get_package_dependency_list(graph, "QuantumElectrodynamics", "QEDbase")
 
             @test length(pkg_ordering) == 1
             @test pkg_ordering[1] == Set{String}(["QEDbase"])
@@ -87,7 +87,7 @@
 
     @testset "stop: NoStop" begin
         disable_info_logger_output() do
-            pkg_ordering = CI.get_package_dependency_list(graph, "NoStop")
+            pkg_ordering = CI.get_package_dependency_list(graph, "QuantumElectrodynamics", "NoStop")
 
             @test length(pkg_ordering) == 4
             @test pkg_ordering[1] == Set{String}(["QEDbase"])
@@ -155,7 +155,7 @@ end
 
     @testset "stop: QuantumElectrodynamics" begin
         disable_info_logger_output() do
-            pkg_ordering = CI.get_package_dependency_list(graph, "QuantumElectrodynamics")
+            pkg_ordering = CI.get_package_dependency_list(graph, "QuantumElectrodynamics", "QuantumElectrodynamics")
 
             @test length(pkg_ordering) == 5
             @test pkg_ordering[1] == Set{String}(["QEDbase"])
@@ -175,7 +175,7 @@ end
 
     @testset "stop: QEDBigWhoop" begin
         disable_info_logger_output() do
-            pkg_ordering = CI.get_package_dependency_list(graph, "QEDBigWhoop")
+            pkg_ordering = CI.get_package_dependency_list(graph, "QuantumElectrodynamics", "QEDBigWhoop")
 
             @test length(pkg_ordering) == 4
             @test pkg_ordering[1] == Set{String}(["QEDbase"])
@@ -194,7 +194,7 @@ end
 
     @testset "stop: QEDFeynmanDiagrams" begin
         disable_info_logger_output() do
-            pkg_ordering = CI.get_package_dependency_list(graph, "QEDFeynmanDiagrams")
+            pkg_ordering = CI.get_package_dependency_list(graph, "QuantumElectrodynamics", "QEDFeynmanDiagrams")
 
             @test length(pkg_ordering) == 3
             @test pkg_ordering[1] == Set{String}(["QEDbase"])
@@ -205,7 +205,7 @@ end
 
     @testset "stop: QEDfields" begin
         disable_info_logger_output() do
-            pkg_ordering = CI.get_package_dependency_list(graph, "QEDfields")
+            pkg_ordering = CI.get_package_dependency_list(graph, "QuantumElectrodynamics", "QEDfields")
 
             @test length(pkg_ordering) == 3
             @test pkg_ordering[1] == Set{String}(["QEDbase"])

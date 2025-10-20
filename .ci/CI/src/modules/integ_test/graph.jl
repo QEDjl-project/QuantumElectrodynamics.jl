@@ -86,9 +86,9 @@ end
     )::Dict
 
 Creates the dependency graph of the QED package ecosystem just by parsing Projects.toml. The
-function starts by cloning the QuantumElectrodynamics.jl GitHub repository. Depending on
-QuantumElectrodynamics.jl `Project.toml`, clones all directly and indirectly dependent QED.jl
-GitHub repositories and constructs the dependency graph.
+function starts by cloning the `start_project`. Depending on `start_project` `Project.toml`, 
+clones all directly and indirectly dependent QED.jl GitHub repositories and constructs the 
+dependency graph.
 
 Side effects of the function are:
     - the Git repositories remain in the path defined in the `repository_base_path` variable
@@ -104,6 +104,8 @@ Side effects of the function are:
     is checked out. The dict allows the use of custom URLs and branches for each QED project. The
     key is the package name and the value must have the following form: `<git_url>#<branch_name>`.
     The syntax is the same as for `Pkg.add()`.
+- `start_project`: First package to be cloned. Only QED dependencies and their dependencies are 
+    used to build the graph.
 
 # Returns
 
@@ -114,18 +116,19 @@ function build_qed_dependency_graph!(
         repository_base_path::AbstractString,
         compat_changes::Dict{String, String},
         custom_urls::Dict{String, String} = Dict{String, String}(),
+        start_project::AbstractString = "QuantumElectrodynamics"
     )::Dict
     @info "build QED dependency graph"
     io = IOBuffer()
     println(io, "input compat_changes: $(compat_changes)")
 
     qed_dependency_graph = Dict()
-    qed_dependency_graph["QuantumElectrodynamics"] = _build_qed_dependency_graph!(
+    qed_dependency_graph[start_project] = _build_qed_dependency_graph!(
         repository_base_path,
         compat_changes,
         custom_urls,
-        "QuantumElectrodynamics",
-        ["QuantumElectrodynamics"],
+        start_project,
+        [start_project],
     )
     println(io, "output compat_changes: $(compat_changes)")
     with_logger(debuglogger) do

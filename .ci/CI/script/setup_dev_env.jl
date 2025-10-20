@@ -67,12 +67,12 @@ if abspath(PROGRAM_FILE) == @__FILE__
         qed_path = mktempdir(; cleanup = false)
 
         pkg_tree = CI.build_qed_dependency_graph!(
-            qed_path, compat_changes, test_specific_custom_urls
+            qed_path, compat_changes, test_specific_custom_urls, ENV["CI_QED_DEV_PKG_NAME"]
         )
-        pkg_ordering = CI.get_package_dependency_list(pkg_tree)
+        pkg_ordering = CI.get_package_dependency_list(pkg_tree, ENV["CI_QED_DEV_PKG_NAME"])
 
         required_deps = CI.get_filtered_dependencies(
-            r"^(QED*|QuantumElectrodynamics*)", active_project_project_toml
+            CI.get_qed_filter_regex(), active_project_project_toml
         )
 
         linear_pkg_ordering = CI.calculate_linear_dependency_ordering(
@@ -93,10 +93,10 @@ if abspath(PROGRAM_FILE) == @__FILE__
         )
     catch e
         # print debug information if uncatch error is thrown
-        println(String(take!(debug_logger_io)))
+        println(String(take!(CI.debug_logger_io)))
         throw(e)
     end
 
     # print debug information if debug information is manually enabled
-    @debug String(take!(debug_logger_io))
+    @debug String(take!(CI.debug_logger_io))
 end
