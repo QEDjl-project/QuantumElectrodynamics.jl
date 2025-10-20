@@ -325,7 +325,7 @@ function get_unit_test_julia_versions()::Vector{String}
     if haskey(ENV, "CI_QED_UNIT_TEST_VERSIONS")
         return strip.(split(ENV["CI_QED_UNIT_TEST_VERSIONS"], ","))
     else
-        return ["1.10", "1.11", "rc", "nightly"]
+        return ["1.10", "1.11", "1.12", "rc", "nightly"]
     end
 end
 """

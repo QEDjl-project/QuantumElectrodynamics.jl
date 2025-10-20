@@ -1,5 +1,5 @@
 @testset "unit test: AMDGPU release" begin
-    julia_versions = ["1.10", "1.11"]
+    julia_versions = ["1.10", "1.11", "1.12"]
     test_package = CI.TestPackage("QEDfoo", "/path/to/project", "42.0")
     git_url = "http://github.com/name/repo"
     git_branch = "branch"
