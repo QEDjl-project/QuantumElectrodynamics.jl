@@ -4,7 +4,7 @@
 Only packages which matches this regex will be used to construct the QED dependency graph.
 """
 function get_qed_filter_regex()::Regex
-    return r"^(QED*|QuantumElectrodynamics*)"
+    return r"^(QED*|QuantumElectrodynamics*|RejectionSamplers*)"
 end
 
 """
