@@ -36,7 +36,7 @@
                 "CI_QED_TEST_AMDGPU" => "0",
             ),
             "interruptible" => true,
-            "tags" => ["cpuonly"],
+            "tags" => CI.get_cpu_runner_tags(),
             "script" => [
                 "env | grep CI_QED_",
                 "apt update",
@@ -104,7 +104,7 @@
                 "CI_QED_TEST_AMDGPU" => "0",
             ),
             "interruptible" => true,
-            "tags" => ["cpuonly"],
+            "tags" => CI.get_cpu_runner_tags(),
             "script" => [
                 "env | grep CI_QED_",
                 "apt update",

@@ -62,7 +62,7 @@ function add_integration_test_job_yaml!(
         integration_test_type,
         tools_git_repo
     )
-    job_yaml["tags"] = ["cpuonly"]
+    job_yaml["tags"] = get_cpu_runner_tags()
 
     job_dict["integration_test_$(integration_test_name)"] = job_yaml
     return nothing

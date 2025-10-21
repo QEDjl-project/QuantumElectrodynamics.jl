@@ -37,7 +37,7 @@ function add_unit_test_verify_job_yaml!(
                 "julia --project=/tools/.ci/CI/ /tools/.ci/CI/script/verify_env.jl",
             ],
             "interruptible" => true,
-            "tags" => ["cpuonly"],
+            "tags" => get_cpu_runner_tags(),
         )
     else
         generate_dummy_job_yaml!(

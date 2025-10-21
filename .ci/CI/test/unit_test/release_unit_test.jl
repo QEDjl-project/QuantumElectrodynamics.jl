@@ -9,7 +9,7 @@
     expected_job["script"] = get_main_unit_job_script_section(tools_git_repo)
 
     expected_job["variables"]["CI_QED_TEST_CPU"] = "1"
-    expected_job["tags"] = ["cpuonly"]
+    expected_job["tags"] = CI.get_cpu_runner_tags()
     expected_job["allow_failure"] = true
 
 

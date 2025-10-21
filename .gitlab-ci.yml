@@ -27,6 +27,7 @@ stages:
   interruptible: true
   tags:
     - cpuonly
+    - x86_64
 
 unit_tests_releases:
   extends: .untit_test_template
@@ -67,6 +68,7 @@ unit_tests_nightly:
   allow_failure: true
   tags:
     - cpuonly
+    - x86_64
 
 verify-unit-test-deps:
   image: julia:1.10
@@ -83,6 +85,7 @@ verify-unit-test-deps:
   interruptible: true
   tags:
     - cpuonly
+    - x86_64
 
 bootloader_jl_integration_test:
   image: julia:1.10
@@ -96,6 +99,7 @@ bootloader_jl_integration_test:
   interruptible: true
   tags:
     - cpuonly
+    - x86_64
 
 get_gitlab_ci_conf_jl_integration_test:
   image: julia:1.10
@@ -108,6 +112,7 @@ get_gitlab_ci_conf_jl_integration_test:
   interruptible: true
   tags:
     - cpuonly
+    - x86_64
 
 trigger_job:
   stage: qedcore-integration-test

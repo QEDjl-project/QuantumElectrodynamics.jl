@@ -30,7 +30,7 @@ fi",
         expected_job["variables"]["JULIA_DOWNLOAD"] = "/julia/download"
         expected_job["variables"]["JULIA_EXTRACT"] = "/julia/extract"
         expected_job["variables"]["CI_QED_TEST_CPU"] = "1"
-        expected_job["tags"] = ["cpuonly"]
+        expected_job["tags"] = CI.get_cpu_runner_tags()
         expected_job["allow_failure"] = true
 
 
