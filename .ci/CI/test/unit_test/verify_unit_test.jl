@@ -13,7 +13,7 @@
                 "julia --project=/tools/.ci/CI/ /tools/.ci/CI/script/verify_env.jl",
             ],
             "interruptible" => true,
-            "tags" => ["cpuonly"],
+            "tags" => CI.get_cpu_runner_tags(),
         )
 
         job_dict = Dict()

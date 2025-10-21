@@ -164,3 +164,14 @@ function print_pkg_urls(urls::Dict{String, String})::String
     end
     return String(take!(io))
 end
+
+"""
+    get_cpu_runner_tags()
+
+Get GitLab CI runner tags for the CPU runner.
+"""
+function get_cpu_runner_tags()
+    # cpuonly -> x86 or ARM CPU
+    # x86_64 -> use AMD Epyc's only, which are 3 times faster than the ARM CPU
+    return ["cpuonly", "x86_64"]
+end

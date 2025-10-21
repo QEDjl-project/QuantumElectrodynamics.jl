@@ -38,7 +38,7 @@ function add_unit_test_job_yaml!(
     job_yaml = _get_default_unit_test(
         unit_test_type.version, test_package, test_platform, tools_git_repo
     )
-    job_yaml["tags"] = ["cpuonly"]
+    job_yaml["tags"] = get_cpu_runner_tags()
 
     job_name = _get_unit_test_name_prefix(test_platform)
     job_name *= "_" * replace(unit_test_type.version, "." => "_")
@@ -103,7 +103,7 @@ function add_unit_test_job_yaml!(
         "rc", test_package, test_platform, tools_git_repo
     )
     job_yaml["allow_failure"] = true
-    job_yaml["tags"] = ["cpuonly"]
+    job_yaml["tags"] = get_cpu_runner_tags()
 
     job_name = _get_unit_test_name_prefix(test_platform)
     job_name *= "_release_candidate"
@@ -154,7 +154,7 @@ fi",
         "cp -r \$JULIA_EXTRACT_FOLDER/* /usr",
     ]
     job_yaml["allow_failure"] = true
-    job_yaml["tags"] = ["cpuonly"]
+    job_yaml["tags"] = get_cpu_runner_tags()
 
     job_name = _get_unit_test_name_prefix(test_platform)
     job_name *= "_nightly"
