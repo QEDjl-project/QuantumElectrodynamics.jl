@@ -45,13 +45,36 @@ function main()
     package_path = CI.get_project_path(args)
     test_package = CI.get_package_name_version(package_path)
     pull_request = CI.is_pull_request(args)
+    code_coverage = CI.is_code_coverage(args)
 
     @info "Test package name: $(test_package.name)"
     @info "Test package version: $(test_package.version)"
     @info "Test package path: $(test_package.path)"
     @info "Target branch: $(target_branch)"
     @info "Is pull request: $(pull_request)"
+    @info "Enable code coverage: $(code_coverage)"
     @info "Unit test: setup dev environment: $(setup_dev_env)"
+
+    code_coverage_conf = CI.CodeCoverageConf("", "", "", 0)
+
+    if code_coverage
+        # if some of the arguments is not set, the exception is caught, a error
+        # message added and the application exited with 1.
+        try
+            commit_hash = CI.get_commit_hash(args, CI.runtime_error_handler)
+            feature_branch = CI.get_feature_branch(args, CI.runtime_error_handler)
+            pr_number = 0
+            if pull_request
+                pr_number = CI.get_pr_number(args, CI.runtime_error_handler)
+            end
+            code_coverage_conf = CI.CodeCoverageConf(
+                "QEDjl-project/$(test_package.name).jl", commit_hash, feature_branch, pr_number
+            )
+        catch e
+            @error "Because code coverage is enabled:\n$(sprint(showerror, e))"
+            exit(1)
+        end
+    end
 
     tests_configurations = Dict()
     tests_configurations[CI.UnitTest] = CI.get_unit_test_configs(args)
@@ -59,6 +82,10 @@ function main()
 
     CI.info_test_configs(CI.UnitTest, tests_configurations)
     CI.info_test_configs(CI.IntegrationTest, tests_configurations)
+
+    # measure the code coverage only in CPU jobs and with the latest release version
+    # if no CPU unit test with a release version exist, the version is 0.0
+    latest_julia_cpu_release_ver = CI.get_latest_julia_cpu_release(tests_configurations[CI.UnitTest])
 
     # the "stdout" entry is required, otherwise
     # `get(job_yamls, "<name>", job_yamls["stdout"])` is not working
@@ -86,12 +113,28 @@ function main()
 
     for (julia_version_type_name, platform) in tests_configurations[CI.UnitTest]
         output_yaml = CI.get_output_job_yaml(job_yamls, platform)
+        unit_code_coverage_conf = CI.CodeCoverageConf("", "", "", 0)
+        if (
+                code_coverage &&
+                    typeof(julia_version_type_name) == CI.ReleaseVersion &&
+                    julia_version_type_name.version == latest_julia_cpu_release_ver &&
+                    platform == CI.CPU()
+            )
+            unit_code_coverage_conf = code_coverage_conf
+            pr_string = unit_code_coverage_conf.pr_number == 0 ? "" : "  Pull request number: $(unit_code_coverage_conf.pr_number)\n"
+            @info "Add to code coverage to unit test Julia 1.12 CPU\n" *
+                "  Project name: $(unit_code_coverage_conf.project_name)\n" *
+                "  Commit hash: $(unit_code_coverage_conf.commit_hash)\n" *
+                "  Branch: $(unit_code_coverage_conf.feature_branch)\n" *
+                pr_string
+        end
         CI.add_unit_test_job_yaml!(
             output_yaml,
             test_package,
             julia_version_type_name,
             platform,
-            tools_git_repo
+            tools_git_repo,
+            unit_code_coverage_conf
         )
     end
 

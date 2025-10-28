@@ -10,7 +10,7 @@ function get_dev_unit_job_script_section(
         "julia --project=/tmp/integration_test_tools/.ci/CI/ -e 'import Pkg; Pkg.instantiate()'",
         "julia --project=/tmp/integration_test_tools/.ci/CI/ /tmp/integration_test_tools/.ci/CI/script/setup_dev_env.jl \${CI_PROJECT_DIR}",
         "julia --project=. -e 'import Pkg; Pkg.instantiate()'",
-        "julia --project=. -e 'import Pkg; Pkg.test(; coverage = true)'",
+        "julia --project=. -e 'import Pkg; Pkg.test()'",
     ]
 end
 
@@ -30,7 +30,7 @@ function get_main_unit_job_script_section(
         "julia --project=/tmp/integration_test_tools/.ci/CI/ -e 'import Pkg; Pkg.instantiate()'",
         "julia --project=/tmp/integration_test_tools/.ci/CI/ /tmp/integration_test_tools/.ci/CI/script/setup_dev_env.jl \${CI_PROJECT_DIR}",
         "julia --project=. -e 'import Pkg; Pkg.instantiate()'",
-        "julia --project=. -e 'import Pkg; Pkg.test(; coverage = true)'",
+        "julia --project=. -e 'import Pkg; Pkg.test()'",
     ]
 end
 

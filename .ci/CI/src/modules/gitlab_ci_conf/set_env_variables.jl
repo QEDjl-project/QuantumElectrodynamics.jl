@@ -69,6 +69,8 @@ function handle_pull_request!(ci_commit_ref_name::AbstractString, output_env_var
     pr = CI.pull_github_pull_request(pull_request_info)
 
     _set_output_env_vars!(output_env_vars, "CI_QED_TARGET_BRANCH", pr.base.ref)
+    _set_output_env_vars!(output_env_vars, "CI_QED_FEATURE_BRANCH", pr.head.ref)
+    _set_output_env_vars!(output_env_vars, "CI_QED_PR_NUMBER", string(pull_request_info.pr_number))
     _read_pull_request_labels!(pr, output_env_vars)
     return nothing
 end
@@ -131,8 +133,10 @@ function handle_normal_commit!(ci_commit_ref_name::AbstractString, output_env_va
     try
         VersionNumber(ci_commit_ref_name)
         _set_output_env_vars!(output_env_vars, "CI_QED_TARGET_BRANCH", "main")
+        _set_output_env_vars!(output_env_vars, "CI_QED_FEATURE_BRANCH", "main")
     catch
         _set_output_env_vars!(output_env_vars, "CI_QED_TARGET_BRANCH", ci_commit_ref_name)
+        _set_output_env_vars!(output_env_vars, "CI_QED_FEATURE_BRANCH", ci_commit_ref_name)
     end
     return nothing
 end

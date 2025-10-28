@@ -20,6 +20,8 @@ contains all properties to be directly translated to GitLab CI yaml.
 - `test_platform::TestPlatform`: Set target platform test, e.g. CPU, Nvidia GPU or AMD GPU.
 - `tools_git_repo::GitRepoAddress`: URL and branch of the Git repository from which the CI tools are
     cloned in unit test job.
+- `code_coverage::CodeCoverageConf`: Configuration for creating a code coverage report and upload it
+    to codecov.com. The code generation is only triggered, if `is_code_coverage(code_coverage)` is true.
 """
 function add_unit_test_job_yaml! end
 
@@ -32,11 +34,12 @@ function add_unit_test_job_yaml!(
         test_platform::CPU,
         tools_git_repo::GitRepoAddress = GitRepoAddress(
             "https://github.com/QEDjl-project/QuantumElectrodynamics.jl.git", "dev"
-        )
+        ),
+        code_coverage::CodeCoverageConf = CodeCoverageConf("", "", "", 0)
     )
     _add_stage_once!(job_dict, "unit-test")
     job_yaml = _get_default_unit_test(
-        unit_test_type.version, test_package, test_platform, tools_git_repo
+        unit_test_type.version, test_package, test_platform, tools_git_repo, code_coverage
     )
     job_yaml["tags"] = get_cpu_runner_tags()
 
@@ -53,11 +56,12 @@ function add_unit_test_job_yaml!(
         test_platform::CUDA,
         tools_git_repo::GitRepoAddress = GitRepoAddress(
             "https://github.com/QEDjl-project/QuantumElectrodynamics.jl.git", "dev"
-        )
+        ),
+        code_coverage::CodeCoverageConf = CodeCoverageConf("", "", "", 0)
     )
     _add_stage_once!(job_dict, "unit-test")
     job_yaml = _get_default_unit_test(
-        unit_test_type.version, test_package, test_platform, tools_git_repo
+        unit_test_type.version, test_package, test_platform, tools_git_repo, code_coverage
     )
     job_yaml["tags"] = ["cuda", "x86_64"]
 
@@ -74,11 +78,12 @@ function add_unit_test_job_yaml!(
         test_platform::AMDGPU,
         tools_git_repo::GitRepoAddress = GitRepoAddress(
             "https://github.com/QEDjl-project/QuantumElectrodynamics.jl.git", "dev"
-        )
+        ),
+        code_coverage::CodeCoverageConf = CodeCoverageConf("", "", "", 0)
     )
     _add_stage_once!(job_dict, "unit-test")
     job_yaml = _get_default_unit_test(
-        unit_test_type.version, test_package, test_platform, tools_git_repo
+        unit_test_type.version, test_package, test_platform, tools_git_repo, code_coverage
     )
     _add_julia_rocm_environment!(job_yaml, unit_test_type)
     job_yaml["tags"] = ["rocm", "x86_64"]
@@ -96,11 +101,12 @@ function add_unit_test_job_yaml!(
         test_platform::CPU,
         tools_git_repo::GitRepoAddress = GitRepoAddress(
             "https://github.com/QEDjl-project/QuantumElectrodynamics.jl.git", "dev"
-        )
+        ),
+        code_coverage::CodeCoverageConf = CodeCoverageConf("", "", "", 0)
     )
     _add_stage_once!(job_dict, "unit-test")
     job_yaml = _get_default_unit_test(
-        "rc", test_package, test_platform, tools_git_repo
+        "rc", test_package, test_platform, tools_git_repo, code_coverage
     )
     job_yaml["allow_failure"] = true
     job_yaml["tags"] = get_cpu_runner_tags()
@@ -119,11 +125,12 @@ function add_unit_test_job_yaml!(
         test_platform::CPU,
         tools_git_repo::GitRepoAddress = GitRepoAddress(
             "https://github.com/QEDjl-project/QuantumElectrodynamics.jl.git", "dev"
-        )
+        ),
+        code_coverage::CodeCoverageConf = CodeCoverageConf("", "", "", 0)
     )
     _add_stage_once!(job_dict, "unit-test")
     job_yaml = _get_default_unit_test(
-        "nightly", test_package, test_platform, tools_git_repo
+        "nightly", test_package, test_platform, tools_git_repo, code_coverage
     )
     job_yaml["image"] = unit_test_type.container_image
 
@@ -164,6 +171,53 @@ fi",
 end
 
 """
+    _get_code_coverage_script(
+        conf::CodeCoverageConf
+    )::AbstractArray
+
+Generates a part of a GitLab CI script section, which runs generating a code coverage report and upload it
+to codecov.com.
+"""
+function _get_code_coverage_script(
+        conf::CodeCoverageConf
+    )::AbstractArray
+    pr_string = conf.pr_number == 0 ? "" : "--pr $(conf.pr_number)"
+    return [
+        "julia --project=. -e 'import Pkg; Pkg.test(; coverage = true)'",
+        "julia --project=@coverage -e 'import Pkg; Pkg.add(\"Coverage\"); using Coverage; LCOV.writefile(\"coverage-lcov.info\", process_folder())'",
+        # installing the codecov CLI via pip takes much more time
+        # therefore use it as fallback
+        # on x86, simply download pre compiled executable
+        "if [[ \$CI_RUNNER_EXECUTABLE_ARCH == \"linux/amd64\" ]]; then
+  curl -Os https://cli.codecov.io/latest/linux/codecov
+  chmod +x codecov
+  mv ./codecov /usr/local/bin/
+else
+  apt update && apt install -y python3-pip
+  pip3 install --break-system-packages codecov-cli
+fi",
+        "codecov --version",
+        "env -i CODECOV_TOKEN=\$CODECOV_TOKEN bash -c \"codecov -v \
+            create-commit \
+            --git-service github \
+            --branch $(conf.feature_branch) \
+            --sha $(conf.commit_hash) $(pr_string) \
+            --slug $(conf.project_name)\"",
+        "env -i CODECOV_TOKEN=\$CODECOV_TOKEN bash -c \"codecov -v \
+            create-report \
+            --git-service github \
+            --sha $(conf.commit_hash) $(pr_string) \
+            --slug $(conf.project_name)\"",
+        "env -i CODECOV_TOKEN=\$CODECOV_TOKEN bash -c \"codecov -v \
+            do-upload \
+            --git-service github \
+            --branch $(conf.feature_branch) \
+            --sha $(conf.commit_hash) $(pr_string) \
+            --slug $(conf.project_name)\"",
+    ]
+end
+
+"""
     _get_default_unit_test(
         version::AbstractString,
         test_package::TestPackage,
@@ -179,6 +233,8 @@ Creates a normal unit test job for a specific Julia version.
 - `test_platform::TestPlatform`: Set target platform test, e.g. CPU, Nvidia GPU or AMD GPU.
 - `tools_git_repo::GitRepoAddress`: URL and branch of the Git repository from which the CI tools are
     cloned in unit test job.
+- `code_coverage::CodeCoverageConf`: Configuration for creating a code coverage report and upload it
+    to codecov.com. The code generation is only triggered, if `is_code_coverage(code_coverage)` is true.
 
 Return
 
@@ -189,6 +245,7 @@ function _get_default_unit_test(
         test_package::TestPackage,
         test_platform::TestPlatform,
         tools_git_repo::GitRepoAddress,
+        code_coverage::CodeCoverageConf = CodeCoverageConf("", "", "", 0)
     )::Dict
     job_yaml = Dict()
     job_yaml["stage"] = "unit-test"
@@ -215,8 +272,13 @@ function _get_default_unit_test(
         "julia --project=/tmp/integration_test_tools/.ci/CI/ -e 'import Pkg; Pkg.instantiate()'",
         "julia --project=/tmp/integration_test_tools/.ci/CI/ /tmp/integration_test_tools/.ci/CI/script/setup_dev_env.jl \${CI_PROJECT_DIR}",
         "julia --project=. -e 'import Pkg; Pkg.instantiate()'",
-        "julia --project=. -e 'import Pkg; Pkg.test(; coverage = true)'",
     ]
+
+    if is_code_coverage(code_coverage)
+        append!(job_yaml["script"], _get_code_coverage_script(code_coverage))
+    else
+        push!(job_yaml["script"], "julia --project=. -e 'import Pkg; Pkg.test()'")
+    end
 
     job_yaml["interruptible"] = true
 

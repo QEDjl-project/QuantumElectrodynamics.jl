@@ -10,6 +10,7 @@ function get_output_variables()::Dict{String, String}
     required_output_variables = [
         "CI_QED_TARGET_BRANCH",
         "CI_QED_IS_PR",
+        "CI_QED_COMMIT_HASH",
     ]
 
     output_env_vars = Dict{String, String}()
