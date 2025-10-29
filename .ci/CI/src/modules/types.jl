@@ -222,11 +222,11 @@ Contains all information, which are required to upload a code coverage to codeco
     branch name to be tested if it is not a pull request.
 - `pr_number::Integer`: Pull Reqeust number. If it is not a pull request, the number is 0.
 """
-struct CodeCoverageConf
-    project_name::AbstractString
-    commit_hash::AbstractString
-    feature_branch::AbstractString
-    pr_number::Integer
+Base.@kwdef struct CodeCoverageConf
+    project_name::AbstractString = ""
+    commit_hash::AbstractString = ""
+    feature_branch::AbstractString = ""
+    pr_number::Integer = 0
 end
 
 """

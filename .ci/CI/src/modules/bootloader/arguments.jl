@@ -74,7 +74,7 @@ function parse_commandline()::Dict{String, Any}
         "--target-branch"
         help = "On Pull Request, the target branch is the branch where changes will be merged in.\n" *
             "Otherwise it is the branch where the tests are running on.\n" *
-            "If target branch is set, does not read the target branch from a GitHub Pull Request which is set via environment variable `CI_QED_TARGET_BRANCH`."
+            "If a target branch is explicitly set, the value from the environment variable `CI_QED_TARGET_BRANCH` (used for GitHub pull requests) is ignored."
         arg_type = String
         "--pr"
         help = "Generate jobs for a pull request. If not set, the value of the environment variable CI_QED_IS_PR decides if it is pull request or not."
@@ -88,7 +88,7 @@ function parse_commandline()::Dict{String, Any}
         "--feature-branch"
         help = "The feature branch names the branch in a pull request, where changes coming from.\n" *
             "If the CI runs on a non-pull request, the feature branch and target branch are equal.\n" *
-            "If feature branch is set, does not read the target branch from a GitHub Pull Request which is set via environment variable `CI_QED_FEATURE_BRANCH`."
+            "If a feature branch is set, the value from the environment variable `CI_QED_FEATURE_BRANCH` (used for GitHub pull requests) is ignored."
         arg_type = String
         "--commit-hash"
         help = "Git commit hash of the commit to be tested."
@@ -109,8 +109,7 @@ end
 """
     exit_error_handler(error_msg::AbstractString)
 
-A error handler handles an error. This error displays the error message and exit the 
-application with error code 1.
+"The error handler manages errors by printing an error message and terminating the application with exit code 1."
 
 # Args
 - `error_msg::AbstractString`: Error message.
@@ -123,7 +122,7 @@ end
 """
     runtime_error_handler(error_msg::AbstractString)
 
-A error handler handles an error. This error throws an ErrorException.
+The error handler manages errors by throwing an ErrorException with the error message.
 
 # Args
 - `error_msg::AbstractString`: Error message.

@@ -35,7 +35,7 @@ function add_unit_test_job_yaml!(
         tools_git_repo::GitRepoAddress = GitRepoAddress(
             "https://github.com/QEDjl-project/QuantumElectrodynamics.jl.git", "dev"
         ),
-        code_coverage::CodeCoverageConf = CodeCoverageConf("", "", "", 0)
+        code_coverage::CodeCoverageConf = CodeCoverageConf()
     )
     _add_stage_once!(job_dict, "unit-test")
     job_yaml = _get_default_unit_test(
@@ -57,7 +57,7 @@ function add_unit_test_job_yaml!(
         tools_git_repo::GitRepoAddress = GitRepoAddress(
             "https://github.com/QEDjl-project/QuantumElectrodynamics.jl.git", "dev"
         ),
-        code_coverage::CodeCoverageConf = CodeCoverageConf("", "", "", 0)
+        code_coverage::CodeCoverageConf = CodeCoverageConf()
     )
     _add_stage_once!(job_dict, "unit-test")
     job_yaml = _get_default_unit_test(
@@ -79,7 +79,7 @@ function add_unit_test_job_yaml!(
         tools_git_repo::GitRepoAddress = GitRepoAddress(
             "https://github.com/QEDjl-project/QuantumElectrodynamics.jl.git", "dev"
         ),
-        code_coverage::CodeCoverageConf = CodeCoverageConf("", "", "", 0)
+        code_coverage::CodeCoverageConf = CodeCoverageConf()
     )
     _add_stage_once!(job_dict, "unit-test")
     job_yaml = _get_default_unit_test(
@@ -102,7 +102,7 @@ function add_unit_test_job_yaml!(
         tools_git_repo::GitRepoAddress = GitRepoAddress(
             "https://github.com/QEDjl-project/QuantumElectrodynamics.jl.git", "dev"
         ),
-        code_coverage::CodeCoverageConf = CodeCoverageConf("", "", "", 0)
+        code_coverage::CodeCoverageConf = CodeCoverageConf()
     )
     _add_stage_once!(job_dict, "unit-test")
     job_yaml = _get_default_unit_test(
@@ -126,7 +126,7 @@ function add_unit_test_job_yaml!(
         tools_git_repo::GitRepoAddress = GitRepoAddress(
             "https://github.com/QEDjl-project/QuantumElectrodynamics.jl.git", "dev"
         ),
-        code_coverage::CodeCoverageConf = CodeCoverageConf("", "", "", 0)
+        code_coverage::CodeCoverageConf = CodeCoverageConf()
     )
     _add_stage_once!(job_dict, "unit-test")
     job_yaml = _get_default_unit_test(
@@ -245,7 +245,7 @@ function _get_default_unit_test(
         test_package::TestPackage,
         test_platform::TestPlatform,
         tools_git_repo::GitRepoAddress,
-        code_coverage::CodeCoverageConf = CodeCoverageConf("", "", "", 0)
+        code_coverage::CodeCoverageConf = CodeCoverageConf()
     )::Dict
     job_yaml = Dict()
     job_yaml["stage"] = "unit-test"

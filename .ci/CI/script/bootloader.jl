@@ -55,7 +55,7 @@ function main()
     @info "Enable code coverage: $(code_coverage)"
     @info "Unit test: setup dev environment: $(setup_dev_env)"
 
-    code_coverage_conf = CI.CodeCoverageConf("", "", "", 0)
+    code_coverage_conf = CI.CodeCoverageConf()
 
     if code_coverage
         # if some of the arguments is not set, the exception is caught, a error
@@ -71,7 +71,7 @@ function main()
                 "QEDjl-project/$(test_package.name).jl", commit_hash, feature_branch, pr_number
             )
         catch e
-            @error "Because code coverage is enabled:\n$(sprint(showerror, e))"
+            @error "because code coverage is enabled:\n$(sprint(showerror, e))"
             exit(1)
         end
     end
@@ -113,7 +113,7 @@ function main()
 
     for (julia_version_type_name, platform) in tests_configurations[CI.UnitTest]
         output_yaml = CI.get_output_job_yaml(job_yamls, platform)
-        unit_code_coverage_conf = CI.CodeCoverageConf("", "", "", 0)
+        unit_code_coverage_conf = CI.CodeCoverageConf()
         if (
                 code_coverage &&
                     typeof(julia_version_type_name) == CI.ReleaseVersion &&
