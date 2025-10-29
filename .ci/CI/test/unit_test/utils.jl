@@ -1,16 +1,17 @@
 """
-Returns the script section of an unit job targeting the dev branch.
+Returns the script section of an unit job without test command.
+
+# Args
+- `tools_git_repo::CI.GitRepoAddress`: Contains Git repository URL and branch of the dev tools.
 """
-function get_dev_unit_job_script_section(
-        git_repo_url::AbstractString, git_repo_branch::AbstractString
-    )
+function get_script_section_without_test(tools_git_repo::CI.GitRepoAddress)
     return [
+        "env | grep CI_QED_",
         "apt update && apt install -y git",
-        "git clone --depth 1 -b $(git_repo_branch) $(git_repo_url) /tmp/integration_test_tools/",
+        "git clone --depth 1 -b $(tools_git_repo.branch) $(tools_git_repo.url) /tmp/integration_test_tools/",
         "julia --project=/tmp/integration_test_tools/.ci/CI/ -e 'import Pkg; Pkg.instantiate()'",
         "julia --project=/tmp/integration_test_tools/.ci/CI/ /tmp/integration_test_tools/.ci/CI/script/setup_dev_env.jl \${CI_PROJECT_DIR}",
         "julia --project=. -e 'import Pkg; Pkg.instantiate()'",
-        "julia --project=. -e 'import Pkg; Pkg.test(; coverage = true)'",
     ]
 end
 
@@ -23,15 +24,9 @@ Returns the script section of an unit job.
 function get_main_unit_job_script_section(
         tools_git_repo::CI.GitRepoAddress
     )
-    return [
-        "env | grep CI_QED_",
-        "apt update && apt install -y git",
-        "git clone --depth 1 -b $(tools_git_repo.branch) $(tools_git_repo.url) /tmp/integration_test_tools/",
-        "julia --project=/tmp/integration_test_tools/.ci/CI/ -e 'import Pkg; Pkg.instantiate()'",
-        "julia --project=/tmp/integration_test_tools/.ci/CI/ /tmp/integration_test_tools/.ci/CI/script/setup_dev_env.jl \${CI_PROJECT_DIR}",
-        "julia --project=. -e 'import Pkg; Pkg.instantiate()'",
-        "julia --project=. -e 'import Pkg; Pkg.test(; coverage = true)'",
-    ]
+    script = get_script_section_without_test(tools_git_repo)
+    push!(script, "julia --project=. -e 'import Pkg; Pkg.test()'")
+    return script
 end
 
 """

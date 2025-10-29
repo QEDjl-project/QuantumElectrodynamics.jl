@@ -134,3 +134,23 @@ function info_test_configs(
     end
     return @info output
 end
+
+"""
+    get_latest_julia_cpu_release(unit_test::Vector{Tuple{JuliaVersionType, TestPlatform}})::String
+
+Take a list of unit test configuration and return the latest Julia version of the ReleaseTests.
+
+# Args
+- `unit_test::Vector{Tuple{JuliaVersionType, TestPlatform}}`: A list of unit test configurations.
+
+# Return
+- A versions string. Returns 0.0 if no CPU test with a release version was in `unit_test`.
+"""
+function get_latest_julia_cpu_release(unit_test::Vector{Tuple{JuliaVersionType, TestPlatform}})::String
+    cpu_tests = filter(t -> typeof(t[1]) == ReleaseVersion && t[2] == CI.CPU(), unit_test)
+    if isempty(cpu_tests)
+        return "0.0"
+    else
+        return findmax(t -> t[1].version, cpu_tests)[1]
+    end
+end

@@ -208,3 +208,38 @@ Base.:(==)(a::GitHubPR, b::GitHubPR) = a.user == b.user && a.project == b.projec
 
 "Get String representation of GitHubPR"
 github_pr_to_string(gh_pr::GitHubPR) = "User: $(gh_pr.user)\nProject: $(gh_pr.project)\nPR number: $(gh_pr.pr_number)"
+
+"""
+    struct CodeCoverageConf
+
+Contains all information, which are required to upload a code coverage to codecov.io
+
+# Members
+- `project_name::AbstractString`: Fully qualified name of the Github project. 
+    Contains user/group and project name. E.g. qed-project/QEDbase.jl
+- `commit_hash::AbstractString`: Git commit hash where code coverage is related to.
+- `feature_branch::AbstractString`: Name of the feature branch of a pull request or 
+    branch name to be tested if it is not a pull request.
+- `pr_number::Integer`: Pull Reqeust number. If it is not a pull request, the number is 0.
+"""
+Base.@kwdef struct CodeCoverageConf
+    project_name::AbstractString = ""
+    commit_hash::AbstractString = ""
+    feature_branch::AbstractString = ""
+    pr_number::Integer = 0
+end
+
+"""
+    is_code_coverage(conf::CodeCoverageConf)
+
+Checks if a CodeCoverageConf object is valid triggers code generation.
+
+# Args
+- `conf::CodeCoverageConf:` Configuration object to be tested.
+
+# Return
+Return true, if the project_name, commit_hash or feature_branch is not empty.
+"""
+function is_code_coverage(conf::CodeCoverageConf)::Bool
+    return !isempty(conf.project_name) && !isempty(conf.commit_hash) && !isempty(conf.feature_branch)
+end

@@ -72,13 +72,29 @@ function parse_commandline()::Dict{String, Any}
         help = "Disable the generation of integration tests."
         action = :store_true
         "--target-branch"
-        help = "If target branch is set, does not read the target branch from a GitHub Pull Request which is set via environment variable `CI_QED_TARGET_BRANCH`."
+        help = "On Pull Request, the target branch is the branch where changes will be merged in.\n" *
+            "Otherwise it is the branch where the tests are running on.\n" *
+            "If a target branch is explicitly set, the value from the environment variable `CI_QED_TARGET_BRANCH` (used for GitHub pull requests) is ignored."
         arg_type = String
         "--pr"
         help = "Generate jobs for a pull request. If not set, the value of the environment variable CI_QED_IS_PR decides if it is pull request or not."
         action = :store_true
         "--project-path"
         help = "Set the path to the package folder of the package to be tested. Can also be set via the environment variable `CI_PROJECT_DIR`."
+        arg_type = String
+        "--code-coverage"
+        help = "Enable code coverage in Unit tests. Requires --target-branch and --commit-hash. --pr-number is required if --pr is set."
+        action = :store_true
+        "--feature-branch"
+        help = "The feature branch names the branch in a pull request, where changes coming from.\n" *
+            "If the CI runs on a non-pull request, the feature branch and target branch are equal.\n" *
+            "If a feature branch is set, the value from the environment variable `CI_QED_FEATURE_BRANCH` (used for GitHub pull requests) is ignored."
+        arg_type = String
+        "--commit-hash"
+        help = "Git commit hash of the commit to be tested."
+        arg_type = String
+        "--pr-number"
+        help = "Pull request number."
         arg_type = String
     end
 
@@ -91,11 +107,37 @@ function parse_commandline()::Dict{String, Any}
 end
 
 """
+    exit_error_handler(error_msg::AbstractString)
+
+"The error handler manages errors by printing an error message and terminating the application with exit code 1."
+
+# Args
+- `error_msg::AbstractString`: Error message.
+"""
+function exit_error_handler(error_msg::AbstractString)
+    @error error_msg
+    return exit(1)
+end
+
+"""
+    runtime_error_handler(error_msg::AbstractString)
+
+The error handler manages errors by throwing an ErrorException with the error message.
+
+# Args
+- `error_msg::AbstractString`: Error message.
+"""
+function runtime_error_handler(error_msg::AbstractString)
+    throw(ErrorException(error_msg))
+end
+
+"""
     _get_config_from_arg_or_env_variable(
         arg_name::AbstractString,
         env_name::AbstractString,
         error_msg::AbstractString,
         args::Dict{String,Any},
+        error_handler,
     )::String
 
 Checks the script argument and the environment variable. If the script argument is set, the value
@@ -108,6 +150,7 @@ error code 1.
 - `env_name::AbstractString`: Name of the environment variable.
 - `error_msg::AbstractString`: Error message if both are not set.
 - `args::Dict{String,Any}`: Parsed arguments
+- `error_handler`: Error handler which is called in the case of an error.
 
 # Return
 
@@ -118,6 +161,7 @@ function _get_config_from_arg_or_env_variable(
         env_name::AbstractString,
         error_msg::AbstractString,
         args::Dict{String, Any},
+        error_handler
     )::String
     if args[arg_name] !== nothing
         return args[arg_name]
@@ -127,29 +171,30 @@ function _get_config_from_arg_or_env_variable(
         return ENV[env_name]
     end
 
-    @error error_msg
-    return exit(1)
+    error_handler(error_msg)
 end
 
 """
-    get_target_branch(args::Dict{String,Any})::String
+    get_target_branch(args::Dict{String,Any}, error_handler)::String
 
 Get the target branch name. Can be set via argument `--target-branch` or environment variable
 `CI_QED_TARGET_BRANCH`.
 
 # Args
 - `args::Dict{String,Any}`: Parsed arguments
+- `error_handler`: Error handler which is called in the case of an error.
 
 # Return
 
 Target branch name.
 """
-function get_target_branch(args::Dict{String, Any})::String
+function get_target_branch(args::Dict{String, Any}, error_handler = exit_error_handler)::String
     ci_commit_ref_name = _get_config_from_arg_or_env_variable(
         "target-branch",
         "CI_QED_TARGET_BRANCH",
         "Target branch is not set via argument `--target-branch` or environment variable `CI_QED_TARGET_BRANCH`",
         args,
+        error_handler
     )
 
     return find_target_branch(ci_commit_ref_name)
@@ -163,17 +208,93 @@ variable `CI_PROJECT_DIR`.
 
 # Args
 - `args::Dict{String,Any}`: Parsed arguments
+- `error_handler`: Error handler which is called in the case of an error.
 
 # Return
 
 The path of the project to be tested.
 """
-function get_project_path(args::Dict{String, Any})::String
+function get_project_path(args::Dict{String, Any}, error_handler = exit_error_handler)::String
     return _get_config_from_arg_or_env_variable(
         "project-path",
         "CI_PROJECT_DIR",
         "Path of the package to be tested is not set via argument `--project-path` or environment variable `CI_PROJECT_DIR`",
         args,
+        error_handler
+    )
+end
+
+"""
+    get_feature_branch(args::Dict{String,Any}, error_handler)::String
+
+Get the feature branch name. Can be set via argument `--feature-branch` or environment variable
+`CI_QED_FEATURE_BRANCH`.
+
+# Args
+- `args::Dict{String,Any}`: Parsed arguments
+- `error_handler`: Error handler which is called in the case of an error.
+
+# Return
+
+Feature branch name.
+"""
+function get_feature_branch(args::Dict{String, Any}, error_handler = exit_error_handler)::String
+    return _get_config_from_arg_or_env_variable(
+        "feature-branch",
+        "CI_QED_FEATURE_BRANCH",
+        "Feature branch is not set via argument `--feature-branch` or environment variable `CI_QED_FEATURE_BRANCH`",
+        args,
+        error_handler
+    )
+end
+
+"""
+    get_commit_hash(args::Dict{String,Any}, error_handler)::String
+
+Get the git commit hash. Can be set via argument `--commit-hash"` or environment variable
+`CI_QED_COMMIT_HASH`.
+
+# Args
+- `args::Dict{String,Any}`: Parsed arguments
+- `error_handler`: Error handler which is called in the case of an error.
+
+# Return
+
+Git commit hash.
+"""
+function get_commit_hash(args::Dict{String, Any}, error_handler = exit_error_handler)::String
+    return _get_config_from_arg_or_env_variable(
+        "commit-hash",
+        "CI_QED_COMMIT_HASH",
+        "Git commit hash is not set via argument `--commit-hash` or environment variable `CI_QED_COMMIT_HASH`",
+        args,
+        error_handler
+    )
+end
+
+"""
+    get_pr_number(args::Dict{String,Any}, error_handler)::String
+
+Get the pull request number. Can be set via argument `--pr-number"` or environment variable
+`CI_QED_PR_NUMBER`.
+
+# Args
+- `args::Dict{String,Any}`: Parsed arguments
+- `error_handler`: Error handler which is called in the case of an error.
+
+# Return
+
+Git commit hash.
+"""
+function get_pr_number(args::Dict{String, Any}, error_handler = exit_error_handler)::Integer
+    return parse(
+        Int64, _get_config_from_arg_or_env_variable(
+            "pr-number",
+            "CI_QED_PR_NUMBER",
+            "Pull request number is not set via argument `--pr-number` or environment variable `CI_QED_PR_NUMBER`",
+            args,
+            error_handler
+        )
     )
 end
 
@@ -304,6 +425,23 @@ True if the tests are generated for a pull request, false otherwise.
 """
 function is_pull_request(args::Dict{String, Any})::Bool
     return _is_test("pr", true, "CI_QED_IS_PR", args)
+end
+
+"""
+    is_code_coverage(args::Dict{String,Any})::Bool
+
+Return true if code coverage is enabled. Disabled by default. Set argument `--code-coverage`
+to enable this or use the environment variable `CI_QED_IS_CODE_COVERAGE={"ON"|"OFF"}`.
+
+# Args
+- `args::Dict{String,Any}`: Parsed arguments
+
+# Return
+
+True if the code coverage script code should be generated, false otherwise.
+"""
+function is_code_coverage(args::Dict{String, Any})::Bool
+    return _is_test("code-coverage", true, "CI_QED_IS_CODE_COVERAGE", args)
 end
 
 """

@@ -18,6 +18,9 @@ if abspath(PROGRAM_FILE) == @__FILE__
         CI.handle_normal_commit!(ci_commit_ref_name, output_env_vars)
     end
 
+    # get commit hash of current git commit
+    output_env_vars["CI_QED_COMMIT_HASH"] = strip(read(`git rev-parse HEAD`, String))
+
     if output_env_vars["CI_QED_TARGET_BRANCH"] != "main"
         CI.read_commit_message!(output_env_vars)
     end
