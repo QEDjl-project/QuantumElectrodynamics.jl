@@ -21,7 +21,7 @@ contains all properties to be directly translated to GitLab CI yaml.
 - `tools_git_repo::GitRepoAddress`: URL and branch of the Git repository from which the CI tools are
     cloned in unit test job.
 - `code_coverage::CodeCoverageConf`: Configuration for creating a code coverage report and upload it
-    to codecov.com. The code generation is only triggered, if `is_code_coverage(code_coverage)` is true.
+    to codecov.io. The code generation is only triggered, if `is_code_coverage(code_coverage)` is true.
 """
 function add_unit_test_job_yaml! end
 
@@ -176,7 +176,7 @@ end
     )::AbstractArray
 
 Generates a part of a GitLab CI script section, which runs generating a code coverage report and upload it
-to codecov.com.
+to codecov.io.
 """
 function _get_code_coverage_script(
         conf::CodeCoverageConf
@@ -234,7 +234,7 @@ Creates a normal unit test job for a specific Julia version.
 - `tools_git_repo::GitRepoAddress`: URL and branch of the Git repository from which the CI tools are
     cloned in unit test job.
 - `code_coverage::CodeCoverageConf`: Configuration for creating a code coverage report and upload it
-    to codecov.com. The code generation is only triggered, if `is_code_coverage(code_coverage)` is true.
+    to codecov.io. The code generation is only triggered, if `is_code_coverage(code_coverage)` is true.
 
 Return
 

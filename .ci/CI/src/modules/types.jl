@@ -212,7 +212,7 @@ github_pr_to_string(gh_pr::GitHubPR) = "User: $(gh_pr.user)\nProject: $(gh_pr.pr
 """
     struct CodeCoverageConf
 
-Contains all information, which are required to upload a code coverage to codecov.com
+Contains all information, which are required to upload a code coverage to codecov.io
 
 # Members
 - `project_name::AbstractString`: Fully qualified name of the Github project. 
