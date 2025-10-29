@@ -105,6 +105,7 @@ get_gitlab_ci_conf_jl_integration_test:
   image: julia:1.10
   stage: integration-test
   script:
+    - apt update && apt install -y git
     - cd ${CI_PROJECT_DIR}/.ci/CI/
     - julia --project=. -e 'import Pkg; Pkg.instantiate()'
     - $(julia --project=. ${CI_PROJECT_DIR}/.ci/CI/script/get_gitlab_ci_conf.jl)
