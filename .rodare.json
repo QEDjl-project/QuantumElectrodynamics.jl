@@ -1,0 +1,35 @@
+{
+    "creators": [
+        {
+            "name": "Hernandez Acosta, Uwe",
+            "affiliation": "Helmholtz-Zentrum Dresden-Rossendorf, CASUS",
+            "orcid": "0000-0002-6182-1481"
+        },
+        {
+            "name": "Reinhard, Anton",
+            "affiliation": "Helmholtz-Zentrum Dresden-Rossendorf, CASUS",
+            "orcid": "0009-0004-6483-2137"
+        },
+        {
+            "name": "Ehrig, Simeon",
+            "affiliation": "Helmholtz-Zentrum Dresden-Rossendorf, CASUS",
+            "orcid": "0000-0002-8218-3116"
+        },
+        {
+            "name": "Steiniger, Klaus",
+            "affiliation": "Helmholtz-Zentrum Dresden-Rossendorf, CASUS",
+            "orcid": "0000-0001-8965-1149"
+        },
+        {
+            "name": "Bussmann, Michael",
+            "affiliation": "Helmholtz-Zentrum Dresden-Rossendorf, CASUS",
+            "orcid": "0000-0002-8258-3881"
+        }
+    ],
+    "title": "QuantumElectrodynamics.jl",
+    "access_right": "open",
+    "upload_type": "software",
+    "license": "MIT",
+    "pub_id": "42912",
+    "description": "QuantumElectrodynamics.jl is an open-source Julia framework to model and simulate interactions between particle and strong electromagnetic fields."
+}
