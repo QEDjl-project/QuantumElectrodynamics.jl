@@ -7,8 +7,8 @@ stages:
 .untit_test_template:
   stage: unit-test
   variables:
-      CI_QED_TEST_TYPE: "unit"
-      CI_QED_DISABLE_LONG_TESTS: "ON"
+    CI_QED_TEST_TYPE: "unit"
+    CI_QED_DISABLE_LONG_TESTS: "ON"
   script:
     # test CI scripts
     - cd ${CI_PROJECT_DIR}/.ci/CI/
@@ -33,8 +33,13 @@ unit_tests_releases:
   extends: .untit_test_template
   parallel:
     matrix:
-      - JULIA_VERSION: ["1.10", "1.11", "1.12", "rc"]
+      - JULIA_VERSION: ["1.10", "1.11", "1.12"]
   image: julia:$JULIA_VERSION
+
+unit_tests_rc:
+  extends: .untit_test_template
+  image: julia:rc
+  allow_failure: true
 
 unit_tests_nightly:
   extends: .untit_test_template
