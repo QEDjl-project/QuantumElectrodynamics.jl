@@ -35,6 +35,19 @@ The following is a description of our release process for a version `<version>`.
 
 ### Releasing Breaking Changes
 
-Just as with merging breaking changes into `dev`, when releasing breaking changes, extra care has to be taken. When a release contains breaking changes, some of the release-version integration tests will fail. In this case, the major version should be increased (or the minor version for versions `0.x.y`). This prevents the released downstream packages from failing since they have a `compat` entry, choosing the latest working version. 
+Just as with merging breaking changes into `dev`, when releasing breaking changes, extra care has to be taken. When a release contains breaking changes, some of the release-version integration tests will fail. In this case, the major version should be increased (or the minor version for versions `0.x.y`). This prevents the released downstream packages from failing since they have a `compat` entry, choosing the latest working version.
 
 The dev-integration tests assure that the latest `dev`s of all packages still work together. This means that the depending package can now be released, after changing the `compat` entry of the base package in the release branch accordingly.
+
+### Setup a Local Development Environment
+
+If you want to further develop the source code of a QED project, you must first clone the repository and check out the dev branch. You must then do the same with all QED dependencies and their dependencies. After that, you can instantiate the Julia environment of the QED project you want to modify and add the local repositories with the dev branch version as development dependencies to the environment. The process is tedious and error-prone. However, there is a script that clones all QED projects for you and sets up the development environment for each project.
+
+```bash
+# clone the script as part of the QuantumElectrodynamics.jl repository
+git clone https://github.com/QEDjl-project/QuantumElectrodynamics.jl.git
+julia --project=./QuantumElectrodynamics.jl/ -e 'import Pkg; Pkg.instantiate()'
+# Create a folder where all QED projects should be cloned.
+mkdir /path/to/qed-projects
+julia --project=./QuantumElectrodynamics.jl/ ./QuantumElectrodynamics.jl/.ci/CI/script/create_dev_env.jl /path/to/qed-projects
+```

@@ -1,11 +1,14 @@
 stages:
   - unit-test
+  - integration-test
+  - qedcore-integration-test
   - verify-unit-test-deps
 
 .untit_test_template:
   stage: unit-test
   variables:
-      CI_TEST_TYPE: "unit"
+    CI_QED_TEST_TYPE: "unit"
+    CI_QED_DISABLE_LONG_TESTS: "ON"
   script:
     # test CI scripts
     - cd ${CI_PROJECT_DIR}/.ci/CI/
@@ -13,29 +16,30 @@ stages:
     - julia --project=. -e 'import Pkg; Pkg.test(; coverage = true)'
     - cd ${CI_PROJECT_DIR}
     # test QuantumElectrodynamics.jl
-    - $(julia --project=. ${CI_PROJECT_DIR}/.ci/CI/src/GetProjectNameVersionPath.jl)
-    - echo "CI_DEV_PKG_NAME -> $CI_DEV_PKG_NAME"
-    - echo "CI_DEV_PKG_VERSION -> $CI_DEV_PKG_VERSION"
-    - echo "CI_DEV_PKG_PATH -> $CI_DEV_PKG_PATH"
-    - >
-      if [[ $CI_COMMIT_BRANCH == "main" || $CI_COMMIT_REF_NAME == "main" || $CI_COMMIT_BRANCH == "dev" || $CI_COMMIT_REF_NAME == "dev" ]]; then
-        # set name of the commit message from CI_COMMIT_MESSAGE to NO_MESSAGE, that the script does not read accidentally custom packages from the commit message of a merge commit
-        julia --project=. ${CI_PROJECT_DIR}/.ci/CI/src/SetupDevEnv.jl ${CI_PROJECT_DIR}/Project.toml NO_MESSAGE
-      else
-        julia --project=. ${CI_PROJECT_DIR}/.ci/CI/src/SetupDevEnv.jl ${CI_PROJECT_DIR}/Project.toml
-      fi
+    - $(julia --project=${CI_PROJECT_DIR}/.ci/CI/ ${CI_PROJECT_DIR}/.ci/CI/script/get_project_name_version_path.jl ${CI_PROJECT_DIR})
+    - echo "CI_QED_DEV_PKG_NAME -> $CI_QED_DEV_PKG_NAME"
+    - echo "CI_QED_DEV_PKG_VERSION -> $CI_QED_DEV_PKG_VERSION"
+    - echo "CI_QED_DEV_PKG_PATH -> $CI_QED_DEV_PKG_PATH"
+    - julia --project=${CI_PROJECT_DIR}/.ci/CI -e 'import Pkg; Pkg.test(; coverage = true)'
+    - julia --project=${CI_PROJECT_DIR}/.ci/CI ${CI_PROJECT_DIR}/.ci/CI/script/setup_dev_env.jl ${CI_PROJECT_DIR}
     - julia --project=. -e 'import Pkg; Pkg.instantiate()'
     - julia --project=. -e 'import Pkg; Pkg.test(; coverage = true)'
   interruptible: true
   tags:
     - cpuonly
+    - x86_64
 
 unit_tests_releases:
   extends: .untit_test_template
   parallel:
     matrix:
-      - JULIA_VERSION: ["1.10", "1.11", "rc"]
+      - JULIA_VERSION: ["1.10", "1.11", "1.12"]
   image: julia:$JULIA_VERSION
+
+unit_tests_rc:
+  extends: .untit_test_template
+  image: julia:rc
+  allow_failure: true
 
 unit_tests_nightly:
   extends: .untit_test_template
@@ -69,6 +73,7 @@ unit_tests_nightly:
   allow_failure: true
   tags:
     - cpuonly
+    - x86_64
 
 verify-unit-test-deps:
   image: julia:1.10
@@ -79,8 +84,55 @@ verify-unit-test-deps:
         # does not check for custom package URLs on the main and dev branch
         echo "no custom package URL check necessary"
       else
-        julia ${CI_PROJECT_DIR}/.ci/CI/src/VerifyEnv.jl
+        julia --project=${CI_PROJECT_DIR}/.ci/CI/ -e 'import Pkg; Pkg.instantiate()'
+        julia --project=${CI_PROJECT_DIR}/.ci/CI/ ${CI_PROJECT_DIR}/.ci/CI/script/verify_env.jl
       fi
   interruptible: true
   tags:
     - cpuonly
+    - x86_64
+
+bootloader_jl_integration_test:
+  image: julia:1.10
+  stage: integration-test
+  variables:
+    CI_QED_DISABLE_SHORT_TESTS: "ON"
+  script:
+    - cd ${CI_PROJECT_DIR}/.ci/CI/
+    - julia --project=. -e 'import Pkg; Pkg.instantiate()'
+    - julia --project=. -e 'import Pkg; Pkg.test()'
+  interruptible: true
+  tags:
+    - cpuonly
+    - x86_64
+
+get_gitlab_ci_conf_jl_integration_test:
+  image: julia:1.10
+  stage: integration-test
+  script:
+    - apt update && apt install -y git
+    - cd ${CI_PROJECT_DIR}/.ci/CI/
+    - julia --project=. -e 'import Pkg; Pkg.instantiate()'
+    - $(julia --project=. ${CI_PROJECT_DIR}/.ci/CI/script/get_gitlab_ci_conf.jl)
+    - env | grep CI_QED_
+  interruptible: true
+  tags:
+    - cpuonly
+    - x86_64
+
+trigger_job:
+  stage: qedcore-integration-test
+  variables:
+    # use bootloader.jl code of the pull request
+    CI_QED_GIT_CI_TOOLS_URL: "${CI_PROJECT_URL}.git"
+    CI_QED_GIT_CI_TOOLS_BRANCH: $CI_COMMIT_REF_NAME
+    # need to enable generating test jobs for a pull request by hand because pipeline is triggered
+    # by other project and not a pull request (automatic detection mechanism does not work)
+    # use CI_QED_IS_PR instead CI_QED_ENABLE_INTEG_TESTS to simulate behavior of pull request
+    CI_QED_IS_PR: "ON"
+  trigger:
+    project: hzdr/qedjl-project/qedcore.jl
+    strategy: depend
+  # run only in pull requests
+  rules:
+    - if: $CI_COMMIT_REF_NAME =~ /^pr-*./

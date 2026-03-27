@@ -17,7 +17,7 @@ The unit tests are automatically triggered, if you open a pull request, which ta
 You can also modify which version of a `QuantumElectrodynamics.jl` dependency should be used. For example if you need to test your code with a function, which is not merged in the development branch yet. Thus, you need to add a specific line to your commit message with the following format:
 
 ```
-CI_UNIT_PKG_URL_<dep_name>: https://github.com/<user>/<dep_name>#<commit_hash>
+CI_QED_UNIT_PKG_URL_<dep_name>: https://github.com/<user>/<dep_name>#<commit_hash>
 ```
 
 You can find the `<dep_name>` name in the `Project.toml` of the dependent project. For example, let's assume the name of the dependent package is `depLibrary`. The url of the fork is https://github.com/user/depLibrary.jl and the required feature has the commit sha `45a753b`.
@@ -31,20 +31,20 @@ the new functionality.
 
 If you pass a 0, it has a special meaning.
 
-CI_UNIT_PKG_URL_depLibrary: https://github.com/user/depLibrary.jl#45a753b
+CI_QED_UNIT_PKG_URL_depLibrary: https://github.com/user/depLibrary.jl#45a753b
 ```
 
-It is also possible to set a custom URL for more than one package. Simply add an additional line with the format `CI_UNIT_PKG_URL_<dep_name>: https://github.com/<user>/<dep_name>#<commit_hash>` to the commit message.
+It is also possible to set a custom URL for more than one package. Simply add an additional line with the format `CI_QED_UNIT_PKG_URL_<dep_name>: https://github.com/<user>/<dep_name>#<commit_hash>` to the commit message.
 
 !!! note
 
     You don't need to add a new commit to set custom URLs. You can modify the commit message with `git commit --amend` and force push to the branch. This also starts the CI pipeline again.
 
-There is a last job, which checks if lines starting with `CI_UNIT_PKG_URL_` exist in the commit message of the latest commit. If so, the unit test will fail. This is required, because otherwise the merged code would depend on non merged changes in sub-packages and would be non-compatible.
+There is a last job, which checks if lines starting with `CI_QED_UNIT_PKG_URL_` exist in the commit message of the latest commit. If so, the unit test will fail. This is required, because otherwise the merged code would depend on non merged changes in sub-packages and would be non-compatible.
 
 !!! note
 
-    If you use `CI_UNIT_PKG_URL_`, the CI pipeline will fail which does not mean that the actual tests are failing.
+    If you use `CI_QED_UNIT_PKG_URL_`, the CI pipeline will fail which does not mean that the actual tests are failing.
 
 # Integration Tests for CI Users
 
@@ -60,7 +60,7 @@ If the tests pass successfully, you don't need to do anything. If they fail, i.e
 For better understanding, the package currently modified by the pull request is called `orig`, and the package that depends on it is referred to as `dep`. This means in practice, the `Project.toml` of the project `dep` contains the dependency to `orig`. First, one should fork the package `dep` and checkout a new feature branch on this fork. The fix of the integration issue for `dep` is now developed on the feature branch. Once finished, the changes to `dep` are push to GitHub, and a pull request on `dep` is opened to check in the changes. By default, the unit test for `dep` should fail, because the CI in `dep` needs to use the modified version of `orig`. The solution for this problem is explained in the section [Unit Test for CI Users](#Unit-Test-for-CI-Users). Using this, one should develop the fix on the feature branch until the CI of `dep` passes all unit tests. In this case, the original pull request in the upstream package `orig` can be resumed. Therefore, one needs to tell the CI of `orig` that the integration tests should use the fixed version package `dep`, which is still on the feature branch in a pull request on `dep`. In order to proceed, the CI on `orig` needs information on where the fix for `dep` is located. This is given to the CI of `orig` in a commit message on the origin branch of the pull request on `orig`, one just needs to add a new line with the following format to the commit message:
 
 ```
-CI_INTG_PKG_URL_<dep_name>: https://github.com/<user>/<dep_name>#<commit_hash>
+CI_QED_INTG_PKG_URL_<dep_name>: https://github.com/<user>/<dep_name>#<commit_hash>
 ```
 
 You can find the names of the environment variables in the section [Environment Variables](#Environment-Variables). For an example let's assume the name of the `dep` package is `dep1.jl`, `user1` forked the package and the commit hash of the fix for package `dep1.jl` is `45a723b`. Then, an example message could look like this:
@@ -74,10 +74,10 @@ the new functionality.
 
 If you pass a 0, it has a special meaning.
 
-CI_INTG_PKG_URL_DEP1JL: https://github.com/user1/dep1.jl#45a723b
+CI_QED_INTG_PKG_URL_DEP1JL: https://github.com/user1/dep1.jl#45a723b
 ```
 
-It is also possible to set a custom URL for more than one package, which depends on `orig`. Simply add an additional line of the shape `CI_INTG_PKG_URL_<dep_name>: https://github.com/<user>/<dep_name>#<commit_hash>` to the commit message.
+It is also possible to set a custom URL for more than one package, which depends on `orig`. Simply add an additional line of the shape `CI_QED_INTG_PKG_URL_<dep_name>: https://github.com/<user>/<dep_name>#<commit_hash>` to the commit message.
 
 !!! note
 
@@ -87,28 +87,29 @@ It is also possible to set a custom URL for more than one package, which depends
 
 The following table shows the names of the environment variables to use custom URLs for the unit and integration tests.
 
-Package Name    | Unit Test                      | Integration Test
-----------------|--------------------------------|-------------------------------
-QEDbase.jl      | `CI_UNIT_PKG_URL_QEDbase`      | `CI_INTG_PKG_URL_QEDbase`
-QEDcore.jl      | `CI_UNIT_PKG_URL_QEDcore`      | `CI_INTG_PKG_URL_QEDcore`
-QEDevents.jl    | `CI_UNIT_PKG_URL_QEDevents`    | `CI_INTG_PKG_URL_QEDevents`
-QEDfields.jl    | `CI_UNIT_PKG_URL_QEDfields`    | `CI_INTG_PKG_URL_QEDfields`
-QEDprocesses.jl | `CI_UNIT_PKG_URL_QEDprocesses` | `CI_INTG_PKG_URL_QEDprocesses`
+Package Name          | Unit Test                            | Integration Test
+----------------------|--------------------------------------|-------------------------------------
+QEDbase.jl            | `CI_QED_UNIT_PKG_URL_QEDbase`            | `CI_QED_INTG_PKG_URL_QEDbase`
+QEDcore.jl            | `CI_QED_UNIT_PKG_URL_QEDcore`            | `CI_QED_INTG_PKG_URL_QEDcore`
+QEDevents.jl          | `CI_QED_UNIT_PKG_URL_QEDevents`          | `CI_QED_INTG_PKG_URL_QEDevents`
+QEDfields.jl          | `CI_QED_UNIT_PKG_URL_QEDfields`          | `CI_QED_INTG_PKG_URL_QEDfields`
+QEDprocesses.jl       | `CI_QED_UNIT_PKG_URL_QEDprocesses`       | `CI_QED_INTG_PKG_URL_QEDprocesses`
+QEDFeynmanDiagrams.jl | `CI_QED_UNIT_PKG_URL_QEDFeynmanDiagrams` | `CI_QED_INTG_PKG_URL_QEDFeynmanDiagrams`
 
 # Unit Tests for CI Develops
 
 In this section, we explain how the unit tests are prepared and executed. It is not mandatory to read the section if you only want to use the CI.
 
-Before the unit tests are executed, the `SetupDevEnv.jl` is executed, which prepares the project environment for the unit test. It reads the `Project.toml` of the current project and adds the version of the `dev` branch of all QED dependency (`Pkg.develop()`) if no line starting with `CI_UNIT_PKG_URL_` was defined in the commit message. If `CI_UNIT_PKG_URL_` was defined, it will use the custom URL.
+Before the unit tests are executed, the `setup_dev_env.jl` is executed, which prepares the project environment for the unit test. It reads the `Project.toml` of the project give via argument and adds the version of the `dev` branch of all QED dependency (`Pkg.develop()`) if no line starting with `CI_QED_UNIT_PKG_URL_` was defined in the commit message. If `CI_QED_UNIT_PKG_URL_` was defined, it will use the custom URL.
 
-The commit message is defined in the environment variable `CI_COMMIT_MESSAGE` by GitLab CI. If the variable is not defined, the script ignores the commit message. If you want to disable reading the commit message, you can set the name of the commit message variable to an undefined variable via the first argument of the `integTestGen.jl` script. We use this when executing the CI on the `main` or `dev` branch. On these branches, it should not be possible to use custom URLs for unit or integration tests. Therefore we disable it, which also allows the use of `CI_INTG_PKG_URL_` variables as regular part of the merge commit message.
+The commit message is defined in the environment variable `CI_COMMIT_MESSAGE` by GitLab CI. If the variable is not defined, the script ignores the commit message. If you want to disable reading the commit message, you can set the name of the commit message variable to an undefined variable via the first argument of the `integTestGen.jl` script. We use this when executing the CI on the `main` or `dev` branch. On these branches, it should not be possible to use custom URLs for unit or integration tests. Therefore we disable it, which also allows the use of `CI_QED_INTG_PKG_URL_` variables as regular part of the merge commit message.
 
 ## Running Locally
 
 If you want to run the script locally, you can set custom URLs via environment variables. For example:
 
 ```bash
-CI_UNIT_PKG_URL_QEDbase="www.github.com/User/QEDbase#0e1593b" CI_UNIT_PKG_URL_QEDfields="www.github.com/User/QEDfields#60324ad" julia --project=/path/to/QED/repo SetupDevEnv.jl`
+CI_QED_UNIT_PKG_URL_QEDbase="www.github.com/User/QEDbase#0e1593b" CI_QED_UNIT_PKG_URL_QEDfields="www.github.com/User/QEDfields#60324ad" julia --project=. script/setup_dev_env.jl /path/to/QED/repo`
 ```
 
 # Integration Tests for CI Develops
@@ -131,7 +132,7 @@ Before we talk about the details, here is a small overview on what the `integTes
 
 The `integTestGen.jl` script traverses the dependency tree of `QuantumElectrodynamics.jl` package. Because each QED sub-package is a dependency of the `QuantumElectrodynamics.jl` package, the `QuantumElectrodynamics.jl` dependency tree contains implicitly all dependency trees of the sub-packages. So the script is traversing the tree and creating a list of sub-packages who depends on `orig`. This list is called `users`.
 
-For each `user` from the list of `users` we need to define a separate CI job. First, the job checkouts the `dev` branch of the git repository of `user`. Then it sets the modified version of `orig` as dependency (`Pkg.develop(path="$CI_package_DIR")`). Finally, it executes the unit tests of `user`. The unit tests of `user` are tested with the code changes of the current pull request.
+For each `user` from the list of `users` we need to define a separate CI job. First, the job checkouts the `dev` branch of the git repository of `user`. Then it sets the modified version of `orig` as dependency (`Pkg.develop(path="$CI_QED_package_DIR")`). Finally, it executes the unit tests of `user`. The unit tests of `user` are tested with the code changes of the current pull request.
 
 If the `dev` branch of `user` does not work, it is also possible to define a custom git commit to a working commit via the git commit message of the pull request of `orig`. For more details see [Integration Tests for CI Users](#Integration-Tests-for-CI-Users).
 
@@ -141,22 +142,22 @@ If the `dev` branch of `user` does not work, it is also possible to define a cus
 
 !!! note
 
-    The commit message is defined in the environment variable `CI_COMMIT_MESSAGE` by GitLab CI. 
+    The commit message is defined in the environment variable `CI_COMMIT_MESSAGE` by GitLab CI.
     If the variable is not defined, the script ignores the commit message. If you want to disable
-    reading the commit message, you can set the name of the commit message variable to an 
-    undefined variable via the first argument of the `integTestGen.jl` script. We use this when 
-    executing the CI on the `main` or `dev` branch. On these branches, it should not be possible 
-    to use custom URLs for unit or integration tests. Therefore we disable it, which also allows 
-    the use of `CI_INTG_PKG_URL_` variables as regular part of the merge commit message.
+    reading the commit message, you can set the name of the commit message variable to an
+    undefined variable via the first argument of the `integTestGen.jl` script. We use this when
+    executing the CI on the `main` or `dev` branch. On these branches, it should not be possible
+    to use custom URLs for unit or integration tests. Therefore we disable it, which also allows
+    the use of `CI_QED_INTG_PKG_URL_` variables as regular part of the merge commit message.
 
 
-## Stage: Run Integration Tests 
+## Stage: Run Integration Tests
 
 This stage uses the generated job yaml to create and run new test jobs. It uses the [GitLab CI child pipeline](https://about.gitlab.com/blog/2020/04/24/parent-child-pipelines/#dynamically-generating-pipelines) mechanism.
 
 ## Stage: Integration Tests of Sub-Packages N
 
-Each job clones the repository of the sub-package. After the clone, it uses the Julia function `Pkg.develop(path="$CI_package_DIR")` to replace the dependency to the package `orig` with the modified version of the pull request and execute the tests of the sub-package via `Pkg.test()`.
+Each job clones the repository of the sub-package. After the clone, it uses the Julia function `Pkg.develop(path="$CI_QED_package_DIR")` to replace the dependency to the package `orig` with the modified version of the pull request and execute the tests of the sub-package via `Pkg.test()`.
 
 The integration tests of each sub-package are executed in parallel. So, if the integration tests of a package fails, the integration tests of the other packages are still executed and can pass.
 
@@ -170,5 +171,5 @@ The `integTestGen.jl` script has a special behavior. It creates its own `Project
 The following example assumes that the `QuantumElectrodynamics.jl` project is located at `$HOME/projects/QuantumElectrodynamics.jl` and the project to test is `QEDbase.jl` and is located at `$HOME/projects/QEDbase.jl`.
 
 ```bash
-CI_DEV_PKG_NAME=QEDbase CI_PROJECT_DIR="$HOME/projects/QEDbase.jl" julia --project=$HOME/projects/QuantumElectrodynamics.jl/ci/integTestGen $HOME/projects/QuantumElectrodynamics.jl/ci/integTestGen/src/integTestGen.jl
+CI_QED_DEV_PKG_NAME=QEDbase CI_PROJECT_DIR="$HOME/projects/QEDbase.jl" julia --project=$HOME/projects/QuantumElectrodynamics.jl/ci/integTestGen $HOME/projects/QuantumElectrodynamics.jl/ci/integTestGen/src/integTestGen.jl
 ```

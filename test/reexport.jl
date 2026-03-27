@@ -7,6 +7,9 @@ end
 @testset "QEDcore" begin
     @test isdefined(QuantumElectrodynamics, :ParticleStateful)
 end
+@testset "QEDFeynmanDiagrams" begin
+    @test isdefined(QuantumElectrodynamics, :number_of_diagrams)
+end
 @testset "QEDprocesses" begin
     @test isdefined(QuantumElectrodynamics, :Compton)
 end

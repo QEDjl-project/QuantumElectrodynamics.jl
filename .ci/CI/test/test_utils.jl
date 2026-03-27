@@ -1,15 +1,15 @@
 using YAML
 
 """
-    yaml_diff(given::Dict, expected::Dict)::String
+    yaml_diff(given::T, expected::T)::String
 
-Generates an error string that shows a given and an expected data structure in yaml 
+Generates an error string that shows a given and an expected data structure in yaml
 representation.
 
 # Returns
 - Human readable error message for the comparison of two job yaml's.
 """
-function yaml_diff(given::Dict, expected::Dict)::String
+function yaml_diff(given::T, expected::T)::String where {T}
     output = "\n***given***\n"
     output *= String(YAML.yaml(given))
     output *= "\n***expected***\n"
@@ -59,7 +59,7 @@ function disable_info_logger_output(test_function::Function)
     info_logger_io = IOBuffer()
     info_logger = CI.Logging.ConsoleLogger(info_logger_io, CI.Logging.Info)
 
-    CI.Logging.with_logger(info_logger) do
+    return CI.Logging.with_logger(info_logger) do
         test_function()
     end
 end
