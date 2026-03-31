@@ -4,6 +4,9 @@ CurrentModule = QuantumElectrodynamics
 
 # QuantumElectrodynamics.jl
 
+[![code style: runic](https://img.shields.io/badge/code_style-%E1%9A%B1%E1%9A%A2%E1%9A%BE%E1%9B%81%E1%9A%B2-black)](https://github.com/fredrikekre/Runic.jl)
+[![DOI](https://rodare.hzdr.de/badge/DOI/10.14278/rodare.4584.svg)](https://doi.org/10.14278/rodare.4584)
+
 This is the documentation for [`QuantumElectrodynamics.jl`](https://github.com/QEDjl-project/QuantumElectrodynamics.jl). It represents the combination of the following subpackages:
 
 **The two fundamental packages**:
